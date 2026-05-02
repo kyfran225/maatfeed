@@ -7,7 +7,7 @@
   "routes": [
     {
       "src": "/api/(.*)",
-      "dest": "https://api.maatfeed.com/api/$1"
+      "dest": "https://maat-api-production.onrender.com/api/$1"
     },
     {
       "handle": "filesystem"
@@ -41,7 +41,7 @@
     }
   ],
   "env": {
-    "VITE_API_URL": "https://api.maatfeed.com",
+    "VITE_API_URL": "https://maat-api-production.onrender.com",
     "NODE_ENV": "production"
   }
 }
