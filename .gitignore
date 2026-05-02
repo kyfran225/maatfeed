@@ -1,0 +1,23 @@
+node_modules/
+dist/
+build/
+.turbo/
+.env
+.env.local
+.env.*.local
+coverage/
+.DS_Store
+Thumbs.db
+*.log
+.vite/
+apps/web/dist/
+apps/api/dist/
+
+.vercel
+.env.preview
+.env.staging
+render-env-curl-commands.txt
+
+# Local Render CLI artifacts
+bin/
+render.zip

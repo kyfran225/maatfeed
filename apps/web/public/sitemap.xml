@@ -1,0 +1,212 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset 
+  xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+  xmlns:xhtml="http://www.w3.org/1999/xhtml"
+  xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"
+  xmlns:video="http://www.google.com/schemas/sitemap-video/1.1"
+  xmlns:news="http://www.google.com/schemas/sitemap-news/0.9"
+>
+<!--
+  MAATFEED Sitemap
+  Généré: 2026-05-01
+  Domaine: https://maatfeed.com
+  
+  Note: Ce sitemap contient les pages statiques principales.
+  Pour les contenus dynamiques (posts, débats), utiliser:
+  - /api/sitemap/content (à implémenter côté serveur)
+  - Ou un sitemap généré dynamiquement
+-->
+
+  <!-- ============================================ -->
+  <!-- PAGE D'ACCUEIL - Priorité maximale -->
+  <!-- ============================================ -->
+  <url>
+    <loc>https://maatfeed.com/</loc>
+    <lastmod>2026-05-01</lastmod>
+    <changefreq>hourly</changefreq>
+    <priority>1.0</priority>
+    <xhtml:link 
+      rel="alternate" 
+      hreflang="fr" 
+      href="https://maatfeed.com/" 
+    />
+    <xhtml:link 
+      rel="alternate" 
+      hreflang="en" 
+      href="https://maatfeed.com/?lang=en" 
+    />
+    <xhtml:link 
+      rel="alternate" 
+      hreflang="x-default" 
+      href="https://maatfeed.com/" 
+    />
+    <image:image>
+      <image:loc>https://maatfeed.com/og-image.png</image:loc>
+      <image:title>MAATFEED - Le feed africain du savoir</image:title>
+      <image:caption>Plateforme de débats et de découverte du savoir africain</image:caption>
+    </image:image>
+  </url>
+
+  <!-- ============================================ -->
+  <!-- EXPLORER - Découverte de contenu -->
+  <!-- ============================================ -->
+  <url>
+    <loc>https://maatfeed.com/explore</loc>
+    <lastmod>2026-05-01</lastmod>
+    <changefreq>hourly</changefreq>
+    <priority>0.9</priority>
+    <xhtml:link 
+      rel="alternate" 
+      hreflang="fr" 
+      href="https://maatfeed.com/explore" 
+    />
+    <xhtml:link 
+      rel="alternate" 
+      hreflang="en" 
+      href="https://maatfeed.com/explore?lang=en" 
+    />
+  </url>
+
+  <!-- ============================================ -->
+  <!-- COMMUNAUTÉ - Débats et discussions -->
+  <!-- ============================================ -->
+  <url>
+    <loc>https://maatfeed.com/community</loc>
+    <lastmod>2026-05-01</lastmod>
+    <changefreq>hourly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link 
+      rel="alternate" 
+      hreflang="fr" 
+      href="https://maatfeed.com/community" 
+    />
+    <xhtml:link 
+      rel="alternate" 
+      hreflang="en" 
+      href="https://maatfeed.com/community?lang=en" 
+    />
+  </url>
+
+  <!-- ============================================ -->
+  <!-- AUDIO - Plateforme audio -->
+  <!-- ============================================ -->
+  <url>
+    <loc>https://maatfeed.com/audio</loc>
+    <lastmod>2026-05-01</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link 
+      rel="alternate" 
+      hreflang="fr" 
+      href="https://maatfeed.com/audio" 
+    />
+  </url>
+
+  <!-- ============================================ -->
+  <!-- CATÉGORIES THÉMATIQUES (à développer) -->
+  <!-- ============================================ -->
+  <!-- 
+    Ces URLs seront activées quand les pages catégories 
+    seront implémentées côté frontend.
+  -->
+  <!--
+  <url>
+    <loc>https://maatfeed.com/category/kemet</loc>
+    <lastmod>2026-05-01</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+  
+  <url>
+    <loc>https://maatfeed.com/category/spiritualite</loc>
+    <lastmod>2026-05-01</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+  
+  <url>
+    <loc>https://maatfeed.com/category/histoire</loc>
+    <lastmod>2026-05-01</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+  
+  <url>
+    <loc>https://maatfeed.com/category/societe</loc>
+    <lastmod>2026-05-01</lastmod>
+    <changefreq>hourly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  
+  <url>
+    <loc>https://maatfeed.com/category/religion</loc>
+    <lastmod>2026-05-01</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+  -->
+
+  <!-- ============================================ -->
+  <!-- PAGES STATIQUES INFORMATIVES -->
+  <!-- ============================================ -->
+  <!-- À créer si nécessaire:
+  <url>
+    <loc>https://maatfeed.com/about</loc>
+    <lastmod>2026-05-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  
+  <url>
+    <loc>https://maatfeed.com/contact</loc>
+    <lastmod>2026-05-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  
+  <url>
+    <loc>https://maatfeed.com/privacy</loc>
+    <lastmod>2026-05-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.3</priority>
+  </url>
+  
+  <url>
+    <loc>https://maatfeed.com/terms</loc>
+    <lastmod>2026-05-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.3</priority>
+  </url>
+  -->
+
+  <!-- ============================================ -->
+  <!-- EXEMPLE CONTENU DYNAMIQUE (template) -->
+  <!-- ============================================ -->
+  <!-- 
+    Pour les contenus dynamiques (posts, débats, profils IA),
+    générer un sitemap dynamique via API:
+    
+    GET /api/sitemap/content → retourne les URLs des contenus
+    
+    Ou créer des sitemaps séparés:
+    - sitemap-content.xml (posts/vidéos)
+    - sitemap-debates.xml (débats)
+    - sitemap-profiles.xml (profils IA)
+  -->
+  <!--
+  <url>
+    <loc>https://maatfeed.com/content/[ID]</loc>
+    <lastmod>2026-05-01T12:00:00+00:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+    <video:video>
+      <video:thumbnail_loc>https://maatfeed.com/thumb/[ID].jpg</video:thumbnail_loc>
+      <video:title>Titre du contenu</video:title>
+      <video:description>Description du contenu</video:description>
+      <video:content_loc>https://youtube.com/watch?v=...</video:content_loc>
+      <video:publication_date>2026-05-01T12:00:00+00:00</video:publication_date>
+    </video:video>
+  </url>
+  -->
+
+</urlset>

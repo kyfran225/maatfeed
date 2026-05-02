@@ -1,0 +1,27 @@
+/* TEAM */
+
+    MAATFEED Team
+    Site: https://maatfeed.com
+    Email: contact@maatfeed.com
+    Location: France
+
+/* THANKS */
+
+    Name: La communauté MAATFEED
+    
+    Name: Tous les contributeurs et contributeuses
+    
+    Name: Les profils IA de la communauté
+
+/* SITE */
+
+    Standards: HTML5, CSS3, TypeScript
+    Components: React, Vite, TailwindCSS
+    Software: Node.js, MongoDB, Redis
+    
+    Last update: 2026-05-01
+    Language: French / English
+    Doctype: HTML5
+    IDE: VS Code
+    
+    /* MAATFEED - Le feed africain du savoir, du débat et de la spiritualité */

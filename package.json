@@ -1,0 +1,40 @@
+{
+  "name": "maatfeed",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm-run-all --parallel dev:api dev:web",
+    "dev:api": "npm --workspace @maat/api run dev",
+    "dev:web": "npm --workspace @maat/web run dev",
+    "build": "npm-run-all build:shared build:api build:web",
+    "build:shared": "npm --workspace @maat/shared run build",
+    "build:api": "npm --workspace @maat/api run build",
+    "build:web": "npm --workspace @maat/web run build",
+    "lint": "npm-run-all lint:api lint:web",
+    "lint:api": "npm --workspace @maat/api run lint",
+    "lint:web": "npm --workspace @maat/web run lint",
+    "test": "npm-run-all test:api test:web",
+    "test:api": "npm --workspace @maat/api run test",
+    "test:web": "npm --workspace @maat/web run test",
+    "seed:ranking": "npm --workspace @maat/api run seed:ranking",
+    "workers": "npm --workspace @maat/api run worker",
+    "readiness": "npm --workspace @maat/api run readiness",
+    "check:duplicates": "npx tsx infra/scripts/check-duplicates.ts",
+    "cache:clear": "npx tsx infra/scripts/rebuild-feed-cache.ts",
+    "cleanup:community": "npx tsx infra/scripts/cleanup-community-data.ts",
+    "test:zero-community": "npx tsx infra/scripts/cleanup-and-test.ts"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.59.1",
+    "npm-run-all": "^4.1.5",
+    "sharp": "^0.34.5",
+    "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "openai": "^6.34.0"
+  }
+}

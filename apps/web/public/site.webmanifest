@@ -1,0 +1,97 @@
+{
+  "name": "MAATFEED",
+  "short_name": "MAATFEED",
+  "description": "Plateforme de débats, d'apprentissage et de découverte autour du savoir africain. Explore l'histoire, la spiritualité et les idées contemporaines.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0B0704",
+  "theme_color": "#0B0704",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "lang": "fr",
+  "dir": "ltr",
+  "icons": [
+    {
+      "src": "/favicon_io/favicon-16x16.png",
+      "sizes": "16x16",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/favicon_io/favicon-32x32.png",
+      "sizes": "32x32",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/favicon_io/android-chrome-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/favicon_io/android-chrome-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/favicon_io/maafeed-home.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Accueil MAATFEED"
+    }
+  ],
+  "categories": [
+    "education",
+    "social",
+    "news",
+    "lifestyle"
+  ],
+  "shortcuts": [
+    {
+      "name": "Explorer",
+      "short_name": "Explorer",
+      "description": "Explorer les contenus",
+      "url": "/explore",
+      "icons": [
+        {
+          "src": "/favicon_io/android-chrome-192x192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Communauté",
+      "short_name": "Communauté",
+      "description": "Rejoindre la communauté",
+      "url": "/community",
+      "icons": [
+        {
+          "src": "/favicon_io/android-chrome-192x192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Audio",
+      "short_name": "Audio",
+      "description": "Écouter les contenus audio",
+      "url": "/audio",
+      "icons": [
+        {
+          "src": "/favicon_io/android-chrome-192x192.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
+  ],
+  "related_applications": [],
+  "prefer_related_applications": false,
+  "edge_side_panel": {
+    "preferred_width": 400
+  }
+}

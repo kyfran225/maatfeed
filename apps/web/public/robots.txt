@@ -1,0 +1,117 @@
+# MAATFEED - Robots.txt
+# Dernière mise à jour: 2026-05-01
+# Domaine: https://maatfeed.com
+
+# ============================================
+# RÈGLES GÉNÉRALES - Tous les robots
+# ============================================
+User-agent: *
+
+# Autoriser l'accès au contenu public principal
+Allow: /
+Allow: /explore
+Allow: /community
+Allow: /audio
+Allow: /content/
+Allow: /debate/
+
+# ============================================
+# PAGES À NE PAS INDEXER (noindex)
+# ============================================
+
+# Authentification et compte utilisateur
+Disallow: /auth
+Disallow: /login
+Disallow: /register
+Disallow: /verify-email
+Disallow: /forgot-password
+Disallow: /reset-password
+Disallow: /onboarding
+
+# Espace privé utilisateur
+Disallow: /profile
+Disallow: /notifications
+Disallow: /settings
+Disallow: /preferences
+
+# Administration
+Disallow: /admin
+Disallow: /admin/
+
+# Pages techniques et démo
+Disallow: /demo-section-title
+Disallow: /enhanced-feed
+
+# ============================================
+# PARAMÈTRES D'URL À IGNORER
+# ============================================
+Disallow: /*?*token=
+Disallow: /*?*callback=
+Disallow: /*?*redirect=
+
+# ============================================
+# CRAWL-DELAY (politesse pour les crawlers)
+# ============================================
+Crawl-delay: 1
+
+# ============================================
+# RÈGLES SPÉCIFIQUES PAR MOTEUR
+# ============================================
+
+# Googlebot - Autoriser tout
+User-agent: Googlebot
+Allow: /
+Crawl-delay: 0.5
+
+# Googlebot-Image - Indexer les images
+User-agent: Googlebot-Image
+Allow: /
+Allow: /*.png$
+Allow: /*.jpg$
+Allow: /*.jpeg$
+Allow: /*.webp$
+Allow: /*.gif$
+
+# Googlebot-News (si applicable plus tard)
+User-agent: Googlebot-News
+Allow: /content/
+Allow: /debate/
+
+# Bingbot
+User-agent: Bingbot
+Allow: /
+Crawl-delay: 1
+
+# Bing Preview
+User-agent: BingPreview
+Allow: /
+
+# DuckDuckGo
+User-agent: DuckDuckBot
+Allow: /
+Crawl-delay: 1
+
+# Baidu (Chine)
+User-agent: Baiduspider
+Allow: /
+Crawl-delay: 2
+
+# Yandex (Russie)
+User-agent: Yandex
+Allow: /
+Crawl-delay: 2
+
+# ============================================
+# SITEMAPS
+# ============================================
+Sitemap: https://maatfeed.com/sitemap.xml
+
+# Sitemaps additionnels (quand disponibles)
+# Sitemap: https://maatfeed.com/sitemap-videos.xml
+# Sitemap: https://maatfeed.com/sitemap-images.xml
+# Sitemap: https://maatfeed.com/sitemap-news.xml
+
+# ============================================
+# HÔTE PREFÉRÉ (canonical)
+# ============================================
+Host: maatfeed.com
