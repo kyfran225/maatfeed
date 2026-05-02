@@ -21,3 +21,5 @@ render-env-curl-commands.txt
 # Local Render CLI artifacts
 bin/
 render.zip
+
+.env*.local
