@@ -33,6 +33,7 @@ import { analyzeComment, sanitizeCommentText, type CommentAnalysis } from "./com
 import { moderateComment, CommentModerationError } from "./moderationService.js";
 import { refreshCommunityDiscussionScore, updateCommunityProfileSignals } from "./communityScoreService.js";
 import { communityAIQueue } from "../queues/communityAIQueue.js";
+import { queueReplyNotification } from "../queues/pushNotificationQueue.js";
 import { recordComment } from "./interactionService.js";
 import { logger } from "../config/logger.js";
 
@@ -459,6 +460,10 @@ export async function postReply(input: {
   }
 
   await notifyCommentAuthorOfReply(input.commentId, input.userId, newComment._id.toString(), "comment");
+
+  // Queue push notification for reply
+  const authorName = profile?.displayName || `User ${input.userId.slice(-6)}`;
+  await queueReplyNotification(input.commentId, authorName, sanitizedBody);
 
   if (replyTargetReplyId) {
     await notifyReplyAuthorOfNestedReply(replyTargetReplyId, input.userId, newComment._id.toString(), "comment");
