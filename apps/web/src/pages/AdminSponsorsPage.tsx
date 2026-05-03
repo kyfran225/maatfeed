@@ -401,7 +401,7 @@ export default function AdminSponsorsPage() {
                       onClick={() => handleToggleActive(sponsor)}
                       disabled={updateSponsorMutation.isPending}
                       variant={sponsor.isActive ? "secondary" : "primary"}
-                      size="sm"
+                      className="px-3 py-1 text-sm"
                     >
                       {sponsor.isActive ? "Désactiver" : "Activer"}
                     </Button>
@@ -409,7 +409,7 @@ export default function AdminSponsorsPage() {
                     <Button
                       onClick={() => startEdit(sponsor)}
                       variant="secondary"
-                      size="sm"
+                      className="px-3 py-1 text-sm"
                     >
                       Modifier
                     </Button>
@@ -417,8 +417,8 @@ export default function AdminSponsorsPage() {
                     <Button
                       onClick={() => handleDelete(sponsor.id)}
                       disabled={deleteSponsorMutation.isPending}
-                      variant="danger"
-                      size="sm"
+                      variant="secondary"
+                      className="px-3 py-1 text-sm text-red-400 hover:text-red-300 hover:bg-red-400/10"
                     >
                       Supprimer
                     </Button>

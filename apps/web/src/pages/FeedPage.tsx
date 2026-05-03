@@ -15,11 +15,19 @@ import { ErrorState } from "../components/ui/ErrorState";
 import { LoadingState } from "../components/ui/LoadingState";
 import { QuizModal } from "../components/modals/QuizModal";
 import { SponsorCard } from "../components/feed/SponsorCard";
+import { QuizRecapCard } from "../components/feed/QuizRecapCard";
 import { getActiveSponsors, incrementSponsorStats, type Sponsor } from "../services/sponsorService";
 
 type FeedItem = FeedResponse["items"][number];
 type LearningStatus = "new" | "learned" | "review";
 type LearningState = Record<string, LearningStatus>;
+
+interface QuizRecapItem {
+  type: "quiz_recap";
+  contentIds: string[];
+}
+
+type FeedWithInjections = FeedItem | { type: "sponsor"; data: Sponsor } | QuizRecapItem;
 
 const STORAGE_KEY = "maatfeed-learning-state";
 
@@ -216,13 +224,36 @@ export function FeedPage() {
     [items, learningState]
   );
 
-  // Combiner les items du feed avec les sponsors
-  const feedWithSponsors = useMemo(() => {
-    const result: (FeedItem | { type: 'sponsor'; data: Sponsor })[] = [];
+  // Combiner les items du feed avec les sponsors et les quiz récap
+  const feedWithInjections = useMemo(() => {
+    const result: FeedWithInjections[] = [];
     let sponsorIndex = 0;
+    let learnedSinceLastRecap = 0;
 
     for (let i = 0; i < items.length; i++) {
       result.push(items[i]);
+
+      // Track learned items for recap quiz trigger
+      if (learningState[items[i].id] === "learned") {
+        learnedSinceLastRecap++;
+      }
+
+      // Inject quiz recap after every 3 learned items
+      if (learnedSinceLastRecap >= 3) {
+        const last3Learned = items
+          .slice(0, i + 1)
+          .filter((item) => learningState[item.id] === "learned")
+          .slice(-3)
+          .map((item) => item.id);
+
+        if (last3Learned.length === 3) {
+          result.push({
+            type: "quiz_recap" as const,
+            contentIds: last3Learned
+          });
+          learnedSinceLastRecap = 0; // Reset counter
+        }
+      }
 
       // Insérer un sponsor tous les 4 items
       if ((i + 1) % 4 === 0 && sponsorIndex < sponsors.length) {
@@ -238,7 +269,7 @@ export function FeedPage() {
     }
 
     return result;
-  }, [items, sponsors]);
+  }, [items, sponsors, learningState]);
 
   const markedCount = serverSummary ? serverSummary.learned + serverSummary.review : localMarkedCount;
 
@@ -308,12 +339,24 @@ export function FeedPage() {
         )}
 
         <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {feedWithSponsors.map((item, index) => {
+          {feedWithInjections.map((item, index) => {
             if ('type' in item && item.type === 'sponsor') {
               return (
                 <SponsorCard
                   key={`sponsor-${item.data.id}-${index}`}
                   sponsor={item.data}
+                />
+              );
+            }
+
+            if ('type' in item && item.type === 'quiz_recap') {
+              return (
+                <QuizRecapCard
+                  key={`quiz-recap-${index}`}
+                  contentIds={item.contentIds}
+                  onComplete={() => {
+                    // Optional: track completion or refresh state
+                  }}
                 />
               );
             }

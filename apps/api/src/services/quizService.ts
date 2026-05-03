@@ -162,3 +162,135 @@ export async function validateQuizAnswer(
     throw error;
   }
 }
+
+export type RecapQuizDTO = {
+  contentIds: string[];
+  contentTitles: string[];
+  question: string;
+  options: string[];
+  explanation: string;
+};
+
+async function generateRecapQuizWithAI(contents: Array<{
+  title: string;
+  description?: string;
+  summary?: string;
+}>): Promise<QuizQuestion | null> {
+  try {
+    const contentText = contents
+      .map((c, i) => `Contenu ${i + 1}: ${c.title}\n${c.summary || c.description || ""}`)
+      .join("\n\n");
+
+    if (!contentText || contentText.length < 100) {
+      return null;
+    }
+
+    const userPrompt = `Génère UNE question de récap basée sur ces ${contents.length} contenus récents :
+
+---
+${contentText.substring(0, 1500)}
+---
+
+Règles STRICTES :
+1. La question doit connecter 2-3 idées des contenus (synthèse légère)
+2. Propose 3 réponses seulement
+3. La réponse correcte doit être à l'index 0, puis mélange les autres
+4. L'explication doit être courte et utile
+5. Ton direct : "Tu as retenu que..." ou "Une idée clé :"
+6. Ne pas utiliser de vocabulaire scolaire
+
+Réponds UNIQUEMENT en JSON valide, sans backticks, dans ce format exact :
+{
+  "question": "...",
+  "options": ["réponse correcte", "mauvaise réponse", "mauvaise réponse"],
+  "correctIndex": 0,
+  "explanation": "..."
+}`;
+
+    const routed = await generateWithAIRouter({
+      complex: false,
+      fast: true,
+      maxTokens: 400,
+      temperature: 0.7,
+      systemPrompt: "Tu es un expert en questions de récap discrètes. Génère une question qui relie des idées en JSON.",
+      userPrompt
+    });
+
+    if (!routed || !routed.text) {
+      return null;
+    }
+
+    const jsonMatch = routed.text.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      return null;
+    }
+
+    const parsed = JSON.parse(jsonMatch[0]) as QuizQuestion;
+
+    // Validate structure
+    if (
+      !parsed.question ||
+      !Array.isArray(parsed.options) ||
+      parsed.options.length !== 3 ||
+      typeof parsed.correctIndex !== "number" ||
+      !parsed.explanation
+    ) {
+      return null;
+    }
+
+    // Shuffle options but track correct index
+    const optionsWithIndex = parsed.options.map((opt, idx) => ({
+      option: opt,
+      isCorrect: idx === parsed.correctIndex
+    }));
+
+    const shuffled = optionsWithIndex.sort(() => Math.random() - 0.5);
+    const newCorrectIndex = shuffled.findIndex(item => item.isCorrect);
+
+    return {
+      question: parsed.question,
+      options: shuffled.map(item => item.option),
+      correctIndex: newCorrectIndex,
+      explanation: parsed.explanation
+    };
+  } catch (error) {
+    console.error("Error generating recap quiz with AI:", error);
+    return null;
+  }
+}
+
+export async function generateRecapQuiz(contentIds: string[]): Promise<RecapQuizDTO | null> {
+  if (!contentIds || contentIds.length < 2 || contentIds.length > 5) {
+    throw new Error("Il faut entre 2 et 5 contenus pour un récap");
+  }
+
+  try {
+    // Validate all IDs
+    contentIds.forEach((id, i) => assertObjectId(id, `contentId[${i}]`));
+
+    // Fetch contents
+    const contents = await ContentModel.find({
+      _id: { $in: contentIds.map(id => new mongoose.Types.ObjectId(id)) }
+    }).select("title description summary").lean();
+
+    if (contents.length < 2) {
+      return null;
+    }
+
+    const quiz = await generateRecapQuizWithAI(contents as any);
+    if (!quiz) {
+      return null;
+    }
+
+    return {
+      contentIds,
+      contentTitles: contents.map(c => c.title || "Sans titre"),
+      question: quiz.question,
+      options: quiz.options,
+      explanation: quiz.explanation
+    };
+  } catch (error) {
+    console.error("Error generating recap quiz:", error);
+    return null;
+  }
+}
