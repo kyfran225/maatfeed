@@ -15,25 +15,18 @@ import {
 } from "../hooks/useAudio";
 import { SkeletonLoader } from "../components/motion/SkeletonLoader";
 import { TouchFeedback } from "../components/motion/TouchFeedback";
-import { saveLaterAudioTrack } from "../services/audioBookmarkService";
-
-type AudioMark = "kept" | "review";
-type AudioMarks = Record<string, AudioMark>;
-const AUDIO_MARKS_KEY = "maatfeed-audio-marks";
+import {
+  getAudioMarks,
+  setAudioMark,
+  removeAudioMark,
+  type AudioMark,
+  type AudioMarks
+} from "../services/audioMarkService";
 
 function formatDuration(seconds: number) {
   const minutes = Math.floor(seconds / 60);
   const remainder = Math.floor(seconds % 60);
   return `${minutes}:${remainder.toString().padStart(2, "0")}`;
-}
-
-function readAudioMarks(): AudioMarks {
-  try {
-    const raw = window.localStorage.getItem(AUDIO_MARKS_KEY);
-    return raw ? JSON.parse(raw) as AudioMarks : {};
-  } catch {
-    return {};
-  }
 }
 
 function AudioSectionCard({
@@ -180,13 +173,16 @@ export default function AudioPage() {
     return Array.from(uniqueTracks.values());
   }, [sections]);
 
+  // Charger les audio marks depuis l'API
   useEffect(() => {
-    setAudioMarks(readAudioMarks());
-  }, []);
-
-  useEffect(() => {
-    window.localStorage.setItem(AUDIO_MARKS_KEY, JSON.stringify(audioMarks));
-  }, [audioMarks]);
+    async function loadMarks() {
+      if (profile) {
+        const marks = await getAudioMarks();
+        setAudioMarks(marks);
+      }
+    }
+    void loadMarks();
+  }, [profile]);
 
   useEffect(() => {
     if (shareLinkHandledRef.current || tracks.length === 0) {
@@ -231,13 +227,23 @@ export default function AudioPage() {
     }
   };
 
-  const handleMarkTrack = (trackId: string, mark: AudioMark) => {
+  const handleMarkTrack = async (trackId: string, mark: AudioMark) => {
+    if (!profile) {
+      // Mode non-authentifié : pas de persistence
+      return;
+    }
+
+    // Mettre à jour l'état local immédiatement (optimistic UI)
     setAudioMarks((current) => ({ ...current, [trackId]: mark }));
 
-    // Persist to API if authenticated and marking "Plus tard"
-    if (profile && mark === "review") {
-      void saveLaterAudioTrack(trackId).catch((err) => {
-        console.error("Failed to save audio track:", err);
+    // Persister sur l'API
+    const result = await setAudioMark(trackId, mark);
+    if (!result) {
+      // Rollback en cas d'échec
+      setAudioMarks((current) => {
+        const next = { ...current };
+        delete next[trackId];
+        return next;
       });
     }
   };

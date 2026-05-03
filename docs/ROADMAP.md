@@ -6,8 +6,8 @@ Le produit ne doit plus être présenté comme une plateforme d'apprentissage vi
 
 ### Priorités produit immédiates
 
-1. Brancher la progression sur le ranking du feed.
-2. Persister les marques audio côté API.
+1. ✅ Brancher la progression sur le ranking du feed. (TERMINÉ)
+2. ✅ Persister les marques audio côté API. (TERMINÉ)
 3. Ajouter des quiz courts et contextuels, sans écran scolaire.
 4. Faire revenir les contenus au bon moment.
 5. Mesurer la rétention réelle : retour J7, reprises, corrections, complétion audio.
@@ -53,10 +53,10 @@ Le produit ne doit plus être présenté comme une plateforme d'apprentissage vi
 
 ### Phase 2 - Rétention & Scale (4 semaines)
 **Semaine 5-6 : Intelligence cachée**
-- Ranking influencé par progression, oublis et reprises
+- ✅ Ranking influencé par progression, oublis et reprises (déjà actif)
 - Quiz courts générés depuis un contenu
 - Révisions au bon moment
-- Audio marqué et repris côté compte utilisateur
+- ✅ Audio marqué et repris côté compte utilisateur (API terminée)
 
 **Semaine 7-8 : Communauté utile**
 - IA moderation (hate speech)

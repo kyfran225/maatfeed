@@ -8,12 +8,14 @@ Le cap produit a été recentré : MAATFEED n'est pas une plateforme d'apprentis
 ```
 ✅ Feed accueil             - Cartes simples, statut discret, progression cachée
 ✅ Découvrir                - Recherche directe, moins de texte explicatif
-✅ Audio                    - Pistes courtes, moments clés, "Plus tard" persisté côté API
+✅ Audio                    - Pistes courtes, moments clés, marques (kept/review) persistées côté API
 ✅ Échanges                 - Correction IA au moment de répondre
 ✅ IA apprentissage         - Détection lacunes, correction, quiz discrets
 ✅ API learning             - Progression contenu + quiz + coach IA
 ✅ Navigation               - Accueil, Découvrir, Échanges, Audio, Profil
 ✅ Copy produit             - Moins d'instructions visibles, ton plus direct
+✅ Sponsors                 - TTL index corrigé, dates dynamiques, seed automatique
+✅ Tests E2E                - Suite sponsors-management complète
 ```
 
 ### Principe validé
@@ -33,7 +35,7 @@ Ce principe guide désormais les décisions produit. L'IA, l'audio et la communa
 ✅ /api/comments/*          - Commentaires + threads
 ✅ /api/interactions/*      - Likes, saves, shares
 ✅ /api/community/*         - Débats communautaires
-✅ /api/audio/*             - Playlists + tracks
+✅ /api/audio/*             - Playlists + tracks + marques (kept/review)
 ✅ /api/profile/*           - Profils utilisateurs
 ✅ /api/notifications/*     - Notifications in-app/email
 ✅ /api/trends/*            - Détection tendances
@@ -76,6 +78,7 @@ Ce principe guide désormais les décisions produit. L'IA, l'audio et la communa
 ✅ Interaction            - Likes/saves/shares
 ✅ AudioTrack             - Pistes audio
 ✅ AudioInteraction       - Interactions audio
+✅ AudioTrackMark         - Marques rapides (kept/review) persistées
 ✅ Playlist               - Playlists
 ✅ Notification           - Notifications multi-canaux
 ✅ UserNotificationPreferences - Préférences

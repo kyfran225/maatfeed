@@ -95,7 +95,7 @@ const sponsorSchema = new Schema<ISponsor>({
 
 // Index pour optimiser les requêtes
 sponsorSchema.index({ isActive: 1, priority: -1, startDate: -1 });
-sponsorSchema.index({ endDate: 1 }, { expireAfterSeconds: 0 }); // TTL index pour supprimer automatiquement les sponsors expirés
+sponsorSchema.index({ endDate: 1 }); // Index pour filtrer les expirés (pas de TTL - on garde l'historique)
 
 // Middleware pour valider les dates
 sponsorSchema.pre('save', function(next) {

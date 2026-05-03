@@ -182,6 +182,18 @@ export async function postJson<T>(input: string, body?: unknown, init?: RequestI
   });
 }
 
+export async function putJson<T>(input: string, body?: unknown, init?: RequestInit): Promise<T> {
+  return requestJson<T>(input, {
+    method: "PUT",
+    body: body ? JSON.stringify(body) : undefined,
+    ...init
+  });
+}
+
+export async function deleteJson<T>(input: string, init?: RequestInit): Promise<T> {
+  return requestJson<T>(input, init);
+}
+
 // Helper to extract both message and structured error data
 async function extractErrorData(response: Response): Promise<ApiErrorResponse & { message?: string }> {
   try {
