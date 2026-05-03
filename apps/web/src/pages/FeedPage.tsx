@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { Check, Play, RotateCcw, Search } from "lucide-react";
+import { Check, Play, RotateCcw, Search, HelpCircle } from "lucide-react";
 import { SEO } from "../components/SEO";
 import { useAuth } from "../hooks/useAuth";
 import { useGlobalFeed } from "../hooks/useFeed";
@@ -13,12 +13,42 @@ import {
 import { EmptyState } from "../components/ui/EmptyState";
 import { ErrorState } from "../components/ui/ErrorState";
 import { LoadingState } from "../components/ui/LoadingState";
+import { QuizModal } from "../components/modals/QuizModal";
+import { SponsorCard } from "../components/feed/SponsorCard";
+import { getActiveSponsors, incrementSponsorStats, type Sponsor } from "../services/sponsorService";
 
 type FeedItem = FeedResponse["items"][number];
 type LearningStatus = "new" | "learned" | "review";
 type LearningState = Record<string, LearningStatus>;
 
 const STORAGE_KEY = "maatfeed-learning-state";
+
+// Sponsors fictifs pour démonstration - à remplacer par données réelles depuis l'API
+const mockSponsors: Sponsor[] = [
+  {
+    id: "sponsor-1",
+    name: "AfroTech Hub",
+    logo: "https://via.placeholder.com/40x40/ffd700/000000?text=AT",
+    description: "Plateforme de formation en tech pour les jeunes africains. Rejoignez notre communauté de 5000+ développeurs.",
+    website: "https://afrotech-hub.com",
+    ctaText: "S'inscrire"
+  },
+  {
+    id: "sponsor-2",
+    name: "Culture247",
+    description: "Média panafricain dédié à la culture et aux arts contemporains. Découvrez les talents émergents du continent.",
+    website: "https://culture247.africa",
+    ctaText: "Explorer"
+  },
+  {
+    id: "sponsor-3",
+    name: "StartUp Africa",
+    logo: "https://via.placeholder.com/40x40/ffd700/000000?text=SA",
+    description: "Accélérateur de startups africaines. Investissons dans l'avenir entrepreneurial du continent.",
+    website: "https://startup-africa.co",
+    ctaText: "Postuler"
+  }
+];
 
 function readLearningState(): LearningState {
   try {
@@ -51,10 +81,12 @@ function FeedItemCard({
   item,
   status,
   onSetStatus,
+  onOpenQuiz,
 }: {
   item: FeedItem;
   status?: LearningStatus;
   onSetStatus: (status: LearningStatus) => void;
+  onOpenQuiz: (contentId: string) => void;
 }) {
   return (
     <article className="overflow-hidden rounded-lg border border-white/10 bg-white/[0.035]">
@@ -129,6 +161,15 @@ function FeedItemCard({
             <RotateCcw className="h-4 w-4" aria-hidden="true" />
             Plus tard
           </button>
+          <button
+            type="button"
+            onClick={() => onOpenQuiz(item.id)}
+            className="inline-flex items-center gap-2 rounded-md border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-sand/72 transition hover:bg-white/[0.08]"
+            title="Vérifier ta compréhension"
+          >
+            <HelpCircle className="h-4 w-4" aria-hidden="true" />
+            Vérifier
+          </button>
         </div>
       </div>
     </article>
@@ -142,6 +183,8 @@ export function FeedPage() {
   const contentIds = useMemo(() => items.map((item) => item.id), [items]);
   const [learningState, setLearningState] = useState<LearningState>({});
   const [serverSummary, setServerSummary] = useState<LearningSummary | null>(null);
+  const [quizContentId, setQuizContentId] = useState<string | null>(null);
+  const [sponsors, setSponsors] = useState<Sponsor[]>(mockSponsors); // Commencer avec les sponsors fictifs
 
   useEffect(() => {
     setLearningState(readLearningState());
@@ -150,6 +193,23 @@ export function FeedPage() {
   useEffect(() => {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(learningState));
   }, [learningState]);
+
+  // Charger les sponsors depuis l'API
+  useEffect(() => {
+    async function loadSponsors() {
+      try {
+        const result = await getActiveSponsors(10);
+        if (result.sponsors.length > 0) {
+          setSponsors(result.sponsors);
+        }
+      } catch (error) {
+        console.error("Erreur lors du chargement des sponsors:", error);
+        // Garder les sponsors fictifs en fallback
+      }
+    }
+
+    void loadSponsors();
+  }, []);
 
   useEffect(() => {
     if (!isAuthenticated || contentIds.length === 0) {
@@ -184,6 +244,30 @@ export function FeedPage() {
     () => items.filter((item) => learningState[item.id] === "learned" || learningState[item.id] === "review").length,
     [items, learningState]
   );
+
+  // Combiner les items du feed avec les sponsors
+  const feedWithSponsors = useMemo(() => {
+    const result: (FeedItem | { type: 'sponsor'; data: Sponsor })[] = [];
+    let sponsorIndex = 0;
+
+    for (let i = 0; i < items.length; i++) {
+      result.push(items[i]);
+
+      // Insérer un sponsor tous les 4 items
+      if ((i + 1) % 4 === 0 && sponsorIndex < sponsors.length) {
+        result.push({
+          type: 'sponsor' as const,
+          data: sponsors[sponsorIndex]
+        });
+        sponsorIndex++;
+
+        // Incrémenter les impressions pour ce sponsor
+        void incrementSponsorStats(sponsors[sponsorIndex - 1].id, 'impressions');
+      }
+    }
+
+    return result;
+  }, [items, sponsors]);
 
   const markedCount = serverSummary ? serverSummary.learned + serverSummary.review : localMarkedCount;
 
@@ -253,15 +337,43 @@ export function FeedPage() {
         )}
 
         <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {items.map((item) => (
-            <FeedItemCard
-              key={item.id}
-              item={item}
-              status={learningState[item.id]}
-              onSetStatus={(status) => setStatus(item.id, status)}
-            />
-          ))}
+          {feedWithSponsors.map((item, index) => {
+            if ('type' in item && item.type === 'sponsor') {
+              return (
+                <SponsorCard
+                  key={`sponsor-${item.data.id}-${index}`}
+                  sponsor={item.data}
+                />
+              );
+            }
+
+            const feedItem = item as FeedItem;
+            return (
+              <FeedItemCard
+                key={feedItem.id}
+                item={feedItem}
+                status={learningState[feedItem.id]}
+                onSetStatus={(status) => setStatus(feedItem.id, status)}
+                onOpenQuiz={(contentId) => setQuizContentId(contentId)}
+              />
+            );
+          })}
         </section>
+
+        <QuizModal
+          contentId={quizContentId ?? ""}
+          isOpen={quizContentId != null}
+          onClose={() => setQuizContentId(null)}
+          onSuccess={(correct) => {
+            // Quiz submission already updates learning progress via API
+            if (quizContentId) {
+              setLearningState((current) => ({
+                ...current,
+                [quizContentId]: correct ? "learned" : "review"
+              }));
+            }
+          }}
+        />
       </main>
     </>
   );

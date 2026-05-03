@@ -22,6 +22,7 @@ import multiPersonalityAIRoutes from "./multiPersonalityAIRoutes.js";
 import gdprRouter from "./gdpr.js";
 import { paymentRouter } from "./paymentRoutes.js";
 import { learningProgressRouter } from "./learningProgressRoutes.js";
+import sponsorRouter from "./sponsorRoutes.js";
 
 export const apiRouter = Router();
 
@@ -47,4 +48,5 @@ apiRouter.use("/ai/v2", multiPersonalityAIRoutes);
 apiRouter.use("/gdpr", gdprRouter);
 apiRouter.use("/payments", paymentRouter);
 apiRouter.use("/learning", learningProgressRouter);
+apiRouter.use("/sponsors", sponsorRouter);
 apiRouter.use("/", healthRouter);

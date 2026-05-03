@@ -1,5 +1,7 @@
+import crypto from "node:crypto";
 import type { Request, Response } from "express";
 import * as paymentService from "../services/paymentService.js";
+import { env } from "../config/env.js";
 import type { PaymentPlan, PaymentProvider } from "../models/PaymentTransaction.js";
 
 export function getPaymentPlansController(_request: Request, response: Response) {
@@ -77,11 +79,40 @@ export async function getPaymentHistoryController(request: Request, response: Re
 
 export async function paymentWebhookController(request: Request, response: Response) {
   const provider = request.params.provider as PaymentProvider;
-  const { providerReference, status, metadata } = request.body as {
-    providerReference?: string;
-    status?: string;
-    metadata?: Record<string, unknown>;
-  };
+  let providerReference: string | undefined;
+  let status: string | undefined;
+  let metadata: Record<string, unknown> | undefined;
+
+  if (provider === "paystack") {
+    const signature = request.headers["x-paystack-signature"] as string | undefined;
+    const rawBody = (request as any).rawBody as string | undefined;
+
+    if (env.PAYSTACK_SECRET_KEY && signature && rawBody) {
+      const expected = crypto
+        .createHmac("sha512", env.PAYSTACK_SECRET_KEY)
+        .update(rawBody)
+        .digest("hex");
+
+      if (expected !== signature) {
+        response.status(400).json({ error: "Signature Paystack invalide." });
+        return;
+      }
+    }
+
+    const body = request.body as any;
+    providerReference = body?.data?.reference;
+    status = body?.event === "charge.success" && body?.data?.status === "success" ? "paid" : body?.data?.status;
+    metadata = body;
+  } else {
+    const body = request.body as {
+      providerReference?: string;
+      status?: string;
+      metadata?: Record<string, unknown>;
+    };
+    providerReference = body.providerReference;
+    status = body.status;
+    metadata = body.metadata;
+  }
 
   if (!providerReference) {
     response.status(400).json({ error: "providerReference requis." });

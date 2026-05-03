@@ -38,8 +38,15 @@ interface RecommendationConfig {
     userInterestMatch: number;
     diversityBoost: number;
     recencyBoost: number;
+    learningBoost: number;
   };
   recencyDecay: number;
+}
+
+interface LearningProgressItem {
+  contentId: string;
+  status: "new" | "learned" | "review";
+  nextReviewAt?: string | null;
 }
 
 function calculateRecencyBoost(createdAt: string, config: RecommendationConfig): number {
@@ -91,6 +98,39 @@ function calculateInterestMatch(
   return matchScore;
 }
 
+function calculateLearningBoost(
+  itemId: string,
+  learningProgress: Map<string, LearningProgressItem>
+): number {
+  const progress = learningProgress.get(itemId);
+  
+  if (!progress) {
+    // No learning history - neutral
+    return 0;
+  }
+
+  if (progress.status === "review") {
+    // Content due for review - strong boost (spaced repetition)
+    const now = new Date();
+    const nextReviewDate = progress.nextReviewAt ? new Date(progress.nextReviewAt) : null;
+    
+    if (nextReviewDate && nextReviewDate <= now) {
+      // Overdue - highest priority
+      return 100;
+    }
+    // Due soon
+    return 60;
+  }
+
+  if (progress.status === "learned") {
+    // Already mastered - slight penalty (user can skip)
+    return -15;
+  }
+
+  // "new" status - default boost to encourage learning
+  return 20;
+}
+
 function enforceContentMix(items: FeedItem[], config: RecommendationConfig): FeedItem[] {
   const targetMix = config.contentMix;
   const totalItems = items.length;
@@ -126,6 +166,7 @@ function enforceContentMix(items: FeedItem[], config: RecommendationConfig): Fee
 export async function rankForUser(input: {
   items: FeedItem[];
   interests: Record<string, number>;
+  learningProgress?: LearningProgressItem[];
 }) {
   // Get active ranking configuration
   const rankingConfig = await getActiveConfig();
@@ -134,14 +175,20 @@ export async function rankForUser(input: {
     scoreWeights: rankingConfig.scoreWeights || { 
       userInterestMatch: 10, 
       diversityBoost: 1, 
-      recencyBoost: 1 
+      recencyBoost: 1,
+      learningBoost: 2
     },
     recencyDecay: rankingConfig.recencyDecay || 0.1
   } : {
     contentMix: { viral: 0.3, educational: 0.4, deep: 0.3 },
-    scoreWeights: { userInterestMatch: 10, diversityBoost: 1, recencyBoost: 1 },
+    scoreWeights: { userInterestMatch: 10, diversityBoost: 1, recencyBoost: 1, learningBoost: 2 },
     recencyDecay: 0.1
   };
+
+  // Build learning progress map for fast lookup
+  const learningMap = new Map(
+    (input.learningProgress || []).map(p => [p.contentId, p])
+  );
 
   const chosenBuckets: string[] = [];
 
@@ -158,6 +205,9 @@ export async function rankForUser(input: {
     
     // Calculate recency boost
     const recencyBoost = calculateRecencyBoost(item.createdAt, config);
+
+    // Calculate learning boost (spaced repetition influence)
+    const learningBoost = calculateLearningBoost(item.id, learningMap);
     
     // Compute final personalized score
     const personalizedScore = computePersonalizedScore({
@@ -165,14 +215,15 @@ export async function rankForUser(input: {
       userInterestMatch: userInterestMatch * config.scoreWeights.userInterestMatch,
       diversityBoost: diversityBoost * config.scoreWeights.diversityBoost,
       recencyBoost: recencyBoost * config.scoreWeights.recencyBoost
-    });
+    }) + (learningBoost * config.scoreWeights.learningBoost);
 
     return {
       item,
       personalizedScore,
       userInterestMatch,
       diversityBoost,
-      recencyBoost
+      recencyBoost,
+      learningBoost
     };
   });
 

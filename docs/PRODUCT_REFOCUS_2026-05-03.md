@@ -35,6 +35,9 @@ Phrase cible :
 - Échanges : correction IA au moment où l'utilisateur répond.
 - SEO et navigation : vocabulaire plus sobre, moins scolaire.
 - API : ajout de `/api/learning/progress` et `/api/learning/coach`.
+- Feed ranking : influencé par la progression d'apprentissage (boost pour révision).
+- Audio bookmarks : "Plus tard" persisté côté serveur pour utilisateurs connectés.
+- Quiz discrets : modale légère générée depuis le contenu, sans pédagogie visible.
 
 ## Architecture ajoutée
 
@@ -43,6 +46,9 @@ Backend :
 - `LearningProgress` stocke l'état d'un contenu par utilisateur.
 - `learningProgressService` calcule la prochaine révision et appelle l'IA coach.
 - `learningProgressRoutes` expose la progression et le coach IA.
+- `SavedAudioTrack` modèle pour persister les bookmarks audio.
+- `quizService` génère des questions IA depuis le contenu.
+- `audioBookmarkController` gère les bookmarks côté API.
 
 Frontend :
 
@@ -50,11 +56,11 @@ Frontend :
 - `FeedPage` synchronise la progression pour les comptes connectés et garde un fallback local.
 - `CommunityPage` appelle le coach IA pour corriger une réponse.
 - `AudioPage` garde localement les pistes à reprendre.
+- `QuizModal` modale discrète pour vérification compréhension.
+- `audioBookmarkService` persiste les "Plus tard" côté serveur.
 
 ## Prochain dur nécessaire
 
-- Persister les marques audio côté API.
-- Utiliser la progression pour influencer le ranking du feed.
-- Ajouter des quiz discrets générés depuis un contenu.
-- Déclencher les révisions au bon moment, sans écran scolaire.
 - Mesurer : retour à J7, contenu repris, correction utilisée, audio terminé.
+- Affiner le ranking learning-based selon les retours réels.
+- Étendre le suivi audio avec position d'écoute persistée.

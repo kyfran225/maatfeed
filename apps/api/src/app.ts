@@ -15,7 +15,14 @@ export function createApp() {
       credentials: true
     })
   );
-  app.use(express.json({ limit: "2mb" }));
+  app.use(
+    express.json({
+      limit: "2mb",
+      verify: (request, _response, buffer) => {
+        (request as any).rawBody = buffer.toString();
+      }
+    })
+  );
   app.use(pinoHttp({ logger }));
 
   app.use("/api", apiRouter);

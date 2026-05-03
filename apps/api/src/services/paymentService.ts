@@ -9,11 +9,12 @@ import {
   type PaymentProvider,
   type PaymentStatus
 } from "../models/PaymentTransaction.js";
+import { UserModel } from "../models/User.js";
 import { SubscriptionModel } from "../models/Subscription.js";
 
 export const paymentPlans: Record<
   PaymentPlan,
-  { id: PaymentPlan; name: string; amount: number; currency: "XOF"; interval: "month"; features: string[] }
+  { id: PaymentPlan; name: string; amount: number; currency: "XOF"; interval: "month" | "one_time"; features: string[] }
 > = {
   premium_monthly: {
     id: "premium_monthly",
@@ -30,6 +31,14 @@ export const paymentPlans: Record<
     currency: "XOF",
     interval: "month",
     features: ["Outils créateur", "Statistiques avancées", "Visibilité communautaire renforcée"]
+  },
+  donation_one_time: {
+    id: "donation_one_time",
+    name: "Soutien MAATFEED",
+    amount: 1500,
+    currency: "XOF",
+    interval: "one_time",
+    features: ["Don unique pour le projet", "Aide à la maintenance", "Support culturel francophone"]
   }
 };
 
@@ -63,12 +72,55 @@ function createProviderReference(provider: PaymentProvider) {
 
 async function createProviderCheckout(
   provider: PaymentProvider,
-  transactionId: string
+  transaction: IPaymentTransaction
 ): Promise<{ providerReference: string; checkoutUrl: string; status: PaymentStatus }> {
   if (provider === "manual") {
     return {
       providerReference: createProviderReference(provider),
-      checkoutUrl: buildFallbackCheckoutUrl(transactionId),
+      checkoutUrl: buildFallbackCheckoutUrl(transaction._id.toString()),
+      status: "pending"
+    };
+  }
+
+  if (provider === "paystack") {
+    if (!env.PAYSTACK_SECRET_KEY) {
+      throw new Error("Paystack secret key is not configured.");
+    }
+
+    const user = await UserModel.findById(transaction.userId);
+    const email = user?.email || "support@maatfeed.com";
+    const amountInKobo = transaction.amount * 100;
+
+    const body = {
+      email,
+      amount: amountInKobo,
+      currency: "XOF",
+      callback_url: env.PAYMENT_SUCCESS_URL,
+      metadata: {
+        transactionId: transaction._id.toString(),
+        provider: "paystack"
+      }
+    };
+
+    const response = await fetch("https://api.paystack.co/transaction/initialize", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${env.PAYSTACK_SECRET_KEY}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(body)
+    });
+
+    const result = await response.json();
+
+    if (!response.ok || !result?.data?.authorization_url || !result?.data?.reference) {
+      logger.error({ provider, result }, "Paystack checkout initialization failed");
+      throw new Error("Impossible d'initialiser le paiement Paystack.");
+    }
+
+    return {
+      providerReference: result.data.reference,
+      checkoutUrl: result.data.authorization_url,
       status: "pending"
     };
   }
@@ -80,7 +132,7 @@ async function createProviderCheckout(
 
   return {
     providerReference: createProviderReference(provider),
-    checkoutUrl: buildFallbackCheckoutUrl(transactionId),
+    checkoutUrl: buildFallbackCheckoutUrl(transaction._id.toString()),
     status: "pending"
   };
 }
@@ -125,7 +177,7 @@ export async function createCheckout(input: CreateCheckoutInput): Promise<Checko
     }
   });
 
-  const providerCheckout = await createProviderCheckout(provider, transaction._id.toString());
+  const providerCheckout = await createProviderCheckout(provider, transaction);
 
   transaction.providerReference = providerCheckout.providerReference;
   transaction.checkoutUrl = providerCheckout.checkoutUrl;
@@ -165,24 +217,29 @@ export async function markTransactionPaid(input: {
     throw new Error("Payment transaction not found");
   }
 
-  const now = new Date();
-  const currentPeriodEnd = new Date(now);
-  currentPeriodEnd.setMonth(currentPeriodEnd.getMonth() + 1);
+  const recurringPlans = ["premium_monthly", "creator_monthly"] as const;
+  const isRecurring = recurringPlans.includes(transaction.plan as typeof recurringPlans[number]);
 
-  await SubscriptionModel.findOneAndUpdate(
-    { userId: transaction.userId },
-    {
-      userId: transaction.userId,
-      plan: transaction.plan,
-      status: "active",
-      currentPeriodStart: now,
-      currentPeriodEnd,
-      providerReference: input.providerReference,
-      latestTransactionId: transaction._id,
-      cancelAtPeriodEnd: false
-    },
-    { upsert: true, new: true }
-  );
+  if (isRecurring) {
+    const now = new Date();
+    const currentPeriodEnd = new Date(now);
+    currentPeriodEnd.setMonth(currentPeriodEnd.getMonth() + 1);
+
+    await SubscriptionModel.findOneAndUpdate(
+      { userId: transaction.userId },
+      {
+        userId: transaction.userId,
+        plan: transaction.plan,
+        status: "active",
+        currentPeriodStart: now,
+        currentPeriodEnd,
+        providerReference: input.providerReference,
+        latestTransactionId: transaction._id,
+        cancelAtPeriodEnd: false
+      },
+      { upsert: true, new: true }
+    );
+  }
 
   return transaction;
 }

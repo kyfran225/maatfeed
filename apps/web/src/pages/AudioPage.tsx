@@ -15,6 +15,7 @@ import {
 } from "../hooks/useAudio";
 import { SkeletonLoader } from "../components/motion/SkeletonLoader";
 import { TouchFeedback } from "../components/motion/TouchFeedback";
+import { saveLaterAudioTrack } from "../services/audioBookmarkService";
 
 type AudioMark = "kept" | "review";
 type AudioMarks = Record<string, AudioMark>;
@@ -232,6 +233,13 @@ export default function AudioPage() {
 
   const handleMarkTrack = (trackId: string, mark: AudioMark) => {
     setAudioMarks((current) => ({ ...current, [trackId]: mark }));
+
+    // Persist to API if authenticated and marking "Plus tard"
+    if (profile && mark === "review") {
+      void saveLaterAudioTrack(trackId).catch((err) => {
+        console.error("Failed to save audio track:", err);
+      });
+    }
   };
 
   if (loading) {
