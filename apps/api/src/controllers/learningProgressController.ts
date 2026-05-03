@@ -3,6 +3,8 @@ import {
   coachLearning,
   getLearningSummary,
   listLearningProgress,
+  logCorrectionSuggestion,
+  recordCorrectionFeedback,
   updateLearningProgress
 } from "../services/learningProgressService.js";
 import type { LearningProgressStatus } from "../models/LearningProgress.js";
@@ -102,6 +104,7 @@ export async function coachLearningController(request: Request, response: Respon
       return;
     }
 
+    const suggestionId = await logCorrectionSuggestion(userId, answer, contextTitle, contextDescription);
     const coaching = await coachLearning({
       answer,
       contextTitle,
@@ -110,11 +113,41 @@ export async function coachLearningController(request: Request, response: Respon
 
     response.status(200).json({
       status: "ok",
-      data: coaching
+      data: {
+        ...coaching,
+        suggestionId
+      }
     });
   } catch (error) {
     response.status(500).json({
       message: error instanceof Error ? error.message : "Impossible de corriger cette réponse"
+    });
+  }
+}
+
+export async function recordCorrectionFeedbackController(request: Request, response: Response) {
+  try {
+    const userId = response.locals.auth?.userId;
+    if (!userId) {
+      response.status(401).json({ message: "Authentification requise" });
+      return;
+    }
+
+    const { suggestionId, accepted } = request.body as {
+      suggestionId?: string;
+      accepted?: boolean;
+    };
+
+    if (!suggestionId || typeof accepted !== "boolean") {
+      response.status(400).json({ message: "suggestionId et accepted sont requis" });
+      return;
+    }
+
+    const result = await recordCorrectionFeedback(userId, suggestionId, accepted);
+    response.status(200).json({ status: "ok", data: result });
+  } catch (error) {
+    response.status(400).json({
+      message: error instanceof Error ? error.message : "Impossible d'enregistrer le feedback"
     });
   }
 }

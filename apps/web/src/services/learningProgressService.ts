@@ -30,6 +30,7 @@ export type LearningCoachResult = {
   feedback: string;
   gap: string;
   nextQuestion: string;
+  suggestionId?: string;
 };
 
 export async function getLearningProgress(contentIds: string[]) {
@@ -63,5 +64,19 @@ export async function requestLearningCoach(input: {
   contextDescription?: string;
 }) {
   const response = await postJson<{ data: LearningCoachResult }>("/api/learning/coach", input);
+  return response.data;
+}
+
+export type LearningCoachFeedbackResult = {
+  suggestionId: string;
+  accepted: boolean;
+  updatedAt: string;
+};
+
+export async function submitLearningCoachFeedback(input: {
+  suggestionId: string;
+  accepted: boolean;
+}) {
+  const response = await postJson<{ data: LearningCoachFeedbackResult }>("/api/learning/coach/feedback", input);
   return response.data;
 }

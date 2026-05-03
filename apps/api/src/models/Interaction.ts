@@ -10,7 +10,10 @@ const interactionSchema = new Schema(
     contentId: {
       type: Schema.Types.ObjectId,
       ref: "Content",
-      required: true
+      default: null,
+      required: function (this: any) {
+        return this.actionType !== "correction";
+      }
     },
     actionType: {
       type: String,
@@ -25,7 +28,8 @@ const interactionSchema = new Schema(
         "discussion_sort_selected",
         "discussion_reply_opened",
         "discussion_reply_mode_selected",
-        "discussion_reply_submitted"
+        "discussion_reply_submitted",
+        "correction"
       ],
       required: true
     },
@@ -40,6 +44,10 @@ const interactionSchema = new Schema(
     sessionId: {
       type: String,
       default: null
+    },
+    engagedWith: {
+      type: Boolean,
+      default: false
     },
     metadata: {
       type: Schema.Types.Mixed,

@@ -43,6 +43,7 @@ Ce principe guide désormais les décisions produit. L'IA, l'audio et la communa
 ✅ /api/admin/*             - Admin tools
 ✅ /api/ai/*                - IA multi-providers
 ✅ /api/learning/*          - Progression + coach IA
+✅ /admin/dashboard         - Synthèse learning & analytics
 ✅ /api/health              - Monitoring
 ✅ /api/gdpr/*              - Conformité RGPD
 ```

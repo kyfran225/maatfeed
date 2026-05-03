@@ -5,6 +5,7 @@ import {
   type LearningProgressStatus
 } from "../models/LearningProgress.js";
 import { ContentModel } from "../models/Content.js";
+import { InteractionModel } from "../models/Interaction.js";
 import { generateWithAIRouter } from "./aiRouterService.js";
 
 export type LearningProgressDTO = {
@@ -182,6 +183,58 @@ function parseCoachResponse(text: string): LearningCoachDTO {
       nextQuestion: "Quel exemple rendrait ton explication plus solide ?"
     };
   }
+}
+
+export async function logCorrectionSuggestion(userId: string, answer: string, contextTitle?: string, contextDescription?: string) {
+  const suggestionId = new mongoose.Types.ObjectId().toString();
+  await InteractionModel.create({
+    userId,
+    contentId: null,
+    actionType: "correction",
+    engagedWith: false,
+    sessionId: null,
+    metadata: {
+      source: "ai_coach",
+      suggestionId,
+      answerSnippet: answer.slice(0, 280),
+      contextTitle: contextTitle || null,
+      contextDescription: contextDescription || null
+    }
+  });
+  return suggestionId;
+}
+
+export async function recordCorrectionFeedback(userId: string, suggestionId: string, accepted: boolean) {
+  if (!mongoose.isValidObjectId(suggestionId)) {
+    throw new Error("Invalid suggestionId");
+  }
+
+  const interaction = await InteractionModel.findOneAndUpdate(
+    {
+      actionType: "correction",
+      userId,
+      "metadata.suggestionId": suggestionId
+    },
+    {
+      $set: {
+        engagedWith: accepted,
+        "metadata.accepted": accepted
+      }
+    },
+    {
+      new: true
+    }
+  ).lean<{ updatedAt?: Date } | null>();
+
+  if (!interaction) {
+    throw new Error("Correction suggestion introuvable");
+  }
+
+  return {
+    suggestionId,
+    accepted,
+    updatedAt: interaction.updatedAt?.toISOString() ?? new Date().toISOString()
+  };
 }
 
 export async function coachLearning(input: LearningCoachInput): Promise<LearningCoachDTO> {

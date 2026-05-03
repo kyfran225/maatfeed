@@ -61,9 +61,9 @@ Le produit ne doit plus être présenté comme une plateforme d'apprentissage vi
 **Semaine 7-8 : Communauté utile**
 - IA moderation (hate speech)
 - Report system
-- Admin dashboard
+- ✅ Admin dashboard
 - Auto-cleanup
-- Correction IA des réponses
+- ✅ Correction IA des réponses
 - Détection des lacunes dans les échanges
 
 ### Phase 3 - Analytics & Optimisation (4 semaines)
