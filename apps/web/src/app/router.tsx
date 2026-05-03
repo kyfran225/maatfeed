@@ -10,6 +10,7 @@ import { NotFoundPage } from "../pages/NotFoundPage";
 // Lazy load heavy pages
 const AdminOpsPage = lazy(() => import("../pages/AdminOpsPage"));
 const AdminIngestionPage = lazy(() => import("../pages/AdminIngestionPage"));
+const AdminSponsorsPage = lazy(() => import("../pages/AdminSponsorsPage"));
 const AudioPage = lazy(() => import("../pages/AudioPage"));
 const CommunityPage = lazy(() => import("../pages/CommunityPage"));
 const ContentDetailPage = lazy(() => import("../pages/ContentDetailPage"));
@@ -101,7 +102,8 @@ export const router = createBrowserRouter([
         element: <AdminLayout />,
         children: [
           { index: true, element: <AdminOpsPage /> },
-          { path: "ingestion", element: <AdminIngestionPage /> }
+          { path: "ingestion", element: <AdminIngestionPage /> },
+          { path: "sponsors", element: <AdminSponsorsPage /> }
         ]
       }
     ]

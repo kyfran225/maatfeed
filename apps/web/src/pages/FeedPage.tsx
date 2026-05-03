@@ -23,33 +23,6 @@ type LearningState = Record<string, LearningStatus>;
 
 const STORAGE_KEY = "maatfeed-learning-state";
 
-// Sponsors fictifs pour démonstration - à remplacer par données réelles depuis l'API
-const mockSponsors: Sponsor[] = [
-  {
-    id: "sponsor-1",
-    name: "AfroTech Hub",
-    logo: "https://via.placeholder.com/40x40/ffd700/000000?text=AT",
-    description: "Plateforme de formation en tech pour les jeunes africains. Rejoignez notre communauté de 5000+ développeurs.",
-    website: "https://afrotech-hub.com",
-    ctaText: "S'inscrire"
-  },
-  {
-    id: "sponsor-2",
-    name: "Culture247",
-    description: "Média panafricain dédié à la culture et aux arts contemporains. Découvrez les talents émergents du continent.",
-    website: "https://culture247.africa",
-    ctaText: "Explorer"
-  },
-  {
-    id: "sponsor-3",
-    name: "StartUp Africa",
-    logo: "https://via.placeholder.com/40x40/ffd700/000000?text=SA",
-    description: "Accélérateur de startups africaines. Investissons dans l'avenir entrepreneurial du continent.",
-    website: "https://startup-africa.co",
-    ctaText: "Postuler"
-  }
-];
-
 function readLearningState(): LearningState {
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
@@ -184,7 +157,7 @@ export function FeedPage() {
   const [learningState, setLearningState] = useState<LearningState>({});
   const [serverSummary, setServerSummary] = useState<LearningSummary | null>(null);
   const [quizContentId, setQuizContentId] = useState<string | null>(null);
-  const [sponsors, setSponsors] = useState<Sponsor[]>(mockSponsors); // Commencer avec les sponsors fictifs
+  const [sponsors, setSponsors] = useState<Sponsor[]>([]); // Chargement depuis l'API
 
   useEffect(() => {
     setLearningState(readLearningState());
@@ -199,12 +172,10 @@ export function FeedPage() {
     async function loadSponsors() {
       try {
         const result = await getActiveSponsors(10);
-        if (result.sponsors.length > 0) {
-          setSponsors(result.sponsors);
-        }
+        setSponsors(result.sponsors);
       } catch (error) {
         console.error("Erreur lors du chargement des sponsors:", error);
-        // Garder les sponsors fictifs en fallback
+        // Pas de fallback - afficher uniquement les sponsors réels de la base de données
       }
     }
 

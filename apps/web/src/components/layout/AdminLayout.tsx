@@ -27,6 +27,14 @@ export function AdminLayout() {
             >
               Ingestion
             </NavLink>
+            <NavLink
+              to="/admin/sponsors"
+              className={({ isActive }) =>
+                isActive ? "text-gold" : "text-sand/60 hover:text-sand"
+              }
+            >
+              Sponsors
+            </NavLink>
             <Link to="/" className="text-sand/60 hover:text-sand">
               Retour au site →
             </Link>

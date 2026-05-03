@@ -34,19 +34,6 @@ export async function getActiveSponsorsController(request: Request, response: Re
  * GET /api/sponsors - Récupérer tous les sponsors (admin)
  */
 export async function getAllSponsorsController(request: Request, response: Response) {
-  const userId = response.locals.auth?.userId;
-
-  if (!userId) {
-    response.status(401).json({ error: "Authentification requise." });
-    return;
-  }
-
-  // TODO: Vérifier que l'utilisateur est admin
-  // if (!await isUserAdmin(userId)) {
-  //   response.status(403).json({ error: "Accès administrateur requis." });
-  //   return;
-  // }
-
   try {
     const filters: SponsorFilters = {
       isActive: request.query.isActive === 'true' ? true : request.query.isActive === 'false' ? false : undefined,
@@ -71,7 +58,7 @@ export async function getAllSponsorsController(request: Request, response: Respo
         createdAt: sponsor.createdAt,
         updatedAt: sponsor.updatedAt,
         createdBy: {
-          id: sponsor.createdBy._id?.toString(),
+          id: sponsor.createdBy.toString(),
           username: (sponsor.createdBy as any).username,
           email: (sponsor.createdBy as any).email
         },
@@ -141,12 +128,6 @@ export async function createSponsorController(request: Request, response: Respon
     response.status(401).json({ error: "Authentification requise." });
     return;
   }
-
-  // TODO: Vérifier que l'utilisateur est admin
-  // if (!await isUserAdmin(userId)) {
-  //   response.status(403).json({ error: "Accès administrateur requis." });
-  //   return;
-  // }
 
   const input: CreateSponsorInput = {
     ...request.body,

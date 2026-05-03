@@ -13,6 +13,11 @@ import {
   removeAudioBookmarkController
 } from "../controllers/audioBookmarkController.js";
 import { createAudioInteractionController } from "../controllers/audioInteractionController.js";
+import {
+  getAudioMarksController,
+  setAudioMarkController,
+  removeAudioMarkController
+} from "../controllers/audioMarkController.js";
 import { optionalAuth, requireAuth } from "../middleware/auth.js";
 
 const router = Router();
@@ -47,5 +52,15 @@ router.put("/saved/:trackId", requireAuth, updateAudioBookmarkController);
 
 // DELETE /api/audio/saved/:trackId - Remove from saved
 router.delete("/saved/:trackId", requireAuth, removeAudioBookmarkController);
+
+// Audio track marks - Marques rapides (kept/review)
+// GET /api/audio/marks - Get all marks for current user
+router.get("/marks", requireAuth, getAudioMarksController);
+
+// POST /api/audio/marks - Set a mark on a track
+router.post("/marks", requireAuth, setAudioMarkController);
+
+// DELETE /api/audio/marks/:trackId - Remove mark from a track
+router.delete("/marks/:trackId", requireAuth, removeAudioMarkController);
 
 export default router;

@@ -47,7 +47,7 @@ export async function createSponsor(input: CreateSponsorInput): Promise<ISponsor
 
     return sponsor;
   } catch (error) {
-    logger.error("Erreur lors de la création du sponsor:", error);
+    logger.error({ error }, "Erreur lors de la création du sponsor");
     throw error;
   }
 }
@@ -58,22 +58,38 @@ export async function createSponsor(input: CreateSponsorInput): Promise<ISponsor
 export async function getActiveSponsors(limit: number = 10): Promise<ISponsor[]> {
   try {
     const now = new Date();
+    logger.info({ now, limit }, "Recherche des sponsors actifs");
+    
+    // D'abord, compter tous les sponsors
+    const totalSponsors = await Sponsor.countDocuments();
+    logger.info({ totalSponsors }, "Nombre total de sponsors dans la base");
+    
+    // Compter les sponsors actifs
+    const activeSponsorsCount = await Sponsor.countDocuments({ isActive: true });
+    logger.info({ activeSponsorsCount }, "Nombre de sponsors actifs");
+    
+    const query = {
+      isActive: true,
+      startDate: { $lte: now },
+      $or: [
+        { endDate: { $exists: false } },
+        { endDate: { $gt: now } }
+      ]
+    };
+    
+    logger.info({ query }, "Requête MongoDB pour les sponsors actifs");
+    
     const sponsors = await Sponsor
-      .find({
-        isActive: true,
-        startDate: { $lte: now },
-        $or: [
-          { endDate: { $exists: false } },
-          { endDate: { $gt: now } }
-        ]
-      })
+      .find(query)
       .sort({ priority: -1, createdAt: -1 })
       .limit(limit)
       .populate('createdBy', 'username email');
 
+    logger.info({ foundSponsors: sponsors.length, sponsors: sponsors.map(s => ({ id: s._id, name: s.name, isActive: s.isActive, startDate: s.startDate, endDate: s.endDate })) }, "Sponsors trouvés");
+
     return sponsors;
   } catch (error) {
-    logger.error("Erreur lors de la récupération des sponsors actifs:", error);
+    logger.error({ error }, "Erreur lors de la récupération des sponsors actifs");
     throw error;
   }
 }
@@ -85,7 +101,7 @@ export async function getSponsorById(id: string): Promise<ISponsor | null> {
   try {
     return await Sponsor.findById(id).populate('createdBy', 'username email');
   } catch (error) {
-    logger.error(`Erreur lors de la récupération du sponsor ${id}:`, error);
+    logger.error({ error, id }, `Erreur lors de la récupération du sponsor ${id}`);
     throw error;
   }
 }
@@ -107,7 +123,7 @@ export async function updateSponsor(id: string, input: UpdateSponsorInput): Prom
 
     return sponsor;
   } catch (error) {
-    logger.error(`Erreur lors de la mise à jour du sponsor ${id}:`, error);
+    logger.error({ error, id }, `Erreur lors de la récupération du sponsor ${id}`);
     throw error;
   }
 }
@@ -126,7 +142,7 @@ export async function deleteSponsor(id: string): Promise<boolean> {
 
     return false;
   } catch (error) {
-    logger.error(`Erreur lors de la suppression du sponsor ${id}:`, error);
+    logger.error({ error, id }, `Erreur lors de la suppression du sponsor ${id}`);
     throw error;
   }
 }
@@ -141,7 +157,7 @@ export async function incrementSponsorStats(id: string, type: 'impressions' | 'c
       $set: { 'stats.lastShown': new Date() }
     });
   } catch (error) {
-    logger.error(`Erreur lors de l'incrémentation des stats du sponsor ${id}:`, error);
+    logger.error({ error, id }, `Erreur lors de l'incrémentation des stats du sponsor ${id}`);
     // Ne pas throw pour ne pas casser l'affichage du feed
   }
 }
@@ -166,7 +182,7 @@ export async function getAllSponsors(filters: SponsorFilters = {}): Promise<ISpo
 
     return sponsors;
   } catch (error) {
-    logger.error("Erreur lors de la récupération de tous les sponsors:", error);
+    logger.error({ error }, "Erreur lors de la récupération de tous les sponsors");
     throw error;
   }
 }
