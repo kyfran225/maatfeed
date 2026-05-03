@@ -73,6 +73,21 @@ const envSchema = z.object({
   VAPID_PUBLIC_KEY: z.string().optional().default(""),
   VAPID_PRIVATE_KEY: z.string().optional().default(""),
   VAPID_SUBJECT: z.string().optional().default("mailto:noreply@maatfeed.com"),
+  // Payments. Use an aggregator first; direct operator APIs can be added behind the same routes later.
+  PAYMENT_PROVIDER: z
+    .enum(["manual", "paydunya", "fedapay", "flutterwave", "cinetpay", "simiz"])
+    .default("manual"),
+  PAYMENT_SUCCESS_URL: z.string().url().default("http://localhost:5173/profile"),
+  PAYMENT_CANCEL_URL: z.string().url().default("http://localhost:5173/profile"),
+  PAYDUNYA_MASTER_KEY: z.string().optional().default(""),
+  PAYDUNYA_PRIVATE_KEY: z.string().optional().default(""),
+  PAYDUNYA_PUBLIC_KEY: z.string().optional().default(""),
+  PAYDUNYA_TOKEN: z.string().optional().default(""),
+  FEDAPAY_SECRET_KEY: z.string().optional().default(""),
+  FLUTTERWAVE_SECRET_KEY: z.string().optional().default(""),
+  CINETPAY_API_KEY: z.string().optional().default(""),
+  CINETPAY_SITE_ID: z.string().optional().default(""),
+  SIMIZ_API_KEY: z.string().optional().default(""),
   // Cloudinary configuration
   CLOUDINARY_CLOUD_NAME: z.string().optional().default(""),
   CLOUDINARY_API_KEY: z.string().optional().default(""),

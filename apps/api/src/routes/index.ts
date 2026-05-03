@@ -19,6 +19,8 @@ import { searchRouter } from "./searchRoutes.js";
 import { contentRouter } from "./contentRoutes.js";
 import { participativeAIRoutes } from "./participativeAIRoutes.js";
 import multiPersonalityAIRoutes from "./multiPersonalityAIRoutes.js";
+import gdprRouter from "./gdpr.js";
+import { paymentRouter } from "./paymentRoutes.js";
 import { learningProgressRouter } from "./learningProgressRoutes.js";
 
 export const apiRouter = Router();
@@ -42,5 +44,7 @@ apiRouter.use("/content", contentRouter);
 apiRouter.use("/embed", embedRouter);
 apiRouter.use("/ai", participativeAIRoutes);
 apiRouter.use("/ai/v2", multiPersonalityAIRoutes);
+apiRouter.use("/gdpr", gdprRouter);
+apiRouter.use("/payments", paymentRouter);
 apiRouter.use("/learning", learningProgressRouter);
 apiRouter.use("/", healthRouter);
