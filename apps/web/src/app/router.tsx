@@ -19,9 +19,14 @@ const ExplorePage = lazy(() => import("../pages/ExplorePage"));
 const ForgotPasswordPage = lazy(() => import("../pages/ForgotPasswordPage"));
 const OnboardingPage = lazy(() => import("../pages/OnboardingPage"));
 const NotificationsPage = lazy(() => import("../pages/NotificationsPage"));
+const PremiumPage = lazy(() => import("../pages/PremiumPage"));
 const ProfilePage = lazy(() => import("../pages/ProfilePage"));
 const ResetPasswordPage = lazy(() => import("../pages/ResetPasswordPage"));
 const VerifyEmailPage = lazy(() => import("../pages/VerifyEmailPage"));
+const PrivacyPolicyPage = lazy(() => import("../pages/PrivacyPolicy"));
+const LegalNoticePage = lazy(() => import("../pages/LegalNotice"));
+const TermsOfServicePage = lazy(() => import("../pages/TermsOfService"));
+const DataManagementPage = lazy(() => import("../pages/DataManagement"));
 
 // Simple fallback for lazy-loaded pages
 const PageLoader = () => (
@@ -68,6 +73,7 @@ export const router = createBrowserRouter([
       { path: "community", element: <LazyPage><CommunityPage /></LazyPage> },
       { path: "debate/:contentId", element: <LazyPage><DebateDetailPage /></LazyPage> },
       { path: "audio", element: <AudioPage /> },
+      { path: "premium", element: <LazyPage><PremiumPage /></LazyPage> },
       { path: "demo-section-title", element: <DemoSectionTitlePage /> },
       {
         path: "profile",
@@ -77,6 +83,17 @@ export const router = createBrowserRouter([
           </RequireAuth>
         )
       },
+      {
+        path: "data-management",
+        element: (
+          <RequireAuth>
+            <LazyPage><DataManagementPage /></LazyPage>
+          </RequireAuth>
+        )
+      },
+      { path: "privacy-policy", element: <LazyPage><PrivacyPolicyPage /></LazyPage> },
+      { path: "legal-notice", element: <LazyPage><LegalNoticePage /></LazyPage> },
+      { path: "terms-of-service", element: <LazyPage><TermsOfServicePage /></LazyPage> },
       {
         path: "admin",
         element: <AdminLayout />,

@@ -40,7 +40,7 @@ export interface SEOProps {
   /** Auteur du contenu */
   author?: string;
   /** Clé de page prédéfinie pour utiliser la config SEO */
-  pageKey?: 'home' | 'explore' | 'community' | 'audio' | 'content' | 'debate' | 'auth' | 'register' | 'profile' | 'onboarding' | 'admin' | 'notFound' | 'notifications';
+  pageKey?: 'home' | 'explore' | 'community' | 'audio' | 'content' | 'debate' | 'auth' | 'register' | 'profile' | 'onboarding' | 'admin' | 'notFound' | 'notifications' | 'premium';
   /** Données structurées JSON-LD supplémentaires */
   structuredData?: object;
   /** Balise canonical personnalisée (sinon générée automatiquement) */

@@ -24,6 +24,9 @@ Le produit ne doit plus être présenté comme une plateforme d'apprentissage vi
 - **SEO de base** : meta tags, sitemap dynamique
 - **Admin** : ingestion keywords, analytics basiques
 - **Learning API** : progression contenu et coach IA
+- **Paiements** : architecture multi-providers, modèles Transaction/Subscription
+- **RGPD** : consentement, export/delete données, logs de conformité
+- **Legal pages** : Privacy Policy, Terms of Service, Legal Notice, Data Management
 
 ### 🏗️ Architecture Technique
 - **Frontend** : React 19 + Vite + TailwindCSS

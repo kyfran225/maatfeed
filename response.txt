@@ -1,0 +1,1 @@
+{"success":true,"data":{"stats":{"totalFailures":0,"unresolvedFailures":0,"criticalFailures":0,"autoRecoveryPossible":0},"failuresByHour":[]}}
