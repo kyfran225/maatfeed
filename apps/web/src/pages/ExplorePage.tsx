@@ -201,14 +201,14 @@ export default function ExplorePage() {
         animate={{ opacity: 1, y: 0 }}
         className="mb-6"
       >
-        <h1 className="font-display text-3xl text-gold mb-4">Explorer</h1>
+        <h1 className="font-display text-3xl text-gold mb-4">Découvrir</h1>
         
         {/* Search Bar */}
         <div className="relative mb-4">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-sand/40" />
           <input
             type="text"
-            placeholder="Rechercher du contenu..."
+            placeholder="Rechercher..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full pl-10 pr-4 py-3 bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl text-white placeholder-sand/40 focus:outline-none focus:ring-2 focus:ring-orange/50 focus:border-transparent"
@@ -273,11 +273,11 @@ export default function ExplorePage() {
             exit={{ opacity: 0 }}
           >
             <h2 className="text-lg font-semibold text-white mb-4">
-              Search Results for "{searchQuery}"
+              Résultats pour "{searchQuery}"
             </h2>
             
             {isSearching ? (
-              <LoadingState message="Searching..." />
+              <LoadingState message="Recherche en cours..." />
             ) : searchResults.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {searchResults.map((item, index) => (
@@ -286,8 +286,8 @@ export default function ExplorePage() {
               </div>
             ) : (
               <EmptyState 
-                title="No results found"
-                description="Try different keywords or filters"
+                title="Aucun résultat"
+                description="Essaie un sujet plus précis ou change de filtre."
               />
             )}
           </motion.div>
@@ -301,7 +301,7 @@ export default function ExplorePage() {
             exit={{ opacity: 0 }}
           >
             {isLoading ? (
-              <LoadingState message="Loading trending content..." />
+              <LoadingState message="Chargement..." />
             ) : error ? (
               <ErrorState 
                 message={error}
@@ -310,7 +310,7 @@ export default function ExplorePage() {
             ) : trendingContent?.items && trendingContent.items.length > 0 ? (
               <div>
                 <h2 className="text-lg font-semibold text-white mb-4">
-                  Trending {selectedBucket ? BUCKETS.find(b => b.id === selectedBucket)?.name : 'Content'}
+                  {selectedBucket ? BUCKETS.find(b => b.id === selectedBucket)?.name : 'Tendances'}
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {trendingContent.items.map((item, index) => (
@@ -320,8 +320,8 @@ export default function ExplorePage() {
               </div>
             ) : (
               <EmptyState 
-                title="No trending content"
-                description="Check back later for new content"
+                title="Aucun contenu"
+                description="Reviens plus tard."
               />
             )}
           </motion.div>

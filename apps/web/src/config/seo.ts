@@ -42,9 +42,9 @@ export interface SEOConfig {
 export const siteSEO: SEOConfig = {
   // Identité
   siteName: 'MAATFEED',
-  siteTagline: 'Le feed africain du savoir, du débat et de la spiritualité',
-  defaultTitle: 'MAATFEED — Débats, savoirs et spiritualité africaine',
-  defaultDescription: 'MAATFEED est une plateforme de débats, d\'apprentissage et de découverte autour de l\'histoire, de la spiritualité, des civilisations africaines et des idées contemporaines. Rejoins la communauté du savoir africain.',
+  siteTagline: 'Savoirs africains, débats et audio',
+  defaultTitle: 'MAATFEED — Savoirs africains, débats et audio',
+  defaultDescription: 'MAATFEED rassemble contenus, audio et discussions autour des savoirs africains.',
   
   // URLs - IMPORTANT: Adapter selon l'environnement
   siteUrl: 'https://maatfeed.com',
@@ -77,33 +77,33 @@ export const siteSEO: SEOConfig = {
 // Configuration par type de page pour un SEO granulaire
 export const pageSEO = {
   home: {
-    title: 'MAATFEED — Débats, savoirs et spiritualité africaine',
-    description: 'MAATFEED est une plateforme de débats, d\'apprentissage et de découverte autour de l\'histoire, de la spiritualité, des civilisations africaines et des idées contemporaines.',
-    keywords: ['afrique', 'savoir africain', 'débat', 'spiritualité', 'histoire', 'kemet', 'culture africaine'],
+    title: 'MAATFEED — Savoirs africains, débats et audio',
+    description: 'Contenus, audio et discussions autour des savoirs africains.',
+    keywords: ['savoir africain', 'débat', 'spiritualité', 'histoire', 'kemet'],
     robots: 'index, follow',
     priority: '1.0',
     changefreq: 'daily',
   },
   explore: {
-    title: 'Explorer — MAATFEED',
-    description: 'Explore les contenus, débats et ressources audio sur l\'histoire, la spiritualité et les idées africaines. Découvre de nouvelles perspectives.',
-    keywords: ['explorer', 'contenu africain', 'découverte', 'vidéos', 'audio'],
+    title: 'Découvrir — MAATFEED',
+    description: 'Explore les contenus MAATFEED.',
+    keywords: ['contenu africain', 'vidéos', 'audio', 'histoire', 'spiritualité'],
     robots: 'index, follow',
     priority: '0.9',
     changefreq: 'hourly',
   },
   community: {
-    title: 'Communauté — MAATFEED',
-    description: 'Rejoins la communauté MAATFEED. Participe aux débats, échange avec les profils IA et contribue aux discussions sur le savoir africain.',
-    keywords: ['communauté', 'débats', 'discussion', 'forum africain'],
+    title: 'Atelier — MAATFEED',
+    description: 'Explique, confronte et améliore ta compréhension avec les débats et les retours de la communauté MAATFEED.',
+    keywords: ['atelier', 'débats', 'explication', 'discussion', 'forum africain'],
     robots: 'index, follow',
     priority: '0.8',
     changefreq: 'hourly',
   },
   audio: {
     title: 'Audio — MAATFEED',
-    description: 'Écoute les pistes audio, playlists et contenus sonores sur la spiritualité, l\'histoire et la culture africaine.',
-    keywords: ['audio', 'podcast', 'musique africaine', 'spiritualité', 'méditation'],
+    description: 'Écoute les pistes audio MAATFEED.',
+    keywords: ['audio', 'podcast', 'spiritualité', 'histoire africaine'],
     robots: 'index, follow',
     priority: '0.7',
     changefreq: 'daily',
@@ -158,6 +158,11 @@ export const pageSEO = {
     description: 'Centre de notifications MAATFEED.',
     robots: 'noindex, nofollow',
   },
+  premium: {
+    title: 'Premium — MAATFEED',
+    description: 'Découvre les offres Premium MAATFEED.',
+    robots: 'noindex, nofollow',
+  },
 };
 
 // Données structurées Schema.org pour rich snippets
@@ -169,7 +174,7 @@ export const structuredData = {
     name: 'MAATFEED',
     url: 'https://maatfeed.com',
     logo: 'https://maatfeed.com/favicon_io/android-chrome-512x512.png',
-    description: 'Plateforme de débats, d\'apprentissage et de découverte autour du savoir africain.',
+    description: 'Plateforme de contenus, débats et audio autour du savoir africain.',
     sameAs: [
       // À ajouter quand les comptes sociaux seront créés
       // 'https://twitter.com/maatfeed',

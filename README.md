@@ -1,21 +1,24 @@
 # MAAT FEED
 
-Monorepo pour la plateforme d'intelligence culturelle MAAT FEED.
+Monorepo MAATFEED : feed culturel simple en surface, avec une intelligence d'apprentissage discrète derrière.
 
 ## Espaces de travail
 
 - `apps/api`: API Express, jobs, orchestration IA, cache et services de données
-- `apps/web`: Client React/Vite pour le fil, communauté, audio et profils
+- `apps/web`: Client React/Vite pour le feed, découvrir, échanges, audio et profils
 - `packages/shared`: Types partagés, constantes, schémas et utilitaires de scoring
 - `infra`: Scripts d'exécution locale et opérationnels
 
 ## Statut actuel
 
-- Stage 0 scaffold en cours
-- Stage 1 backend/web shell en cours
+- Feed web actif avec progression discrète
+- Audio, échanges, découvrir et profil actifs
+- API learning ajoutée pour progression et coach IA
+- IA utilisée pour aider au moment du blocage, pas comme gadget conversationnel
 
 ## Prochaines étapes
 
-- installer les dépendances
-- démarrer MongoDB et Redis localement
-- implémenter la couche de données et l'authentification
+- brancher la progression sur le ranking du feed
+- persister les marques audio côté API
+- ajouter des quiz courts générés depuis les contenus
+- mesurer les reprises, corrections et retours utilisateur

@@ -37,7 +37,7 @@ const INTEREST_TOPICS: InterestTopic[] = [
   { id: "african-philosophy", label: "Philosophie Africaine", description: "Pensées et sagesses africaines", Icon: PhilosophyIcon, defaultColor: "text-sand/50", selectedColor: "text-blue-400" },
   { id: "spirituality", label: "Spiritualité", description: "Développement spirituel et ésotérisme", Icon: SpiritualityIcon, defaultColor: "text-sand/50", selectedColor: "text-purple-400" },
   { id: "history", label: "Histoire", description: "Histoire africaine et diaspora", Icon: HistoryIcon, defaultColor: "text-sand/50", selectedColor: "text-stone-400" },
-  { id: "education", label: "Éducation", description: "Savoirs et apprentissages", Icon: EducationIcon, defaultColor: "text-sand/50", selectedColor: "text-emerald-400" },
+  { id: "education", label: "Éducation", description: "Savoirs et transmission", Icon: EducationIcon, defaultColor: "text-sand/50", selectedColor: "text-emerald-400" },
   { id: "debate", label: "Débats", description: "Discussions et analyses critiques", Icon: DebateIcon, defaultColor: "text-sand/50", selectedColor: "text-orange-400" },
   { id: "culture", label: "Culture", description: "Arts, musique et traditions", Icon: CultureIcon, defaultColor: "text-sand/50", selectedColor: "text-rose-400" },
   { id: "politics", label: "Politique", description: "Analyses politiques et sociales", Icon: PoliticsIcon, defaultColor: "text-sand/50", selectedColor: "text-indigo-400" },
@@ -240,10 +240,10 @@ export default function OnboardingPage() {
                 Bienvenue, {profile?.displayName}!
               </h1>
               <p className="mt-4 text-lg text-sand/70">
-                Personnalisons votre expérience MAAT FEED pour vous offrir le contenu qui vous correspond le mieux.
+                Quelques réglages rapides.
               </p>
               <p className="mt-6 text-sm text-sand/50">
-                Quelques questions rapides pour commencer...
+                Tu pourras changer ça plus tard.
               </p>
             </motion.div>
           )}
@@ -494,7 +494,7 @@ export default function OnboardingPage() {
                 Parfait!
               </h2>
               <p className="mt-4 text-lg text-sand/70">
-                Votre profil est configuré. Vous allez maintenant découvrir un feed personnalisé selon vos intérêts.
+                C'est prêt.
               </p>
               
               <div className="mt-8 rounded-2xl border border-white/10 bg-white/5 p-4 text-left">
@@ -586,7 +586,7 @@ export default function OnboardingPage() {
               onClick={handleComplete}
               disabled={isLoading}
             >
-              {isLoading ? "Configuration..." : "Découvrir mon feed"}
+              {isLoading ? "Configuration..." : "Entrer"}
             </Button>
           )}
         </div>

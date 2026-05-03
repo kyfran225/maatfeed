@@ -781,7 +781,7 @@ function DebateSidebar({ contentId }: { contentId: string }) {
       <div className="bg-sand/5 border border-sand/10 rounded-xl p-4">
         <h3 className="font-semibold text-white mb-2">À propos de ce débat</h3>
         <p className="text-sm text-sand/70 leading-relaxed">
-          Un espace pour explorer ensemble la notion de vérité, entre philosophie, spiritualité et expérience humaine.
+          Discussions liées au contenu.
         </p>
         <div className="mt-3 pt-3 border-t border-sand/10">
           <div className="flex items-center gap-2">
