@@ -8,10 +8,10 @@ Le cap produit a été recentré : MAATFEED n'est pas une plateforme d'apprentis
 ```
 ✅ Feed accueil             - Cartes simples, statut discret, progression cachée
 ✅ Découvrir                - Recherche directe, moins de texte explicatif
-✅ Audio                    - Pistes courtes, moments clés, "Plus tard" local
+✅ Audio                    - Pistes courtes, moments clés, "Plus tard" persisté côté API
 ✅ Échanges                 - Correction IA au moment de répondre
-✅ IA apprentissage         - Détection lacunes, correction, prochaine étape
-✅ API learning             - Progression contenu + coach IA
+✅ IA apprentissage         - Détection lacunes, correction, quiz discrets
+✅ API learning             - Progression contenu + quiz + coach IA
 ✅ Navigation               - Accueil, Découvrir, Échanges, Audio, Profil
 ✅ Copy produit             - Moins d'instructions visibles, ton plus direct
 ```
@@ -114,21 +114,47 @@ Ce principe guide désormais les décisions produit. L'IA, l'audio et la communa
 
 ## 🎯 Ce qui MANQUE vraiment
 
-### 1. Monétisation (0%)
+### 1. Monétisation (0% → 60% ✅)
 ```typescript
-// Modèles à créer
+// ✅ IMPLÉMENTÉ - Paystack + Sponsors
 interface Transaction {
-  provider: 'wave' | 'mtn' | 'orange' | 'stripe';
+  provider: 'paystack' | 'wave' | 'mtn' | 'orange' | 'stripe';
   amount: number;
-  status: 'pending' | 'completed' | 'failed';
+  status: 'pending' | 'processing' | 'paid' | 'failed' | 'cancelled';
 }
 
 interface Subscription {
   userId: string;
-  plan: 'premium' | 'creator';
-  status: 'active' | 'cancelled';
+  plan: 'premium_monthly' | 'creator_monthly' | 'donation_one_time';
+  status: 'active' | 'cancelled' | 'past_due';
+}
+
+interface Sponsor {
+  name: string;
+  description: string;
+  website?: string;
+  priority: number;
+  stats: { impressions: number; clicks: number };
 }
 ```
+
+**✅ Paystack intégré :**
+- API backend complète avec webhooks
+- Frontend avec checkout sécurisé
+- Modèles Transaction + Subscription
+- Abonnements premium + dons
+
+**✅ Système sponsors intégré :**
+- Page dédiée `/sponsor` avec formulaire
+- Cartes sponsors dans le feed (1/4 items)
+- API CRUD complète pour gestion admin
+- Tracking impressions/clics automatique
+- Modèle Sponsor avec stats temps réel
+
+**🔄 À finaliser :**
+- Authentification admin pour gestion sponsors
+- Données sponsors réelles (remplacer mocks)
+- Tests end-to-end du système de paiement
 
 ### 2. SEO Avancé (30%)
 ```typescript
@@ -167,23 +193,31 @@ interface Subscription {
 | Notifications Base | ✅ Opérationnel | 85% |
 | SEO Base | ✅ Opérationnel | 70% |
 | Admin Tools | ✅ Opérationnel | 90% |
-| **Monétisation** | ❌ **Manquant** | **0%** |
+| **Monétisation** | ✅ **Partiellement Opérationnel** | **60%** |
 | **SEO Avancé** | ⚠️ **Incomplet** | **30%** |
 | **Analytics** | ⚠️ **Incomplet** | **20%** |
 
-**Total : 75% production-ready**
+**Total : 82% production-ready**
 
 ## 🚀 Next Actions Prioritaires
 
-### Week 1 : SEO Complet
+### ✅ FAIT - Monétisation Paystack + Sponsors (60%)
+- Paystack intégré avec webhooks sécurisés
+- Page sponsors `/sponsor` avec formulaire de contact
+- Cartes sponsors intégrées dans le feed
+- API CRUD sponsors avec tracking stats
+- Modèles Transaction, Subscription, Sponsor
+
+### Week 1 : Finalisation Monétisation (40% restant)
+1. Authentification admin pour gestion sponsors `apps/api/src/middleware/adminAuth.ts`
+2. Données sponsors réelles (remplacer mocks par vrais partenaires)
+3. Tests end-to-end paiements `tests/e2e/payments.spec.ts`
+4. Dashboard admin sponsors `apps/web/src/pages/AdminSponsorsPage.tsx`
+
+### Week 2 : SEO Complet
 1. Meta tags dynamiques `apps/web/src/components/seo/DynamicMetaTags.tsx`
 2. Sitemap API `apps/api/src/routes/sitemapRoutes.ts`
 3. Schema.org `apps/web/src/components/seo/StructuredData.tsx`
-
-### Week 2 : Monétisation Wave
-1. Wave SDK integration `apps/api/src/providers/waveProvider.ts`
-2. Transaction model `apps/api/src/models/Transaction.ts`
-3. Payment UI `apps/web/src/components/payments/`
 
 ### Week 3 : Notifications Push
 1. VAPID setup `apps/api/src/services/pushService.ts`

@@ -11,14 +11,14 @@ Monorepo MAATFEED : feed culturel simple en surface, avec une intelligence d'app
 
 ## Statut actuel
 
-- Feed web actif avec progression discrète
+- Feed web actif avec progression discrète et score feed influencé par l'historique d'apprentissage
 - Audio, échanges, découvrir et profil actifs
-- API learning ajoutée pour progression et coach IA
+- API learning ajoutée pour progression, quiz discrets et coach IA
+- Audio "Plus tard" persisté côté API pour les utilisateurs connectés
 - IA utilisée pour aider au moment du blocage, pas comme gadget conversationnel
 
 ## Prochaines étapes
 
-- brancher la progression sur le ranking du feed
-- persister les marques audio côté API
-- ajouter des quiz courts générés depuis les contenus
 - mesurer les reprises, corrections et retours utilisateur
+- affiner le ranking learning-based en fonction des retours réels
+- étendre le suivi audio côté utilisateur avec position d'écoute

@@ -46,10 +46,11 @@ The default provider is `manual` until a real provider account is configured.
 
 ## Recommended Provider Order
 
-1. PayDunya or FedaPay for Francophone West Africa and Senegal-first testing.
-2. Flutterwave if broader pan-African coverage and card support matter more than local specificity.
-3. CinetPay or PayTech as alternatives if onboarding, fees, or country coverage are better for the operating entity.
-4. Direct Wave/Orange/MTN only after traction, transaction volume, and legal/KYC readiness.
+1. Paystack for fast onboarding, mobile money support, and simple payout flow in francophone Africa.
+2. PayDunya or FedaPay for Francophone West Africa and Senegal-first testing.
+3. Flutterwave if broader pan-African coverage and card support matter more than local specificity.
+4. CinetPay or PayTech as alternatives if onboarding, fees, or country coverage are better for the operating entity.
+5. Direct Wave/Orange/MTN only after traction, transaction volume, and legal/KYC readiness.
 
 ## Required Before Production Payments
 

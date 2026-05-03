@@ -798,11 +798,17 @@ export async function getUserFeed(userId: string, cursor?: string, limit = 20): 
   // Get global feed as base content pool
   const globalFeed = await getGlobalFeed();
   
+  // Get user's learning progress for ranking boost
+  const { listLearningProgress } = await import("./learningProgressService.js");
+  const contentIds = globalFeed.items.map((item: any) => item.id);
+  const learningProgress = await listLearningProgress(userId, contentIds);
+  
   // Apply recommendation engine to personalize ranking
   const { rankForUser } = await import("../ai/recommendationEngine.js");
   const personalizedItems = await rankForUser({
     items: globalFeed.items,
-    interests: userInterests
+    interests: userInterests,
+    learningProgress
   });
 
   // Apply pagination to personalized results

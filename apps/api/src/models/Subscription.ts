@@ -28,7 +28,7 @@ const subscriptionSchema = new Schema<ISubscription>(
     },
     plan: {
       type: String,
-      enum: ["premium_monthly", "creator_monthly"],
+      enum: ["premium_monthly", "creator_monthly", "donation_one_time"],
       required: true
     },
     status: {

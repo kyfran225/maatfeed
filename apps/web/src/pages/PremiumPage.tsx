@@ -95,7 +95,8 @@ export default function PremiumPage() {
               ))}
             </div>
           ) : (
-            <div className="mt-8 grid gap-4 md:grid-cols-2">
+            <>
+              <div className="mt-8 grid gap-4 md:grid-cols-2">
               {plans.map((plan) => {
                 const isSelected = selectedPlan === plan.id;
                 const isActivePlan = subscription?.status === "active" && subscription.plan === plan.id;
@@ -112,8 +113,8 @@ export default function PremiumPage() {
                     <div className="flex items-start justify-between gap-4">
                       <div>
                         <h2 className="font-display text-2xl text-white">{plan.name}</h2>
-                        <p className="mt-2 text-sm text-sand/70">
-                          {plan.interval === "month" ? "Facturation mensuelle" : "Abonnement"}
+                            <p className="mt-2 text-sm text-sand/70">
+                          {plan.interval === "month" ? "Facturation mensuelle" : "Don unique"}
                         </p>
                       </div>
                       <div className="text-right">
@@ -138,18 +139,34 @@ export default function PremiumPage() {
                       className="mt-6 flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-gold px-4 text-sm font-semibold text-ink transition hover:bg-gold/90 disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       <CreditCard className="h-4 w-4" />
-                      {isActivePlan ? "Offre active" : isCheckingOut && isSelected ? "Paiement..." : "Choisir"}
+                      {isActivePlan
+                        ? "Offre active"
+                        : isCheckingOut && isSelected
+                        ? "Paiement..."
+                        : plan.interval === "one_time"
+                        ? "Faire un don"
+                        : "Choisir"}
                     </button>
                   </article>
                 );
               })}
             </div>
+
+            <div className="mt-6 rounded-lg border border-sand/10 bg-white/[0.03] p-4 text-sm text-sand/70">
+              <p className="font-semibold text-white">Soutien MAATFEED</p>
+              <p className="mt-2">
+                Choisis l'option « Soutien MAATFEED » pour faire un don unique. Le paiement passe par Paystack,
+                sécurisé et adapté au mobile.
+              </p>
+            </div>
+
+            <div className="mt-6 rounded-lg border border-white/10 bg-white/[0.03] p-4 text-sm text-sand/70">
+              Les paiements passent par une couche backend unique. Le fournisseur peut être remplacé sans changer
+              l'expérience utilisateur une fois les clés PayDunya, FedaPay, Flutterwave, CinetPay ou Simiz disponibles.
+            </div>
+          </>
           )}
 
-          <div className="mt-6 rounded-lg border border-white/10 bg-white/[0.03] p-4 text-sm text-sand/70">
-            Les paiements passent par une couche backend unique. Le fournisseur peut être remplacé sans changer
-            l'expérience utilisateur une fois les clés PayDunya, FedaPay, Flutterwave, CinetPay ou Simiz disponibles.
-          </div>
         </div>
       </section>
     </>

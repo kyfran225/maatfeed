@@ -75,10 +75,11 @@ const envSchema = z.object({
   VAPID_SUBJECT: z.string().optional().default("mailto:noreply@maatfeed.com"),
   // Payments. Use an aggregator first; direct operator APIs can be added behind the same routes later.
   PAYMENT_PROVIDER: z
-    .enum(["manual", "paydunya", "fedapay", "flutterwave", "cinetpay", "simiz"])
+    .enum(["manual", "paystack", "paydunya", "fedapay", "flutterwave", "cinetpay", "simiz"])
     .default("manual"),
   PAYMENT_SUCCESS_URL: z.string().url().default("http://localhost:5173/profile"),
   PAYMENT_CANCEL_URL: z.string().url().default("http://localhost:5173/profile"),
+  PAYSTACK_SECRET_KEY: z.string().optional().default(""),
   PAYDUNYA_MASTER_KEY: z.string().optional().default(""),
   PAYDUNYA_PRIVATE_KEY: z.string().optional().default(""),
   PAYDUNYA_PUBLIC_KEY: z.string().optional().default(""),

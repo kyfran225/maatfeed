@@ -1,8 +1,8 @@
 import mongoose, { model, Schema } from "mongoose";
 
-export type PaymentProvider = "manual" | "paydunya" | "fedapay" | "flutterwave" | "cinetpay" | "simiz";
+export type PaymentProvider = "manual" | "paystack" | "paydunya" | "fedapay" | "flutterwave" | "cinetpay" | "simiz";
 export type PaymentStatus = "pending" | "processing" | "paid" | "failed" | "cancelled" | "expired";
-export type PaymentPlan = "premium_monthly" | "creator_monthly";
+export type PaymentPlan = "premium_monthly" | "creator_monthly" | "donation_one_time";
 
 export interface IPaymentTransaction {
   _id: mongoose.Types.ObjectId;
@@ -33,7 +33,7 @@ const paymentTransactionSchema = new Schema<IPaymentTransaction>(
     },
     provider: {
       type: String,
-      enum: ["manual", "paydunya", "fedapay", "flutterwave", "cinetpay", "simiz"],
+      enum: ["manual", "paystack", "paydunya", "fedapay", "flutterwave", "cinetpay", "simiz"],
       required: true,
       index: true
     },

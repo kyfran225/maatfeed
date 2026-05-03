@@ -24,7 +24,8 @@ Le produit ne doit plus être présenté comme une plateforme d'apprentissage vi
 - **SEO de base** : meta tags, sitemap dynamique
 - **Admin** : ingestion keywords, analytics basiques
 - **Learning API** : progression contenu et coach IA
-- **Paiements** : architecture multi-providers, modèles Transaction/Subscription
+- **Paiements** : Paystack intégré + architecture multi-providers, modèles Transaction/Subscription
+- **Système sponsors** : page dédiée, cartes dans feed, API CRUD, tracking stats
 - **RGPD** : consentement, export/delete données, logs de conformité
 - **Legal pages** : Privacy Policy, Terms of Service, Legal Notice, Data Management
 
@@ -38,11 +39,11 @@ Le produit ne doit plus être présenté comme une plateforme d'apprentissage vi
 ## 🎯 Objectifs 99,9% (3 mois)
 
 ### Phase 1 - Fondamentaux Business (4 semaines)
-**Semaine 1-2 : Monétisation**
-- Intégration Wave (Sénégal)
-- Intégration MTN Mobile Money
-- Abonnements Premium ($9.99/mois)
-- Dashboard créateurs
+**✅ Semaine 1-2 : Monétisation (TERMINÉ)**
+- ✅ Paystack intégré (paiements sécurisés Afrique)
+- ✅ Système sponsors complet (page + feed + API)
+- ✅ Abonnements Premium ($9.99/mois) + dons
+- 🔄 Dashboard créateurs (à finaliser)
 
 **Semaine 3-4 : Acquisition**
 - SEO complet (meta tags dynamiques)

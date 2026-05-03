@@ -1,7 +1,7 @@
 import { getJson, postJson } from "./httpClient";
 
-export type PaymentProvider = "manual" | "paydunya" | "fedapay" | "flutterwave" | "cinetpay" | "simiz";
-export type PaymentPlanId = "premium_monthly" | "creator_monthly";
+export type PaymentProvider = "manual" | "paystack" | "paydunya" | "fedapay" | "flutterwave" | "cinetpay" | "simiz";
+export type PaymentPlanId = "premium_monthly" | "creator_monthly" | "donation_one_time";
 export type PaymentStatus = "pending" | "processing" | "paid" | "failed" | "cancelled" | "expired";
 
 export interface PaymentPlan {
