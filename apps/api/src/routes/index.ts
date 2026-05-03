@@ -19,6 +19,7 @@ import { searchRouter } from "./searchRoutes.js";
 import { contentRouter } from "./contentRoutes.js";
 import { participativeAIRoutes } from "./participativeAIRoutes.js";
 import multiPersonalityAIRoutes from "./multiPersonalityAIRoutes.js";
+import { learningProgressRouter } from "./learningProgressRoutes.js";
 
 export const apiRouter = Router();
 
@@ -41,4 +42,5 @@ apiRouter.use("/content", contentRouter);
 apiRouter.use("/embed", embedRouter);
 apiRouter.use("/ai", participativeAIRoutes);
 apiRouter.use("/ai/v2", multiPersonalityAIRoutes);
+apiRouter.use("/learning", learningProgressRouter);
 apiRouter.use("/", healthRouter);

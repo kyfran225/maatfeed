@@ -7,6 +7,7 @@ import { DebateCard } from "../components/community/DebateCard";
 import { CreateDebateSheet } from "../components/community/CreateDebateSheet";
 import { CommunityAnalytics } from "../components/community/CommunityAnalytics";
 import { useAuth } from "../hooks/useAuth";
+import { requestLearningCoach, type LearningCoachResult } from "../services/learningProgressService";
 import { SkeletonLoader } from "../components/motion/SkeletonLoader";
 import { TouchFeedback } from "../components/motion/TouchFeedback";
 
@@ -24,6 +25,11 @@ export default function CommunityPage() {
   const [sortBy, setSortBy] = useState<'score' | 'participants' | 'recent'>('score');
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [coachDebateId, setCoachDebateId] = useState<string>('');
+  const [coachAnswer, setCoachAnswer] = useState('');
+  const [coachResult, setCoachResult] = useState<LearningCoachResult | null>(null);
+  const [isCoaching, setIsCoaching] = useState(false);
+  const [coachError, setCoachError] = useState<string | null>(null);
 
   // Load top debates from API
   useEffect(() => {
@@ -112,6 +118,37 @@ export default function CommunityPage() {
     loadDebates();
   };
 
+  const selectedCoachDebate = topDebates.find((debate) => debate.contentId === coachDebateId) ?? topDebates[0] ?? null;
+
+  const handleCoach = async () => {
+    if (!profile) {
+      setCoachError("Connecte-toi pour utiliser la correction.");
+      return;
+    }
+
+    if (!coachAnswer.trim()) {
+      setCoachError("Écris une réponse.");
+      return;
+    }
+
+    setIsCoaching(true);
+    setCoachError(null);
+    setCoachResult(null);
+
+    try {
+      const result = await requestLearningCoach({
+        answer: coachAnswer,
+        contextTitle: selectedCoachDebate?.title,
+        contextDescription: selectedCoachDebate?.description
+      });
+      setCoachResult(result);
+    } catch (error) {
+      setCoachError(error instanceof Error ? error.message : "Correction indisponible.");
+    } finally {
+      setIsCoaching(false);
+    }
+  };
+
   if (loading) {
     return (
       <section className="px-4 py-6 pb-24">
@@ -138,10 +175,7 @@ export default function CommunityPage() {
       >
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
           <div className="flex-1">
-            <h1 className="font-display text-2xl sm:text-3xl text-gold">Débats Communautaires</h1>
-            <p className="mt-2 text-sand/75 text-sm sm:text-base">
-              Rejoignez les discussions sur la civilisation Kemet, la philosophie africaine et le patrimoine culturel
-            </p>
+            <h1 className="font-display text-2xl sm:text-3xl text-gold">Échanges</h1>
           </div>
           <div className="flex flex-row sm:flex-col gap-2 sm:gap-0">
             {profile && (
@@ -155,7 +189,7 @@ export default function CommunityPage() {
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
                 </svg>
-                <span className="hidden sm:inline">Nouveau Débat</span>
+                <span className="hidden sm:inline">Nouveau</span>
                 <span className="sm:hidden">+</span>
               </motion.button>
             )}
@@ -169,7 +203,7 @@ export default function CommunityPage() {
               <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
               </svg>
-              <span className="hidden sm:inline">Analytiques</span>
+                <span className="hidden sm:inline">Stats</span>
               <span className="sm:hidden">📊</span>
             </motion.button>
           </div>
@@ -186,7 +220,7 @@ export default function CommunityPage() {
         >
           <div className="bg-sand/10 rounded-lg p-2 sm:p-3 text-center">
             <div className="text-lg sm:text-2xl font-bold text-gold">{topDebates.length}</div>
-            <div className="text-xs text-sand/60">Débats Actifs</div>
+            <div className="text-xs text-sand/60">Sujets</div>
           </div>
           <div className="bg-sand/10 rounded-lg p-2 sm:p-3 text-center">
             <div className="text-lg sm:text-2xl font-bold text-gold">{totalParticipants}</div>
@@ -194,12 +228,71 @@ export default function CommunityPage() {
           </div>
           <div className="bg-sand/10 rounded-lg p-2 sm:p-3 text-center">
             <div className="text-lg sm:text-2xl font-bold text-gold">{averageScore.toFixed(1)}</div>
-            <div className="text-xs text-sand/60">Score Moy</div>
+            <div className="text-xs text-sand/60">Score</div>
           </div>
         </motion.div>
       )}
 
       {/* Search and Filters */}
+      {topDebates.length > 0 && (
+        <motion.section
+          initial={{ opacity: 0, y: 18 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.18 }}
+          className="mb-6 rounded-lg border border-white/10 bg-white/[0.04] p-4"
+        >
+          <div className="flex flex-col gap-3 md:flex-row md:items-start">
+            <div className="min-w-0 flex-1">
+              <p className="text-xs uppercase tracking-[0.18em] text-gold/75">Avis rapide</p>
+              <textarea
+                value={coachAnswer}
+                onChange={(event) => setCoachAnswer(event.target.value)}
+                rows={3}
+                maxLength={600}
+                placeholder="Écris ta réponse..."
+                className="mt-3 w-full resize-none rounded-lg border border-white/10 bg-black/20 px-3 py-3 text-sm leading-6 text-white placeholder:text-sand/42 focus:border-gold/45 focus:outline-none"
+              />
+            </div>
+
+            <div className="w-full md:w-72">
+              <select
+                value={coachDebateId || topDebates[0]?.contentId || ""}
+                onChange={(event) => setCoachDebateId(event.target.value)}
+                className="w-full rounded-lg border border-white/10 bg-black/20 px-3 py-2 text-sm text-sand focus:border-gold/45 focus:outline-none"
+              >
+                {topDebates.slice(0, 8).map((debate) => (
+                  <option key={debate.contentId} value={debate.contentId}>
+                    {debate.title}
+                  </option>
+                ))}
+              </select>
+              <button
+                type="button"
+                onClick={handleCoach}
+                disabled={isCoaching}
+                className="mt-3 w-full rounded-lg bg-gold px-4 py-2 text-sm font-semibold text-ink transition hover:bg-gold/90 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {isCoaching ? "Correction..." : "Corriger"}
+              </button>
+            </div>
+          </div>
+
+          {(coachResult || coachError) && (
+            <div className="mt-4 rounded-lg border border-white/10 bg-black/18 p-3 text-sm leading-6">
+              {coachError ? (
+                <p className="text-amber-100">{coachError}</p>
+              ) : coachResult ? (
+                <div className="grid gap-2 md:grid-cols-3">
+                  <p className="text-sand/80"><span className="text-emerald-200">OK</span> {coachResult.feedback}</p>
+                  <p className="text-sand/80"><span className="text-amber-200">Point</span> {coachResult.gap}</p>
+                  <p className="text-sand/80"><span className="text-cyan-200">Suite</span> {coachResult.nextQuestion}</p>
+                </div>
+              ) : null}
+            </div>
+          )}
+        </motion.section>
+      )}
+
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -210,7 +303,7 @@ export default function CommunityPage() {
         <div className="relative">
           <input
             type="text"
-            placeholder="Rechercher des débats..."
+            placeholder="Rechercher..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full bg-sand/10 border border-sand/20 rounded-lg px-4 py-3 pl-10 text-white placeholder-sand/50 focus:outline-none focus:border-gold/50 transition-colors"
@@ -258,7 +351,7 @@ export default function CommunityPage() {
               onChange={(e) => setSortBy(e.target.value as any)}
               className="bg-sand/10 border border-sand/20 rounded px-2 py-1 text-xs text-white focus:outline-none focus:border-gold/50"
             >
-              <option value="score">Score du Débat</option>
+              <option value="score">Clarté du débat</option>
               <option value="participants">Participants</option>
               <option value="recent">Plus Récent</option>
             </select>
@@ -295,7 +388,7 @@ export default function CommunityPage() {
           animate={{ opacity: 1 }}
           className="mb-4 text-sm text-sand/60"
         >
-          {filteredDebates.length} sur {topDebates.length} débats
+          {filteredDebates.length} sur {topDebates.length} questions
         </motion.div>
       ) : null}
 
@@ -308,8 +401,8 @@ export default function CommunityPage() {
         >
           {topDebates.length === 0 ? (
             <>
-              <p className="text-sand/60 mb-4">Aucun débat actif pour le moment. Commencez à interagir avec le contenu pour lancer des discussions !</p>
-              <div className="text-xs text-sand/50">Les débats sont créés automatiquement lorsque le contenu reçoit un engagement significatif.</div>
+              <p className="text-sand/60 mb-4">Aucune question active pour le moment. Interagis avec les contenus pour lancer les premiers ateliers.</p>
+              <div className="text-xs text-sand/50">Les discussions apparaissent quand un contenu mérite une explication collective.</div>
             </>
           ) : (
             <p className="text-sand/60">Aucun débat ne correspond à vos filtres. Essayez d'ajuster votre recherche ou vos critères de filtrage.</p>

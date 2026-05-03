@@ -254,16 +254,16 @@ export default function ProfilePage() {
           </div>
         ) : (
           <p className="mt-3 text-sm text-sand/50">
-            Aucun centre d'intérêt sélectionné. Complétez l'intégration pour personnaliser votre feed.
+            Aucun centre d'intérêt sélectionné.
           </p>
         )}
       </div>
 
       {/* Saved Content Card */}
       <div className="mt-4 rounded-[1.5rem] border border-white/10 bg-white/5 p-5">
-        <p className="text-xs uppercase tracking-[0.2em] text-gold">Contenu sauvegardé</p>
+        <p className="text-xs uppercase tracking-[0.2em] text-gold">Favoris</p>
         <p className="mt-2 text-sm text-sand/70">
-          {profile?.savedContentIds.length ?? 0} élément(s) sauvegardé(s)
+          {profile?.savedContentIds.length ?? 0} élément(s)
         </p>
       </div>
 

@@ -1,61 +1,59 @@
 import { NavLink } from "react-router-dom";
-import {
-  EyeHorusIcon,
-  CompassKemetIcon,
-  CommunityTribeIcon,
-  AnkhAudioIcon,
-  MaskProfileIcon,
-} from "../icons/KemetIcons";
+import { Home, Headphones, MessageCircle, Search, UserRound } from "lucide-react";
+import { useState } from "react";
 
 const navItems = [
-  { to: "/", label: "Fil", Icon: EyeHorusIcon },
-  { to: "/explore", label: "Explorer", Icon: CompassKemetIcon },
-  { to: "/community", label: "Communauté", Icon: CommunityTribeIcon },
-  { to: "/audio", label: "Audio", Icon: AnkhAudioIcon },
-  { to: "/profile", label: "Profil", Icon: MaskProfileIcon },
+  { to: "/", label: "Accueil", Icon: Home },
+  { to: "/explore", label: "Découvrir", Icon: Search },
+  { to: "/community", label: "Échanges", Icon: MessageCircle },
+  { to: "/audio", label: "Audio", Icon: Headphones },
+  { to: "/profile", label: "Profil", Icon: UserRound },
 ];
 
 export function BottomNav() {
+  const [showLegalMenu, setShowLegalMenu] = useState(false);
+
   return (
-    <>
-      <nav className="fixed bottom-0 left-0 right-0 z-[200]">
+    <nav className="fixed bottom-0 left-0 right-0 z-[200]">
       <div className="mx-auto max-w-lg px-3 pb-3 pt-1">
-        <div className="flex items-center justify-around rounded-2xl border border-gold/20 bg-ink/80 backdrop-blur-xl px-1 py-2 shadow-2xl shadow-black/50">
-          {navItems.map(({ to, Icon }) => (
+        <div className="grid grid-cols-5 rounded-lg border border-gold/20 bg-ink/92 px-1 py-2 shadow-2xl shadow-black/50 backdrop-blur-xl">
+          {navItems.map(({ to, label, Icon }) => (
             <NavLink
               key={to}
               to={to}
               className={({ isActive }) =>
-                `group flex items-center justify-center p-0.5 transition-all duration-300 ${
-                  isActive ? "scale-110" : "hover:scale-105"
+                `flex min-h-14 flex-col items-center justify-center gap-1 rounded-md px-1 text-[11px] transition ${
+                  isActive ? "bg-gold/[0.18] text-gold" : "text-sand/[0.58] hover:bg-white/[0.08] hover:text-sand"
                 }`
               }
+              end={to === "/"}
             >
-              {({ isActive }) => (
-                <div
-                  className={`relative flex h-10 w-10 items-center justify-center rounded-xl transition-all duration-300 ${
-                    isActive
-                      ? "bg-gradient-to-br from-gold/30 to-gold/10 shadow-lg shadow-gold/20"
-                      : "bg-white/5 group-hover:bg-white/10"
-                  }`}
-                >
-                  <Icon
-                    className={`h-8 w-8 transition-all duration-300 ${
-                      isActive
-                        ? "text-gold drop-shadow-[0_0_10px_rgba(212,175,55,0.6)]"
-                        : "text-sand/60 group-hover:text-sand/80"
-                    }`}
-                  />
-                  {isActive && (
-                    <span className="absolute inset-0 rounded-xl bg-gold/10 blur-md" />
-                  )}
-                </div>
-              )}
+              <Icon className="h-5 w-5" aria-hidden="true" />
+              <span className="max-w-full truncate">{label}</span>
             </NavLink>
           ))}
         </div>
+
+        <div className="mt-2 flex justify-center text-xs text-sand/50">
+          <button
+            type="button"
+            onClick={() => setShowLegalMenu(!showLegalMenu)}
+            className="rounded-md px-2 py-1 transition-colors hover:text-sand/75"
+          >
+            Légal
+          </button>
+          {showLegalMenu && (
+            <div className="absolute bottom-20 left-1/2 w-44 -translate-x-1/2 rounded-lg border border-gold/20 bg-ink/95 p-2 shadow-xl backdrop-blur-xl">
+              <div className="grid gap-1">
+                <a href="/privacy-policy" className="rounded-md px-2 py-1 text-xs text-sand/70 transition hover:bg-white/10 hover:text-sand">Confidentialité</a>
+                <a href="/terms-of-service" className="rounded-md px-2 py-1 text-xs text-sand/70 transition hover:bg-white/10 hover:text-sand">CGU</a>
+                <a href="/legal-notice" className="rounded-md px-2 py-1 text-xs text-sand/70 transition hover:bg-white/10 hover:text-sand">Mentions</a>
+                <a href="/data-management" className="rounded-md px-2 py-1 text-xs text-sand/70 transition hover:bg-white/10 hover:text-sand">Données</a>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </nav>
-    </>
   );
 }
