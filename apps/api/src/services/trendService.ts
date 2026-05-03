@@ -1,6 +1,7 @@
 import { TrendEngine } from '../ai/trendEngine.js';
 import { TrendSignal } from '../models/TrendSignal.js';
 import { ContentModel } from '../models/Content.js';
+import { queueTrendingNotification } from '../queues/pushNotificationQueue.js';
 import { logger } from '../config/logger.js';
 
 export class TrendService {
@@ -36,8 +37,14 @@ export class TrendService {
           if (result) {
             if (result.isNew) {
               created++;
+              // Queue push notification for new trending content
+              await queueTrendingNotification(content._id.toString(), result.currentScore || result.peakScore || 100);
             } else {
               updated++;
+              // Queue notification if score is very high (viral threshold)
+              if ((result.currentScore || 0) > 200) {
+                await queueTrendingNotification(content._id.toString(), result.currentScore);
+              }
             }
           }
         } catch (error) {

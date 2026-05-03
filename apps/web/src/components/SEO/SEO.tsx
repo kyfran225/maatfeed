@@ -27,8 +27,8 @@ export interface SEOProps {
   image?: string;
   /** URL canonique de la page */
   url?: string;
-  /** Type Open Graph: 'website' | 'article' | 'profile' */
-  type?: 'website' | 'article' | 'profile';
+  /** Type Open Graph: 'website' | 'article' | 'video' | 'profile' */
+  type?: 'website' | 'article' | 'video' | 'profile';
   /** Mots-clés spécifiques à la page */
   keywords?: string[];
   /** Instructions pour les robots */

@@ -13,6 +13,7 @@ export interface LearningProgressDocument {
   lastReviewedAt?: Date | null;
   nextReviewAt?: Date | null;
   learnedAt?: Date | null;
+  lastNotifiedAt?: Date | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -57,8 +58,12 @@ const learningProgressSchema = new Schema(
     },
     learnedAt: {
       type: Date,
-      default: null
-    }
+      default: null,
+    },
+    lastNotifiedAt: {
+      type: Date,
+      default: null,
+    },
   },
   {
     timestamps: true

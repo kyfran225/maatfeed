@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowLeft, Heart, MessageCircle, Share2, Bookmark, Eye, Check, Compass } from "lucide-react";
 import { SEO } from "../components/SEO";
+import { useContentSEOMeta } from "../hooks/useSEOMeta";
 import { contentService, ContentItem } from "../services/contentService";
 import { interactionService, EngagementData } from "../services/interactionService";
 import { TouchFeedback } from "../components/ui/TouchFeedback";
@@ -22,6 +23,9 @@ export default function ContentDetailPage() {
   const [engagement, setEngagement] = useState<EngagementData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // Load dynamic SEO meta tags
+  const { meta: seoMeta } = useContentSEOMeta(contentId);
 
   // Interaction states
   const [isLiking, setIsLiking] = useState(false);
@@ -169,12 +173,16 @@ export default function ContentDetailPage() {
     <>
       <SEO 
         pageKey="content"
-        title={content!.title}
-        description={content!.description}
-        image={content!.thumbnailUrl}
-        url={`https://maatfeed.com/content/${contentId}`}
-        type="article"
-        keywords={content!.tags}
+        title={seoMeta?.title || content!.title}
+        description={seoMeta?.description || content!.description}
+        image={seoMeta?.image || content!.thumbnailUrl}
+        url={seoMeta?.url || `https://maatfeed.com/content/${contentId}`}
+        type={seoMeta?.type || "article"}
+        keywords={seoMeta?.keywords || content!.tags}
+        publishedTime={seoMeta?.publishedAt}
+        modifiedTime={seoMeta?.modifiedAt}
+        author={seoMeta?.author}
+        structuredData={seoMeta?.schemaData}
       />
       <section className="min-h-screen pb-24">
       {/* Back Button */}

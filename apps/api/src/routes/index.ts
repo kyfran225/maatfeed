@@ -23,6 +23,11 @@ import gdprRouter from "./gdpr.js";
 import { paymentRouter } from "./paymentRoutes.js";
 import { learningProgressRouter } from "./learningProgressRoutes.js";
 import sponsorRouter from "./sponsorRoutes.js";
+import { seoRouter } from "./seoRoutes.js";
+import { seoMetaRouter } from "./seoMetaRoutes.js";
+import { pushRouter } from "./pushRoutes.js";
+import { analyticsDashboardRouter } from "./analyticsDashboardRoutes.js";
+import { quizRouter } from "./quizRoutes.js";
 
 export const apiRouter = Router();
 
@@ -49,4 +54,10 @@ apiRouter.use("/gdpr", gdprRouter);
 apiRouter.use("/payments", paymentRouter);
 apiRouter.use("/learning", learningProgressRouter);
 apiRouter.use("/sponsors", sponsorRouter);
+apiRouter.use("/sitemap.xml", seoRouter);
+apiRouter.use("/robots.txt", seoRouter);
+apiRouter.use("/meta", seoMetaRouter);
+apiRouter.use("/push", pushRouter);
+apiRouter.use("/analytics", analyticsDashboardRouter);
+apiRouter.use("/quiz", quizRouter);
 apiRouter.use("/", healthRouter);

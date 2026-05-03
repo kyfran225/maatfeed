@@ -11,6 +11,7 @@ import { scheduleAutoIngest } from "../scheduler/ingestScheduler.js";
 import { connectServices } from "./connectServices.js";
 import { getQueueConnection } from "../queues/queueFactory.js";
 import { QUEUE_NAMES } from "../queues/queueNames.js";
+import { initializePushNotificationJobs } from "../queues/pushNotificationQueue.js";
 import { createRedisClient } from "../db/redis.js";
 import { getAllDynamicKeywords } from "../services/keywordManagementService.js";
 
@@ -153,7 +154,7 @@ export function registerJobWorkers() {
   });
 
   return {
-    registeredQueues: [QUEUE_NAMES.ingest, QUEUE_NAMES.classify, QUEUE_NAMES.enrich, QUEUE_NAMES.communityAI, "multi-personality-ai", "auto-ingest-scheduler"],
+    registeredQueues: [QUEUE_NAMES.ingest, QUEUE_NAMES.classify, QUEUE_NAMES.enrich, QUEUE_NAMES.communityAI, "multi-personality-ai", "auto-ingest-scheduler", "push-notifications"],
     timestamp: new Date().toISOString()
   };
 }
@@ -197,6 +198,14 @@ async function startWorkers() {
     logger.info("Auto-ingest scheduler initialized (every 2 hours)");
   } catch (err) {
     logger.warn({ err }, "Failed to schedule auto-ingest");
+  }
+
+  // Initialize push notification jobs
+  try {
+    await initializePushNotificationJobs();
+    logger.info("Push notification jobs initialized");
+  } catch (err) {
+    logger.warn({ err }, "Failed to initialize push notification jobs");
   }
 
   console.info(JSON.stringify(result, null, 2));
