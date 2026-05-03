@@ -140,9 +140,9 @@ Vendredi:
 ✅ Coach IA pour corriger une réponse
 ✅ Reprises audio identifiées
 ✅ Copy UI simplifiée
+✅ Quiz récap multi-contenus (QuizRecapCard dans feed)
+✅ Révision déclenchée après 3 contenus "learned"
 ⬜ Ranking feed basé sur progression et reprise
-⬜ Quiz courts générés depuis un contenu
-⬜ Révision déclenchée au bon moment
 ```
 
 ### Phase 2: Rétention & Scale (Semaines 5-8)
