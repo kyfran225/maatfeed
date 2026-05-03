@@ -1,6 +1,7 @@
 import { Router } from "express";
-import { requeueProcessingController, triggerIngestionController, deploymentReadinessController, autoIngestController, autoIngestStatusController, autoIngestTriggerController, massIngestController, contentStatsController, queueStatusController, llmRateLimitStatusController, autoAIDiagnosticsController, autoAICheckController, listRecentDebateCommentsController, triggerAutoAIReplyController, syncAudioSourcesController, refreshFeedCacheController } from "../controllers/adminController.js";
+import { requeueProcessingController, triggerIngestionController, deploymentReadinessController, autoIngestController, autoIngestStatusController, autoIngestTriggerController, massIngestController, contentStatsController, queueStatusController, llmRateLimitStatusController, autoAIDiagnosticsController, autoAICheckController, listRecentDebateCommentsController, triggerAutoAIReplyController, syncAudioSourcesController, refreshFeedCacheController, getAdminDashboardController } from "../controllers/adminController.js";
 import { requireAuth } from "../middleware/auth.js";
+import { requireAdmin } from "../middleware/adminAuth.js";
 
 export const adminRouter = Router();
 
@@ -19,6 +20,8 @@ adminRouter.post("/auto-ingest/trigger", autoIngestTriggerController);
 adminRouter.post("/mass-ingest", massIngestController);
 
 adminRouter.get("/content-stats", contentStatsController);
+
+adminRouter.get("/dashboard", requireAuth, requireAdmin, getAdminDashboardController);
 
 adminRouter.get("/queue-status", queueStatusController);
 

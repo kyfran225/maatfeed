@@ -7,7 +7,11 @@ import { DebateCard } from "../components/community/DebateCard";
 import { CreateDebateSheet } from "../components/community/CreateDebateSheet";
 import { CommunityAnalytics } from "../components/community/CommunityAnalytics";
 import { useAuth } from "../hooks/useAuth";
-import { requestLearningCoach, type LearningCoachResult } from "../services/learningProgressService";
+import {
+  requestLearningCoach,
+  submitLearningCoachFeedback,
+  type LearningCoachResult
+} from "../services/learningProgressService";
 import { SkeletonLoader } from "../components/motion/SkeletonLoader";
 import { TouchFeedback } from "../components/motion/TouchFeedback";
 
@@ -30,6 +34,8 @@ export default function CommunityPage() {
   const [coachResult, setCoachResult] = useState<LearningCoachResult | null>(null);
   const [isCoaching, setIsCoaching] = useState(false);
   const [coachError, setCoachError] = useState<string | null>(null);
+  const [coachFeedbackSent, setCoachFeedbackSent] = useState<'accepted' | 'rejected' | null>(null);
+  const [coachFeedbackError, setCoachFeedbackError] = useState<string | null>(null);
 
   // Load top debates from API
   useEffect(() => {
@@ -134,6 +140,8 @@ export default function CommunityPage() {
     setIsCoaching(true);
     setCoachError(null);
     setCoachResult(null);
+    setCoachFeedbackSent(null);
+    setCoachFeedbackError(null);
 
     try {
       const result = await requestLearningCoach({
@@ -146,6 +154,25 @@ export default function CommunityPage() {
       setCoachError(error instanceof Error ? error.message : "Correction indisponible.");
     } finally {
       setIsCoaching(false);
+    }
+  };
+
+  const handleCoachFeedback = async (accepted: boolean) => {
+    if (!coachResult?.suggestionId) {
+      setCoachFeedbackError("Aucune suggestion disponible pour ce retour.");
+      return;
+    }
+
+    setCoachFeedbackError(null);
+
+    try {
+      await submitLearningCoachFeedback({
+        suggestionId: coachResult.suggestionId,
+        accepted
+      });
+      setCoachFeedbackSent(accepted ? "accepted" : "rejected");
+    } catch (error) {
+      setCoachFeedbackError(error instanceof Error ? error.message : "Impossible d'enregistrer ton feedback.");
     }
   };
 
@@ -282,10 +309,46 @@ export default function CommunityPage() {
               {coachError ? (
                 <p className="text-amber-100">{coachError}</p>
               ) : coachResult ? (
-                <div className="grid gap-2 md:grid-cols-3">
-                  <p className="text-sand/80"><span className="text-emerald-200">OK</span> {coachResult.feedback}</p>
-                  <p className="text-sand/80"><span className="text-amber-200">Point</span> {coachResult.gap}</p>
-                  <p className="text-sand/80"><span className="text-cyan-200">Suite</span> {coachResult.nextQuestion}</p>
+                <div className="space-y-4">
+                  <div className="grid gap-2 md:grid-cols-3">
+                    <p className="text-sand/80"><span className="text-emerald-200">OK</span> {coachResult.feedback}</p>
+                    <p className="text-sand/80"><span className="text-amber-200">Point</span> {coachResult.gap}</p>
+                    <p className="text-sand/80"><span className="text-cyan-200">Suite</span> {coachResult.nextQuestion}</p>
+                  </div>
+
+                  {coachResult.suggestionId && !coachFeedbackSent && (
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                      <p className="text-sand/70">Ce retour permet d’améliorer le coach IA.</p>
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={() => handleCoachFeedback(true)}
+                          className="rounded-lg bg-emerald-500 px-3 py-2 text-sm font-semibold text-ink transition hover:bg-emerald-400"
+                        >
+                          J'accepte
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleCoachFeedback(false)}
+                          className="rounded-lg bg-amber-500 px-3 py-2 text-sm font-semibold text-ink transition hover:bg-amber-400"
+                        >
+                          Je rejette
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {coachFeedbackSent && (
+                    <p className="text-sand/80">
+                      {coachFeedbackSent === "accepted"
+                        ? "Merci, ta correction IA est enregistrée !"
+                        : "Merci, ton retour est pris en compte."}
+                    </p>
+                  )}
+
+                  {coachFeedbackError && (
+                    <p className="text-rose-200">{coachFeedbackError}</p>
+                  )}
                 </div>
               ) : null}
             </div>

@@ -9,6 +9,7 @@ import { DeploymentReadinessService } from "../services/deploymentReadinessServi
 import { scheduleAutoIngest, getSchedulerStatus, triggerImmediateIngest, stopAutoIngest } from "../scheduler/ingestScheduler.js";
 import { logger } from "../config/logger.js";
 import { getReadinessStatus } from "../services/readinessService.js";
+import { getAdminDashboardSummary } from "../services/learningAnalyticsService.js";
 import { getQueueConnection } from "../queues/queueFactory.js";
 import { QUEUE_NAMES } from "../queues/queueNames.js";
 import { env } from "../config/env.js";
@@ -145,6 +146,21 @@ export async function deploymentReadinessController(request: Request, response: 
     response.status(500).json({
       success: false,
       error: "Failed to evaluate deployment readiness"
+    });
+  }
+}
+
+export async function getAdminDashboardController(request: Request, response: Response) {
+  try {
+    const dashboard = await getAdminDashboardSummary();
+    response.status(200).json({
+      success: true,
+      data: dashboard
+    });
+  } catch (error) {
+    response.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to fetch admin dashboard"
     });
   }
 }
