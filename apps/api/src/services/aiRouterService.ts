@@ -368,3 +368,40 @@ export async function generateWithAIRouter(request: AIRouterRequest): Promise<AI
 
   throw new Error(errors.join(" | "));
 }
+
+interface RouteGenericRequest {
+  prompt: string;
+  provider?: ProviderName;
+  temperature?: number;
+  maxTokens?: number;
+}
+
+interface RouteGenericResponse {
+  content: string;
+  error?: string;
+}
+
+async function routeGeneric(request: RouteGenericRequest): Promise<RouteGenericResponse> {
+  try {
+    const provider = request.provider || "groq";
+    const text = await generateWithAIProvider(provider, {
+      systemPrompt: "You are a helpful AI assistant.",
+      userPrompt: request.prompt,
+      temperature: request.temperature,
+      maxTokens: request.maxTokens
+    });
+
+    return {
+      content: text
+    };
+  } catch (error) {
+    return {
+      content: "",
+      error: error instanceof Error ? error.message : String(error)
+    };
+  }
+}
+
+export const aiRouterService = {
+  routeGeneric
+};

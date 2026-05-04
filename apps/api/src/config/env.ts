@@ -80,6 +80,8 @@ const envSchema = z.object({
   PAYMENT_SUCCESS_URL: z.string().url().default("http://localhost:5173/profile"),
   PAYMENT_CANCEL_URL: z.string().url().default("http://localhost:5173/profile"),
   PAYSTACK_SECRET_KEY: z.string().optional().default(""),
+  PAYSTACK_PUBLIC_KEY: z.string().optional().default(""),
+  PAYSTACK_WEBHOOK_SECRET: z.string().optional().default(""),
   PAYDUNYA_MASTER_KEY: z.string().optional().default(""),
   PAYDUNYA_PRIVATE_KEY: z.string().optional().default(""),
   PAYDUNYA_PUBLIC_KEY: z.string().optional().default(""),

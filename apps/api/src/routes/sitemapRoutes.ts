@@ -12,9 +12,6 @@ interface SitemapUrl {
   lastmod?: string;
   changefreq?: "always" | "hourly" | "daily" | "weekly" | "monthly" | "yearly" | "never";
   priority?: number;
-}
-
-interface EnhancedSitemapUrl extends SitemapUrl {
   image?: {
     loc: string;
     title?: string;
@@ -26,7 +23,7 @@ interface EnhancedSitemapUrl extends SitemapUrl {
   }[];
 }
 
-function generateSitemapXml(urls: EnhancedSitemapUrl[]): string {
+function generateSitemapXml(urls: SitemapUrl[]): string {
   const urlEntries = urls.map((url) => {
     let xml = `  <url>\n    <loc>${url.loc}</loc>\n`;
     
@@ -75,27 +72,8 @@ ${urlEntries}
 </urlset>`;
 }
 
-function generateRobotsTxt(): string {
-  return `User-agent: *
-Allow: /
-
-# Sitemap
-Sitemap: ${BASE_URL}/api/sitemap.xml
-
-# Disallow admin and private routes
-Disallow: /admin/
-Disallow: /api/
-Disallow: /auth/
-Disallow: /profile/settings/
-Disallow: /notifications/
-
-# Crawl-delay for bots
-Crawl-delay: 1
-`;
-}
-
 // Static pages with their priorities and change frequencies
-const STATIC_PAGES: EnhancedSitemapUrl[] = [
+const STATIC_PAGES: SitemapUrl[] = [
   {
     loc: `${BASE_URL}/`,
     changefreq: "hourly",
@@ -140,10 +118,11 @@ const STATIC_PAGES: EnhancedSitemapUrl[] = [
   }
 ];
 
-// GET /sitemap.xml - Dynamic sitemap
+// GET /sitemap.xml - Dynamic sitemap  
 router.get("/", async (_req, res) => {
   try {
-    const urls: EnhancedSitemapUrl[] = [...STATIC_PAGES];
+    const urls: SitemapUrl[] = [...STATIC_PAGES];
+    const currentDate = new Date().toISOString().split('T')[0];
 
     // Add published content (last 1000 items)
     const contents = await ContentModel.find({
@@ -162,10 +141,10 @@ router.get("/", async (_req, res) => {
         lastmod,
         changefreq: "weekly",
         priority: 0.6,
-        image: (content as any).thumbnailUrl ? {
-          loc: (content as any).thumbnailUrl,
-          title: (content as any).title || "Contenu MAATFEED",
-          caption: (content as any).description || "Découvrez ce contenu sur MAATFEED"
+        image: content.thumbnailUrl ? {
+          loc: content.thumbnailUrl,
+          title: content.title || "Contenu MAATFEED",
+          caption: content.description || "Découvrez ce contenu sur MAATFEED"
         } : undefined
       });
     }
@@ -177,7 +156,7 @@ router.get("/", async (_req, res) => {
     })
       .sort({ createdAt: -1 })
       .limit(500)
-      .select("_id updatedAt createdAt")
+      .select("_id updatedAt createdAt title content")
       .lean();
 
     for (const post of communityPosts) {
@@ -204,9 +183,9 @@ router.get("/", async (_req, res) => {
         lastmod,
         changefreq: "weekly",
         priority: 0.4,
-        image: (track as any).thumbnailUrl ? {
-          loc: (track as any).thumbnailUrl,
-          title: (track as any).title || "Piste Audio MAATFEED",
+        image: track.thumbnailUrl ? {
+          loc: track.thumbnailUrl,
+          title: track.title || "Piste Audio MAATFEED",
           caption: "Écoutez cette piste audio sur MAATFEED"
         } : undefined
       });
@@ -224,13 +203,4 @@ router.get("/", async (_req, res) => {
   }
 });
 
-// GET /api/robots.txt - Robots.txt
-router.get("/robots.txt", (_req, res) => {
-  const robotsTxt = generateRobotsTxt();
-  
-  res.setHeader("Content-Type", "text/plain");
-  res.setHeader("Cache-Control", "public, max-age=86400"); // Cache 24 hours
-  res.send(robotsTxt);
-});
-
-export { router as seoRouter };
+export { router as sitemapRouter };

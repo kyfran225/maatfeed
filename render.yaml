@@ -70,6 +70,16 @@ services:
         sync: false
       - key: PAYSTACK_SECRET_KEY
         sync: false
+      - key: PAYSTACK_PUBLIC_KEY
+        sync: false
+      - key: PAYSTACK_WEBHOOK_SECRET
+        sync: false
+      - key: PAYMENT_PROVIDER
+        value: paystack
+      - key: PAYMENT_SUCCESS_URL
+        value: https://www.maatfeed.com/profile
+      - key: PAYMENT_CANCEL_URL
+        value: https://www.maatfeed.com/profile
       - key: VAPID_PUBLIC_KEY
         sync: false
       - key: VAPID_PRIVATE_KEY
@@ -213,6 +223,18 @@ services:
         sync: false
       - key: CLOUDINARY_API_SECRET
         sync: false
+      - key: PAYSTACK_SECRET_KEY
+        sync: false
+      - key: PAYSTACK_PUBLIC_KEY
+        sync: false
+      - key: PAYSTACK_WEBHOOK_SECRET
+        sync: false
+      - key: PAYMENT_PROVIDER
+        value: paystack
+      - key: PAYMENT_SUCCESS_URL
+        value: https://maatfeed-staging.vercel.app/profile
+      - key: PAYMENT_CANCEL_URL
+        value: https://maatfeed-staging.vercel.app/profile
       - key: SESSION_SECRET
         generateValue: true
       - key: HELMET_ENABLED
