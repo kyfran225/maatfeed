@@ -1,6 +1,6 @@
 # MAAT FEED - Roadmap Réaliste
 
-## 🎉 Mise à jour majeure - 3 mai 2026
+## 🎉 Mise à jour majeure - 4 mai 2026
 
 ### ✅ Implémentations TERMINÉES
 
@@ -10,8 +10,9 @@
 | **Push** | VAPID, Service Worker, 4 triggers automatiques | `pushRoutes.ts`, `pushTriggerService.ts`, `pushNotificationQueue.ts` |
 | **Analytics** | GA4 events tracking, Dashboard retention | `analyticsService.ts`, `analyticsDashboardService.ts` |
 | **Quiz IA** | Génération contextuelle auto depuis contenu | `quizGenerationService.ts`, `quizRoutes.ts`, `useAutoQuiz.ts` |
+| **PWA** | Service Worker unifié, offline mode, install prompt, update banner | `sw.js`, `useServiceWorker.ts`, `ServiceWorkerUpdate.tsx`, `InstallPrompt.tsx` |
 
-**Total: 95% production-ready**
+**Total: 97% production-ready**
 
 ---
 
@@ -19,13 +20,14 @@
 
 Le produit ne doit plus être présenté comme une plateforme d'apprentissage visible. La roadmap priorise maintenant un feed simple, avec une intelligence cachée qui aide l'utilisateur à retenir, reprendre et répondre mieux.
 
-### Priorités produit immédiates (TERMINÉES 2026-05-03)
+### Priorités produit immédiates (TERMINÉES 2026-05-04)
 
 1. ✅ Brancher la progression sur le ranking du feed. (TERMINÉ)
 2. ✅ Persister les marques audio côté API. (TERMINÉ)
 3. ✅ Ajouter des quiz courts et contextuels, sans écran scolaire. (TERMINÉ)
 4. ✅ Faire revenir les contenus au bon moment. (TERMINÉ - Push notifications)
 5. ✅ Mesurer la rétention réelle : retour J7, reprises, corrections, complétion audio. (TERMINÉ - Analytics GA4)
+6. ✅ PWA Standalone complète avec offline mode et install prompt. (TERMINÉ - 4 mai 2026)
 
 ## État Actuel Vérifié (Décembre 2024)
 
@@ -40,6 +42,7 @@ Le produit ne doit plus être présenté comme une plateforme d'apprentissage vi
 - **Notifications Push** : VAPID, Service Worker, 4 triggers automatiques
 - **Analytics GA4** : events tracking + dashboard retention
 - **Quiz IA** : génération contextuelle auto depuis contenu
+- **PWA** : Service Worker, offline mode, install prompt, update banner
 - **Admin** : ingestion keywords, analytics basiques
 - **Learning API** : progression contenu et coach IA
 - **Paiements** : Paystack intégré + architecture multi-providers, modèles Transaction/Subscription
