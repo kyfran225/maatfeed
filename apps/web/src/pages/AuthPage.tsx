@@ -94,6 +94,7 @@ export function AuthPage() {
           <label className="grid gap-2 text-sm">
             <span className="uppercase tracking-[0.16em] text-sand/70">Nom d'affichage</span>
             <input
+              name="displayName"
               className="rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sand"
               onChange={(event) => setDisplayName(event.target.value)}
               required
@@ -104,6 +105,7 @@ export function AuthPage() {
         <label className="grid gap-2 text-sm">
           <span className="uppercase tracking-[0.16em] text-sand/70">Email</span>
           <input
+            name="email"
             className="rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sand"
             onChange={(event) => setEmail(event.target.value)}
             required
@@ -115,6 +117,7 @@ export function AuthPage() {
           <span className="uppercase tracking-[0.16em] text-sand/70">Mot de passe</span>
           <div className="relative">
             <input
+              name="password"
               className="w-full rounded-2xl border border-white/10 bg-black/20 px-4 py-3 pr-12 text-sand"
               minLength={8}
               onChange={(event) => setPassword(event.target.value)}
