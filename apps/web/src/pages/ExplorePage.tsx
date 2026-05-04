@@ -10,6 +10,7 @@ import { EmptyState } from "../components/ui/EmptyState";
 import { TouchFeedback } from "../components/ui/TouchFeedback";
 import { LoadingSpinner } from "../components/ui/LoadingSpinner";
 import { CONTENT_BUCKET_LABELS } from "@maat/shared";
+import { RedditVideoPlayer } from "../components/media/RedditVideoPlayer";
 
 export const BUCKETS = [
   { id: 'viral', name: CONTENT_BUCKET_LABELS.viral, color: 'bg-red-500', gradient: 'from-red-500/30 via-orange-500/20 to-red-600/30', icon: Flame },
@@ -156,8 +157,17 @@ export default function ExplorePage() {
       onClick={() => handleCardClick(item.id)}
     >
       <TouchFeedback>
-        <div className="aspect-video relative">
-          {item.thumbnailUrl ? (
+        <div className={`${item.videoUrl?.includes('tiktok.com') ? 'aspect-[9/16]' : 'aspect-video'} relative overflow-hidden`} onClick={(e) => e.stopPropagation()}>
+          {item.videoUrl ? (
+            <RedditVideoPlayer
+              src={item.videoUrl}
+              thumbnail={item.thumbnailUrl}
+              title={item.title}
+              className="w-full h-full"
+              muted={true}
+              autoPlay={true}
+            />
+          ) : item.thumbnailUrl ? (
             <img
               src={item.thumbnailUrl}
               alt={item.title}

@@ -8,7 +8,7 @@ import { contentService, ContentItem } from "../services/contentService";
 import { interactionService, EngagementData } from "../services/interactionService";
 import { TouchFeedback } from "../components/ui/TouchFeedback";
 import { LoadingState } from "../components/ui/LoadingState";
-import { VideoPlayer } from "../components/media/VideoPlayer";
+import { RedditVideoPlayer } from "../components/media/RedditVideoPlayer";
 
 const BUCKET_CONFIG: Record<string, { color: string; gradient: string; label: string }> = {
   viral: { color: 'bg-red-500', gradient: 'from-red-500/20 to-orange-500/10', label: 'Viral' },
@@ -198,13 +198,12 @@ export default function ContentDetailPage() {
       </div>
 
       {/* Media Player / Thumbnail */}
-      <div className={`relative aspect-video bg-gradient-to-br ${bucketConfig.gradient}`}>
-        <VideoPlayer
-          videoUrl={content.videoUrl}
-          audioUrl={content.audioUrl}
-          thumbnailUrl={content.thumbnailUrl}
+      <div className={`relative ${content.videoUrl?.includes('tiktok.com') ? 'aspect-[9/16]' : 'aspect-video'} overflow-hidden bg-gradient-to-br ${bucketConfig.gradient}`}>
+        <RedditVideoPlayer
+          src={content.videoUrl || content.audioUrl || ''}
+          thumbnail={content.thumbnailUrl}
           title={content.title}
-          bucket={content.bucket}
+          className="w-full h-full"
         />
 
         {/* Bucket Badge */}

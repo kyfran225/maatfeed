@@ -17,6 +17,7 @@ import { QuizModal } from "../components/modals/QuizModal";
 import { SponsorCard } from "../components/feed/SponsorCard";
 import { QuizRecapCard } from "../components/feed/QuizRecapCard";
 import { getActiveSponsors, incrementSponsorStats, type Sponsor } from "../services/sponsorService";
+import { RedditVideoPlayer } from "../components/media/RedditVideoPlayer";
 
 type FeedItem = FeedResponse["items"][number];
 type LearningStatus = "new" | "learned" | "review";
@@ -69,31 +70,42 @@ function FeedItemCard({
   onSetStatus: (status: LearningStatus) => void;
   onOpenQuiz: (contentId: string) => void;
 }) {
+  const isTikTokVideo = item.mediaUrl?.includes('tiktok.com');
+
   return (
     <article className="overflow-hidden rounded-lg border border-white/10 bg-white/[0.035]">
-      <Link to={`/content/${item.id}`} className="block">
-        <div className="relative aspect-video bg-stone/25">
-          {item.thumbnailUrl ? (
-            <img src={item.thumbnailUrl} alt="" className="h-full w-full object-cover" />
-          ) : (
-            <div className="flex h-full w-full items-center justify-center bg-[linear-gradient(135deg,_rgba(197,162,76,0.18),_rgba(24,93,83,0.2),_rgba(96,65,130,0.16))]">
-              <Play className="h-8 w-8 text-sand/65" aria-hidden="true" />
-            </div>
-          )}
-          <span className={`absolute left-2 top-2 rounded-md border px-2 py-1 text-xs ${getStatusStyle(status)}`}>
-            {getStatusLabel(status)}
-          </span>
-        </div>
-      </Link>
+      <div className={`relative ${isTikTokVideo ? 'aspect-[9/16]' : 'aspect-video'} overflow-hidden bg-stone/25`}>
+        {item.mediaType === 'video' && item.mediaUrl ? (
+          <div className="h-full w-full">
+            <RedditVideoPlayer
+              src={item.mediaUrl}
+              thumbnail={item.thumbnailUrl}
+              title={item.title}
+              className="w-full h-full"
+              muted={true}
+              autoPlay={false}
+            />
+          </div>
+        ) : item.thumbnailUrl ? (
+          <img src={item.thumbnailUrl} alt="" className="h-full w-full object-cover" />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center bg-[linear-gradient(135deg,_rgba(197,162,76,0.18),_rgba(24,93,83,0.2),_rgba(96,65,130,0.16))]">
+            <Play className="h-8 w-8 text-sand/65" aria-hidden="true" />
+          </div>
+        )}
+        <span className={`absolute left-2 top-2 rounded-md border px-2 py-1 text-xs ${getStatusStyle(status)}`}>
+          {getStatusLabel(status)}
+        </span>
+      </div>
 
       <div className="p-4">
         <div className="mb-2 flex flex-wrap items-center gap-2 text-xs text-sand/52">
           <span>{item.sourceProvider}</span>
           <span>·</span>
           <span>{item.bucket}</span>
-          {item.tags?.slice(0, 2).map((tag) => (
-            <span key={tag} className="rounded-md bg-white/[0.06] px-2 py-1">
-              {tag}
+          {item.tags?.slice(0, 2).map((tag, tagIndex) => (
+            <span key={`tag-${tagIndex}`} className="rounded-md bg-white/[0.06] px-2 py-1">
+              {String(tag)}
             </span>
           ))}
         </div>
