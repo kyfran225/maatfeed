@@ -28,6 +28,11 @@ export default defineConfig({
     /* Take screenshot on failure */
     screenshot: 'only-on-failure',
     
+    /* Inject variable to disable CookieBanner during tests */
+    extraHTTPHeaders: {
+      'X-Playwright-Test': 'true'
+    },
+    
     /* Record video on failure */
     video: 'retain-on-failure',
   },
