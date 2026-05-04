@@ -5,6 +5,7 @@ import { AccessibilityWrapper } from "../components/motion/AccessibilityWrapper"
 import { useEffect } from "react";
 import YouTubeAPIManager from "../utils/youtubeAPIManager";
 import CookieBanner from "../components/legal/CookieBanner";
+import { ServiceWorkerUpdate, InstallPrompt, PWABadge } from "../components/pwa";
 
 export default function App() {
   // Précharger l'API YouTube dès le démarrage de l'application
@@ -32,6 +33,10 @@ export default function App() {
       <AccessibilityWrapper>
         <RouterProvider router={router} />
         <CookieBanner />
+        {/* PWA Components */}
+        <ServiceWorkerUpdate />
+        <InstallPrompt />
+        <PWABadge />
       </AccessibilityWrapper>
     </AppProviders>
   );
