@@ -31,3 +31,10 @@ export function redisHealth() {
     status: client.status
   };
 }
+
+export async function disconnectRedis(): Promise<void> {
+  if (redisClient) {
+    await redisClient.quit();
+    redisClient = null;
+  }
+}

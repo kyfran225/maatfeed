@@ -85,13 +85,23 @@ export async function generateQuizForContent(
     }
 
     // Fetch content and enrichment
-    const content = await ContentModel.findById(contentId).lean();
+    interface ContentDoc {
+      _id: string;
+      title: string;
+      description?: string;
+      transcript?: string;
+      tags: string[];
+    }
+    const content = await ContentModel.findById(contentId).lean<ContentDoc>();
     if (!content) {
       logger.warn({ msg: "Content not found for quiz generation", contentId });
       return null;
     }
 
-    const enrichment = await ContentEnrichmentModel.findOne({ contentId }).lean();
+    interface EnrichmentDoc {
+      summary?: string;
+    }
+    const enrichment = await ContentEnrichmentModel.findOne({ contentId }).lean<EnrichmentDoc>();
 
     // Determine best source for quiz generation
     let sourceText: string;
