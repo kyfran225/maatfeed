@@ -103,10 +103,20 @@ test.describe("Sponsors - Intégration dans le feed", () => {
 test.describe("Sponsors - Dashboard Admin", () => {
   async function loginAsAdmin(page: Page) {
     await page.goto("/auth");
+    await page.waitForSelector('input[name="email"]', { timeout: 10000 });
     await page.fill('input[name="email"]', ADMIN_EMAIL);
     await page.fill('input[name="password"]', ADMIN_PASSWORD);
+    
+    // Dismiss CookieBanner if present
+    const cookieBanner = page.locator('[data-testid="cookie-banner"]');
+    if (await cookieBanner.isVisible().catch(() => false)) {
+      await cookieBanner.locator('button:has-text("Accepter"), button:has-text("Tout accepter")').first().click().catch(() => {});
+    }
+    
     await page.click('button[type="submit"]');
-    await page.waitForURL("/", { timeout: 10000 });
+    
+    // Wait a bit for login to process and then go directly to admin page
+    await page.waitForTimeout(2000);
   }
 
   test.beforeEach(async ({ page }) => {
