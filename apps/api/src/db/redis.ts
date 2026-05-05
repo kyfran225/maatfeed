@@ -3,18 +3,31 @@ import { env } from "../config/env.js";
 
 let redisClient: Redis | null = null;
 
+const DEFAULT_REDIS_URL = "redis://localhost:6380";
+
+export function resolveRedisUrl(redisUrl = env.REDIS_URL): string {
+  const trimmedUrl = redisUrl?.trim();
+
+  if (trimmedUrl && (trimmedUrl.startsWith("redis://") || trimmedUrl.startsWith("rediss://"))) {
+    return trimmedUrl;
+  }
+
+  console.warn("Invalid REDIS_URL detected, using default Redis URL");
+  return DEFAULT_REDIS_URL;
+}
+
+export function createBullMqConnection() {
+  return {
+    url: resolveRedisUrl(),
+    maxRetriesPerRequest: null,
+    enableReadyCheck: false,
+    connectTimeout: 10000
+  };
+}
+
 export function createRedisClient(): Redis {
   if (!redisClient) {
-    // Handle case where REDIS_URL might be malformed or missing
-    let redisUrl = env.REDIS_URL || "redis://localhost:6379";
-    
-    // Fix invalid Redis URLs that cause EACCES errors
-    if (redisUrl === '/' || !redisUrl.startsWith('redis://') && !redisUrl.startsWith('rediss://')) {
-      console.warn('Invalid REDIS_URL detected, using default Redis URL');
-      redisUrl = "redis://localhost:6379";
-    }
-    
-    redisClient = new Redis(redisUrl, {
+    redisClient = new Redis(resolveRedisUrl(), {
       lazyConnect: true,
       maxRetriesPerRequest: 3,
       enableReadyCheck: false,
