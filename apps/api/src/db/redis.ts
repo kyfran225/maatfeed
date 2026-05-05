@@ -5,9 +5,31 @@ let redisClient: Redis | null = null;
 
 export function createRedisClient(): Redis {
   if (!redisClient) {
-    redisClient = new Redis(env.REDIS_URL, {
+    // Handle case where REDIS_URL might be malformed or missing
+    let redisUrl = env.REDIS_URL || "redis://localhost:6379";
+    
+    // Fix invalid Redis URLs that cause EACCES errors
+    if (redisUrl === '/' || !redisUrl.startsWith('redis://') && !redisUrl.startsWith('rediss://')) {
+      console.warn('Invalid REDIS_URL detected, using default Redis URL');
+      redisUrl = "redis://localhost:6379";
+    }
+    
+    redisClient = new Redis(redisUrl, {
       lazyConnect: true,
-      maxRetriesPerRequest: 1
+      maxRetriesPerRequest: 3,
+      enableReadyCheck: false,
+      connectTimeout: 10000,
+      commandTimeout: 5000,
+      enableOfflineQueue: false,
+    });
+
+    // Handle connection errors gracefully
+    redisClient.on('error', (err) => {
+      console.error('Redis connection error:', err.message);
+    });
+
+    redisClient.on('connect', () => {
+      console.log('Redis connected successfully');
     });
   }
 
