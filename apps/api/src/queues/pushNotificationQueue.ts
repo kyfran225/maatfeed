@@ -1,9 +1,9 @@
 import { Queue, Worker, type Job } from "bullmq";
-import { createBullMqConnection } from "../db/redis.js";
 import { logger } from "../config/logger.js";
+import { getQueueOptions } from "./queueFactory.js";
 
 // Redis connection for BullMQ
-const redisConnection = createBullMqConnection();
+const queueOptions = getQueueOptions();
 import {
   sendReviewDueNotifications,
   sendReplyNotification,
@@ -13,7 +13,7 @@ import {
 
 // Queue for push notification jobs
 export const pushNotificationQueue = new Queue("push-notifications", {
-  connection: redisConnection,
+  ...queueOptions,
   defaultJobOptions: {
     attempts: 3,
     backoff: {
@@ -73,7 +73,7 @@ export const pushNotificationWorker = new Worker<PushJobData>(
         throw new Error(`Unknown job type: ${type}`);
     }
   },
-  { connection: redisConnection }
+  queueOptions
 );
 
 // Worker event handlers

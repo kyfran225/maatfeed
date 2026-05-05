@@ -1,5 +1,5 @@
 import { Queue, Job } from "bullmq";
-import { getQueueConnection } from "../queues/queueFactory.js";
+import { getQueueOptions } from "../queues/queueFactory.js";
 import { logger } from "../config/logger.js";
 import { createRedisClient } from "../db/redis.js";
 
@@ -10,8 +10,7 @@ const REPEATABLE_JOB_ID = "auto-ingest-recurring";
 const DEFAULT_CRON = "0 */2 * * *";
 
 export function createIngestScheduler(): Queue {
-  const connection = getQueueConnection();
-  return new Queue(SCHEDULER_QUEUE_NAME, { connection });
+  return new Queue(SCHEDULER_QUEUE_NAME, getQueueOptions());
 }
 
 export async function scheduleAutoIngest(

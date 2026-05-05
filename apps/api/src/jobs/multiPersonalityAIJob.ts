@@ -1,6 +1,6 @@
 import { Worker, Queue } from "bullmq";
 import { logger } from "../config/logger.js";
-import { createBullMqConnection, createRedisClient } from "../db/redis.js";
+import { getQueueOptions } from "../queues/queueFactory.js";
 import { createAICommentForComment } from "../services/aiCommentService.js";
 import { CommentModel } from "../models/Comment.js";
 import { AIMemoryService } from "../services/aiMemoryService.js";
@@ -15,16 +15,15 @@ export interface MultiPersonalityAIJobData {
 export const MULTI_PERSONALITY_AI_QUEUE = "multi-personality-ai";
 
 export async function createMultiPersonalityAIJob(data: MultiPersonalityAIJobData, options?: { delay?: number }) {
-  const redisClient = createRedisClient();
   const queue = new Queue<MultiPersonalityAIJobData>(MULTI_PERSONALITY_AI_QUEUE, {
-    connection: redisClient,
+    ...getQueueOptions()
   });
 
   return queue.add("multi-personality-ai", data, options);
 }
 
 export async function runMultiPersonalityAIWorker() {
-  const connection = createBullMqConnection();
+  const queueOptions = getQueueOptions();
   
   const worker = new Worker<MultiPersonalityAIJobData>(
     MULTI_PERSONALITY_AI_QUEUE,
@@ -161,7 +160,7 @@ export async function runMultiPersonalityAIWorker() {
       }
     },
     {
-      connection,
+      ...queueOptions,
       concurrency: 2, // Limit concurrent AI jobs
       limiter: {
         max: 10,

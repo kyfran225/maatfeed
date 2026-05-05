@@ -25,6 +25,10 @@ export function createBullMqConnection() {
   };
 }
 
+export function getBullMqPrefix(): string {
+  return `maatfeed:${env.NODE_ENV}`;
+}
+
 export function createRedisClient(): Redis {
   if (!redisClient) {
     redisClient = new Redis(resolveRedisUrl(), {
