@@ -10,7 +10,7 @@ import { scheduleAutoIngest, getSchedulerStatus, triggerImmediateIngest, stopAut
 import { logger } from "../config/logger.js";
 import { getReadinessStatus } from "../services/readinessService.js";
 import { getAdminDashboardSummary } from "../services/learningAnalyticsService.js";
-import { getQueueConnection } from "../queues/queueFactory.js";
+import { getQueueOptions } from "../queues/queueFactory.js";
 import { QUEUE_NAMES } from "../queues/queueNames.js";
 import { env } from "../config/env.js";
 
@@ -342,9 +342,7 @@ export async function llmRateLimitStatusController(request: Request, response: R
 export async function autoAIDiagnosticsController(_request: Request, response: Response) {
   try {
     const readiness = await getReadinessStatus();
-    const communityAIQueue = new Queue(QUEUE_NAMES.communityAI, {
-      connection: getQueueConnection()
-    });
+    const communityAIQueue = new Queue(QUEUE_NAMES.communityAI, getQueueOptions());
 
     const counts = await communityAIQueue.getJobCounts(
       "waiting",

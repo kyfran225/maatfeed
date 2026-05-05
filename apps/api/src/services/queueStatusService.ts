@@ -3,7 +3,7 @@
  * Provides real-time status of BullMQ queues
  */
 import { Queue } from "bullmq";
-import { getQueueConnection } from "../queues/queueFactory.js";
+import { getQueueOptions } from "../queues/queueFactory.js";
 import { QUEUE_NAMES } from "../queues/queueNames.js";
 import { logger } from "../config/logger.js";
 
@@ -33,12 +33,12 @@ export interface QueueStatus {
 
 export async function getQueueStatus(): Promise<QueueStatus> {
   try {
-    const connection = getQueueConnection();
+    const queueOptions = getQueueOptions();
 
     // Create temporary queue instances to check status
-    const ingestQueue = new Queue(QUEUE_NAMES.ingest, { connection });
-    const classifyQueue = new Queue(QUEUE_NAMES.classify, { connection });
-    const enrichQueue = new Queue(QUEUE_NAMES.enrich, { connection });
+    const ingestQueue = new Queue(QUEUE_NAMES.ingest, queueOptions);
+    const classifyQueue = new Queue(QUEUE_NAMES.classify, queueOptions);
+    const enrichQueue = new Queue(QUEUE_NAMES.enrich, queueOptions);
 
     // Get job counts for each queue
     const [ingestCounts, classifyCounts, enrichCounts] = await Promise.all([

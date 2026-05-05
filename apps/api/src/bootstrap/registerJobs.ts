@@ -9,7 +9,7 @@ import { processCommunityAICommentJob } from "../jobs/processCommunityAICommentJ
 import { runMultiPersonalityAIWorker } from "../jobs/multiPersonalityAIJob.js";
 import { scheduleAutoIngest } from "../scheduler/ingestScheduler.js";
 import { connectServices } from "./connectServices.js";
-import { getQueueConnection } from "../queues/queueFactory.js";
+import { getQueueOptions } from "../queues/queueFactory.js";
 import { QUEUE_NAMES } from "../queues/queueNames.js";
 import { initializePushNotificationJobs } from "../queues/pushNotificationQueue.js";
 import { createRedisClient } from "../db/redis.js";
@@ -22,18 +22,18 @@ const WORKERS_HEARTBEAT_TTL_SECONDS = 30;
 const WORKERS_HEARTBEAT_INTERVAL_MS = 10_000;
 
 export function registerJobWorkers() {
-  const connection = getQueueConnection();
+  const queueOptions = getQueueOptions();
 
   // Ingest worker: higher concurrency for I/O bound operations
   const ingestWorker = new Worker(QUEUE_NAMES.ingest, processIngestJob, {
-    connection,
+    ...queueOptions,
     concurrency: 3
   });
 
   // Classification worker: limited concurrency to respect Groq rate limits
   // With 1.5s delay between requests and 3 concurrent workers = ~2 req/sec = ~120 req/min
   const classifyWorker = new Worker(QUEUE_NAMES.classify, processClassificationJob, {
-    connection,
+    ...queueOptions,
     concurrency: 2,
     limiter: {
       max: 30,        // Max 30 jobs
@@ -43,7 +43,7 @@ export function registerJobWorkers() {
 
   // Enrichment worker: limited concurrency to respect Groq rate limits
   const enrichWorker = new Worker(QUEUE_NAMES.enrich, processEnrichmentJob, {
-    connection,
+    ...queueOptions,
     concurrency: 2,
     limiter: {
       max: 30,
@@ -52,7 +52,7 @@ export function registerJobWorkers() {
   });
 
   const communityAIWorker = new Worker(QUEUE_NAMES.communityAI, processCommunityAICommentJob, {
-    connection,
+    ...queueOptions,
     concurrency: 2,
     limiter: {
       max: 20,
@@ -71,7 +71,7 @@ export function registerJobWorkers() {
       set: async (key: string, value: string) => { await redis.set(key, value); }
     });
   }, {
-    connection
+    ...queueOptions
   });
 
   autoIngestWorker.on("active", (job) => {
