@@ -1,9 +1,7 @@
 import { Queue } from "bullmq";
-import { env } from "../config/env.js";
+import { createBullMqConnection } from "../db/redis.js";
 
-const connection = {
-  url: env.REDIS_URL
-};
+const connection = createBullMqConnection();
 
 export function createQueue(name: string) {
   return new Queue(name, {

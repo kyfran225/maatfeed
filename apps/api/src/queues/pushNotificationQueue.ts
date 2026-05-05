@@ -1,11 +1,9 @@
 import { Queue, Worker, type Job } from "bullmq";
-import { env } from "../config/env.js";
+import { createBullMqConnection } from "../db/redis.js";
 import { logger } from "../config/logger.js";
 
 // Redis connection for BullMQ
-const redisConnection = {
-  url: env.REDIS_URL
-};
+const redisConnection = createBullMqConnection();
 import {
   sendReviewDueNotifications,
   sendReplyNotification,

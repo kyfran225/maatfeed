@@ -1,6 +1,6 @@
 import { Worker, Queue } from "bullmq";
 import { logger } from "../config/logger.js";
-import { createRedisClient } from "../db/redis.js";
+import { createBullMqConnection, createRedisClient } from "../db/redis.js";
 import { createAICommentForComment } from "../services/aiCommentService.js";
 import { CommentModel } from "../models/Comment.js";
 import { AIMemoryService } from "../services/aiMemoryService.js";
@@ -24,12 +24,7 @@ export async function createMultiPersonalityAIJob(data: MultiPersonalityAIJobDat
 }
 
 export async function runMultiPersonalityAIWorker() {
-  // Use standard Redis connection for BullMQ with correct port 6380
-  const connection = {
-    host: 'localhost',
-    port: 6380,
-    maxRetriesPerRequest: null // Fix BullMQ error
-  };
+  const connection = createBullMqConnection();
   
   const worker = new Worker<MultiPersonalityAIJobData>(
     MULTI_PERSONALITY_AI_QUEUE,
