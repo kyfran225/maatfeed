@@ -17,6 +17,7 @@ const ContentDetailPage = lazy(() => import("../pages/ContentDetailPage"));
 const DebateDetailPage = lazy(() => import("../pages/DebateDetailPage"));
 const DemoSectionTitlePage = lazy(() => import("../pages/DemoSectionTitlePage"));
 const TikTokDemoPage = lazy(() => import("../pages/TikTokDemoPage"));
+const MaintenancePage = lazy(() => import("../pages/MaintenancePage"));
 const ExplorePage = lazy(() => import("../pages/ExplorePage"));
 const ForgotPasswordPage = lazy(() => import("../pages/ForgotPasswordPage"));
 const OnboardingPage = lazy(() => import("../pages/OnboardingPage"));
@@ -49,7 +50,7 @@ export const router = createBrowserRouter([
     element: <AppLayout />,
     errorElement: <NotFoundPage />,
     children: [
-      { index: true, element: <FeedPage /> },
+      { index: true, element: <MaintenancePage /> },
       { path: "enhanced-feed", element: <FeedPage /> },
       { path: "auth", element: <AuthPage /> },
       { path: "verify-email", element: <VerifyEmailPage /> },

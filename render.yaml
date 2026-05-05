@@ -103,7 +103,7 @@ services:
       - key: RATE_LIMIT_MAX_REQUESTS
         value: 100
     healthCheckPath: /api/health
-    autoDeploy: true
+    autoDeploy: false
     domains:
       - api.maatfeed.com
 
@@ -157,7 +157,7 @@ services:
         sync: false
       - key: VAPID_PRIVATE_KEY
         sync: false
-    autoDeploy: true
+    autoDeploy: false
 
   # API Staging Service
   - type: web
@@ -240,7 +240,7 @@ services:
       - key: HELMET_ENABLED
         value: true
     healthCheckPath: /api/health
-    autoDeploy: true
+    autoDeploy: false
 
   # Worker Service (Staging)
   - type: worker
@@ -284,4 +284,4 @@ services:
         sync: false
       - key: CLOUDINARY_API_SECRET
         sync: false
-    autoDeploy: true
+    autoDeploy: false
