@@ -1,4 +1,4 @@
-import api from "./api";
+import { getJson } from "./httpClient";
 
 export interface MetaTagsDTO {
   title: string;
@@ -24,16 +24,16 @@ export interface MetaTagsDTO {
 }
 
 export async function getContentMetaTags(contentId: string): Promise<MetaTagsDTO> {
-  const response = await api.get<MetaTagsDTO>(`/meta/content/${contentId}`);
+  const response = await getJson<{ data: MetaTagsDTO }>(`/meta/content/${contentId}`);
   return response.data;
 }
 
 export async function getCommunityPostMetaTags(postId: string): Promise<MetaTagsDTO> {
-  const response = await api.get<MetaTagsDTO>(`/meta/community/${postId}`);
+  const response = await getJson<{ data: MetaTagsDTO }>(`/meta/community/${postId}`);
   return response.data;
 }
 
 export async function getDefaultMetaTags(path: string = "/"): Promise<MetaTagsDTO> {
-  const response = await api.get<MetaTagsDTO>(`/meta/default?path=${encodeURIComponent(path)}`);
+  const response = await getJson<{ data: MetaTagsDTO }>(`/meta/default?path=${encodeURIComponent(path)}`);
   return response.data;
 }

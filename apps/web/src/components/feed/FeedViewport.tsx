@@ -1,4 +1,4 @@
-import { ReactNode, useMemo, useRef, useEffect, useState } from "react";
+import React, { ReactNode, useMemo, useRef, useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useKeyboardNavigation } from "../../hooks/useKeyboardNavigation";
 
@@ -233,10 +233,15 @@ export function FeedViewport({ children, className = "", onActiveChange, onLoadM
       
       {childrenArray.map((child, index) => {
         const shouldRenderChild = index >= renderWindow.start && index <= renderWindow.end;
+        
+        // Generate a unique key for each child
+        const childKey = React.isValidElement(child) && child.key ? 
+          String(child.key) : 
+          `child-${index}`;
 
         return (
           <motion.div
-            key={index}
+            key={childKey}
             className="w-full snap-start h-screen"
             ref={(el) => {
               const prev = itemElementsRef.current[index];

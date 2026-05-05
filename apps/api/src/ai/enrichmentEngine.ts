@@ -36,7 +36,11 @@ export async function enrichContent(input: { title: string; description: string;
   const keyIdeas = Array.isArray(parsed.keyIdeas) ? (parsed.keyIdeas.map((v) => String(v)).slice(0, 5) as string[]) : [];
   const debatePrompt = typeof parsed.debatePrompt === "string" ? parsed.debatePrompt : "";
   const thematicTags = Array.isArray(parsed.thematicTags)
-    ? (parsed.thematicTags.map((v) => String(v)).slice(0, 8) as string[])
+    ? (parsed.thematicTags.map((v) => {
+        if (typeof v === 'string') return v;
+        if (typeof v === 'object' && v !== null && 'name' in v && typeof v.name === 'string') return v.name;
+        return String(v);
+      }).slice(0, 8) as string[])
     : [...new Set([...(input.tags ?? []), ...keyIdeas])].slice(0, 8);
 
   return {
