@@ -8,6 +8,17 @@ import { logger } from "../config/logger.js";
 
 const BASE_URL = process.env.APP_BASE_URL || "https://www.maatfeed.com";
 
+interface ParentCommentForNotification {
+  userId?: { toString(): string } | null;
+  contentId?: { _id?: { toString(): string }; title?: string } | { toString(): string } | null;
+}
+
+interface TrendingContentForNotification {
+  processingStatus?: string;
+  title: string;
+  thumbnailUrl?: string | null;
+}
+
 /**
  * Send push notification to users for content that needs review
  * Triggered when user's spaced repetition indicates content is due for review
@@ -137,16 +148,16 @@ export async function sendReplyNotification(
   try {
     // Get parent comment and its author
     const parentComment = await CommentModel.findById(parentCommentId)
-      .populate("author", "displayName")
       .populate("contentId", "title")
-      .lean();
+      .select("userId contentId")
+      .lean() as ParentCommentForNotification | null;
 
     if (!parentComment) {
       logger.warn({ msg: "Parent comment not found for reply notification", parentCommentId });
       return false;
     }
 
-    const authorId = parentComment.author?._id?.toString();
+    const authorId = parentComment.userId?.toString();
     if (!authorId) {
       logger.warn({ msg: "Comment has no author", parentCommentId });
       return false;
@@ -165,17 +176,18 @@ export async function sendReplyNotification(
 
     if (subscriptions.length === 0) return false;
 
-    const content = parentComment.contentId as unknown as { title?: string };
+    const content = parentComment.contentId as { _id?: { toString(): string }; title?: string } | null | undefined;
+    const contentIdForUrl = content?._id?.toString() ?? parentComment.contentId?.toString() ?? "";
     const truncatedReply = replyContent.slice(0, 100) + (replyContent.length > 100 ? "..." : "");
 
     const payload: PushNotificationPayload = {
       title: `💬 ${replyAuthorName} a répondu`,
-      body: `"${truncatedReply}"${content.title ? ` sur "${content.title.slice(0, 40)}..."` : ""}`,
+      body: `"${truncatedReply}"${content?.title ? ` sur "${content.title.slice(0, 40)}..."` : ""}`,
       icon: "/favicon/android-chrome-192x192.png",
       badge: "/favicon/android-chrome-192x192.png",
       tag: `reply-${parentCommentId}`,
       data: {
-        url: `${BASE_URL}/content/${parentComment.contentId}?comment=${parentCommentId}`,
+        url: `${BASE_URL}/content/${contentIdForUrl}?comment=${parentCommentId}`,
         notificationId: `reply-${parentCommentId}-${Date.now()}`,
         type: "reply",
         commentId: parentCommentId
@@ -229,7 +241,7 @@ export async function sendTrendingContentNotification(
       return false;
     }
 
-    const content = await ContentModel.findById(contentId).lean();
+    const content = await ContentModel.findById(contentId).lean() as TrendingContentForNotification | null;
     if (!content || content.processingStatus !== "published") {
       return false;
     }
