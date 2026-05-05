@@ -2,6 +2,32 @@
 # Deploy to Render: https://render.com/deploy?repo=https://github.com/kyfran225/maatfeed
 
 services:
+  # Frontend Production Service
+  - type: web
+    name: maat-frontend-production
+    runtime: static
+    plan: starter
+    branch: main
+    rootDir: apps/web
+    buildCommand: npm ci --include=dev --legacy-peer-deps && npm run build:shared && npm run build:web
+    staticPublishPath: dist
+    envVars:
+      - key: VITE_API_URL
+        value: https://api.maatfeed.com
+      - key: NODE_ENV
+        value: production
+    routes:
+      - type: rewrite
+        source: /api/(.*)
+        destination: https://api.maatfeed.com/api/$1
+      - type: rewrite
+        source: /(.*)
+        destination: /index.html
+    autoDeploy: false
+    domains:
+      - www.maatfeed.com
+      - maatfeed.com
+
   # API Production Service
   - type: web
     name: maat-api-production
@@ -157,6 +183,29 @@ services:
         sync: false
       - key: VAPID_PRIVATE_KEY
         sync: false
+    autoDeploy: false
+
+  # Frontend Staging Service
+  - type: web
+    name: maat-frontend-staging
+    runtime: static
+    plan: starter
+    branch: staging
+    rootDir: apps/web
+    buildCommand: npm ci --include=dev --legacy-peer-deps && npm run build:shared && npm run build:web
+    staticPublishPath: dist
+    envVars:
+      - key: VITE_API_URL
+        value: https://maat-api-staging.onrender.com
+      - key: NODE_ENV
+        value: staging
+    routes:
+      - type: rewrite
+        source: /api/(.*)
+        destination: https://maat-api-staging.onrender.com/api/$1
+      - type: rewrite
+        source: /(.*)
+        destination: /index.html
     autoDeploy: false
 
   # API Staging Service
