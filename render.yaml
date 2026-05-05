@@ -2,31 +2,11 @@
 # Deploy to Render: https://render.com/deploy?repo=https://github.com/kyfran225/maatfeed
 
 services:
-  # Frontend Production Service
-  - type: web
-    name: maat-frontend-production
-    runtime: static
+  # Redis Production Service
+  - type: redis
+    name: maat-redis-production
     plan: starter
-    branch: main
-    rootDir: apps/web
-    buildCommand: npm ci --include=dev --legacy-peer-deps && npm run build:shared && npm run build:web
-    staticPublishPath: dist
-    envVars:
-      - key: VITE_API_URL
-        value: https://api.maatfeed.com
-      - key: NODE_ENV
-        value: production
-    routes:
-      - type: rewrite
-        source: /api/(.*)
-        destination: https://api.maatfeed.com/api/$1
-      - type: rewrite
-        source: /(.*)
-        destination: /index.html
-    autoDeploy: false
-    domains:
-      - www.maatfeed.com
-      - maatfeed.com
+    ipAllowList: []
 
   # API Production Service
   - type: web
@@ -45,7 +25,10 @@ services:
       - key: MONGODB_URI
         sync: false
       - key: REDIS_URL
-        sync: false
+        fromService:
+          type: redis
+          name: maat-redis-production
+          property: connectionString
       - key: UPSTASH_REST_TOKEN
         sync: false
       - key: JWT_ACCESS_SECRET
@@ -148,7 +131,10 @@ services:
       - key: MONGODB_URI
         sync: false
       - key: REDIS_URL
-        sync: false
+        fromService:
+          type: redis
+          name: maat-redis-production
+          property: connectionString
       - key: UPSTASH_REST_TOKEN
         sync: false
       - key: JWT_ACCESS_SECRET
@@ -185,29 +171,6 @@ services:
         sync: false
     autoDeploy: false
 
-  # Frontend Staging Service
-  - type: web
-    name: maat-frontend-staging
-    runtime: static
-    plan: starter
-    branch: staging
-    rootDir: apps/web
-    buildCommand: npm ci --include=dev --legacy-peer-deps && npm run build:shared && npm run build:web
-    staticPublishPath: dist
-    envVars:
-      - key: VITE_API_URL
-        value: https://maat-api-staging.onrender.com
-      - key: NODE_ENV
-        value: staging
-    routes:
-      - type: rewrite
-        source: /api/(.*)
-        destination: https://maat-api-staging.onrender.com/api/$1
-      - type: rewrite
-        source: /(.*)
-        destination: /index.html
-    autoDeploy: false
-
   # API Staging Service
   - type: web
     name: maat-api-staging
@@ -225,7 +188,10 @@ services:
       - key: MONGODB_URI
         sync: false
       - key: REDIS_URL
-        sync: false
+        fromService:
+          type: redis
+          name: maat-redis-staging
+          property: connectionString
       - key: UPSTASH_REST_TOKEN
         sync: false
       - key: JWT_ACCESS_SECRET
@@ -291,6 +257,12 @@ services:
     healthCheckPath: /api/health
     autoDeploy: false
 
+  # Redis Staging Service
+  - type: redis
+    name: maat-redis-staging
+    plan: starter
+    ipAllowList: []
+
   # Worker Service (Staging)
   - type: worker
     name: maat-worker-staging
@@ -306,7 +278,10 @@ services:
       - key: MONGODB_URI
         sync: false
       - key: REDIS_URL
-        sync: false
+        fromService:
+          type: redis
+          name: maat-redis-staging
+          property: connectionString
       - key: UPSTASH_REST_TOKEN
         sync: false
       - key: JWT_ACCESS_SECRET
