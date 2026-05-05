@@ -1,13 +1,9 @@
-import { SEO } from "../components/SEO";
-
 export function MaintenancePage() {
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
-      <SEO 
-        title="Maintenance - Maatfeed"
-        description="Maatfeed est actuellement en maintenance. Nous serons bientôt de retour !"
-        robots="noindex, nofollow"
-      />
+      <title>Maintenance - Maatfeed</title>
+      <meta name="description" content="Maatfeed est actuellement en maintenance. Nous serons bientôt de retour !" />
+      <meta name="robots" content="noindex, nofollow" />
       
       <div className="max-w-md w-full text-center">
         <div className="mb-8">
