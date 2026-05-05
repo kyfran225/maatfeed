@@ -93,16 +93,28 @@ export function QuizRecapCard({ contentIds, onComplete }: QuizRecapCardProps) {
         <div className="space-y-1.5">
           {quiz.options.map((option, idx) => (
             <button
+<<<<<<< HEAD
+              key={idx}
+              onClick={() => setSelectedAnswer(option)}
+              disabled={loading}
+              className={`w-full rounded-md border px-3 py-2 text-left text-sm transition ${
+                selectedAnswer === option
+=======
               key={`option-${idx}`}
               onClick={() => setSelectedAnswer(String(option))}
               disabled={loading}
               className={`w-full rounded-md border px-3 py-2 text-left text-sm transition ${
                 selectedAnswer === String(option)
+>>>>>>> staging
                   ? "border-gold bg-gold/10 text-white"
                   : "border-white/10 bg-white/[0.04] text-sand/70 hover:bg-white/[0.08]"
               }`}
             >
+<<<<<<< HEAD
+              {option}
+=======
               {String(option)}
+>>>>>>> staging
             </button>
           ))}
         </div>

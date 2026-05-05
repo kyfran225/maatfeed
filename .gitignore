@@ -24,4 +24,32 @@ render-env-curl-commands.txt
 bin/
 render.zip
 
+<<<<<<< HEAD
+# Test and development files
+test_*.json
+test_*.ps1
+debug_*.json
+response.json
+response.txt
+create_profile.ps1
+login_user.ps1
+register_user*.ps1
+
+# Test results and reports
+playwright-report/
+test-results/
+*.log
+
+# Package manager files
+package-lock.json
+
+# Avatar and image assets (keep only needed ones)
+maat-avatar/
+maat_avatar_ia/
+new_avatar/
+
+# Development scripts
+*.ps1
+=======
 .env*.local
+>>>>>>> staging
