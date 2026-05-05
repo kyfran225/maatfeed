@@ -28,10 +28,7 @@ import { seoMetaRouter } from "./seoMetaRoutes.js";
 import { pushRouter } from "./pushRoutes.js";
 import { analyticsDashboardRouter } from "./analyticsDashboardRoutes.js";
 import { quizRouter } from "./quizRoutes.js";
-<<<<<<< HEAD
-=======
 import { sitemapDirectRouter } from "./sitemapDirectRoutes.js";
->>>>>>> staging
 
 export const apiRouter = Router();
 
@@ -58,11 +55,7 @@ apiRouter.use("/gdpr", gdprRouter);
 apiRouter.use("/payments", paymentRouter);
 apiRouter.use("/learning", learningProgressRouter);
 apiRouter.use("/sponsors", sponsorRouter);
-<<<<<<< HEAD
-apiRouter.use("/sitemap.xml", seoRouter);
-=======
 apiRouter.use("/sitemap.xml", sitemapDirectRouter);
->>>>>>> staging
 apiRouter.use("/robots.txt", seoRouter);
 apiRouter.use("/meta", seoMetaRouter);
 apiRouter.use("/push", pushRouter);
