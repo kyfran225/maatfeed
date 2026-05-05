@@ -26,6 +26,7 @@ const envSchema = z.object({
   PORT: z.coerce.number().int().positive().default(4000),
   MONGODB_URI: z.string().min(1).default("mongodb://localhost:27017/maat_feed"),
   REDIS_URL: z.string().min(1).default("redis://localhost:6380"),
+  UPSTASH_REST_TOKEN: z.string().optional().default(""),
   JWT_ACCESS_SECRET: z.string().min(16).default("replace-with-a-long-random-secret"),
   JWT_REFRESH_SECRET: z.string().min(16).default("replace-with-another-long-random-secret"),
   // Email configuration (Resend)
