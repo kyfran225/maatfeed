@@ -4,12 +4,48 @@ import { env } from "../config/env.js";
 let redisClient: Redis | null = null;
 
 const DEFAULT_REDIS_URL = "redis://localhost:6380";
+const UPSTASH_HOST_SUFFIX = ".upstash.io";
+
+function buildUpstashRedisUrl(hostname: string): string | null {
+  if (!env.UPSTASH_REST_TOKEN) {
+    return null;
+  }
+
+  return `rediss://default:${encodeURIComponent(env.UPSTASH_REST_TOKEN)}@${hostname}:6379`;
+}
 
 export function resolveRedisUrl(redisUrl = env.REDIS_URL): string {
   const trimmedUrl = redisUrl?.trim();
 
-  if (trimmedUrl && (trimmedUrl.startsWith("redis://") || trimmedUrl.startsWith("rediss://"))) {
-    return trimmedUrl;
+  if (trimmedUrl) {
+    try {
+      const url = new URL(trimmedUrl);
+      const isUpstashHost = url.hostname.endsWith(UPSTASH_HOST_SUFFIX);
+
+      if (url.protocol === "rediss:") {
+        return url.toString();
+      }
+
+      if (url.protocol === "redis:") {
+        if (isUpstashHost) {
+          url.protocol = "rediss:";
+          url.port = url.port || "6379";
+        }
+
+        return url.toString();
+      }
+
+      if ((url.protocol === "https:" || url.protocol === "http:") && isUpstashHost) {
+        const upstashRedisUrl = buildUpstashRedisUrl(url.hostname);
+
+        if (upstashRedisUrl) {
+          console.warn("Using Upstash REST endpoint as Redis TLS endpoint");
+          return upstashRedisUrl;
+        }
+      }
+    } catch {
+      // Fall through to the explicit fallback warning below.
+    }
   }
 
   console.warn("Invalid REDIS_URL detected, using default Redis URL");
