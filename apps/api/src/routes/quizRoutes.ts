@@ -13,15 +13,24 @@ import { logger } from "../config/logger.js";
 
 const router = Router();
 
+function getParam(value: string | string[] | undefined): string | null {
+  return typeof value === "string" ? value : null;
+}
+
 /**
  * GET /api/quiz/content/:contentId
  * Get or generate quiz for specific content
  */
 router.get("/content/:contentId", optionalAuth, async (req, res) => {
   try {
-    const { contentId } = req.params;
+    const contentId = getParam(req.params.contentId);
     const { force } = req.query;
     const userId = res.locals.auth?.userId;
+
+    if (!contentId) {
+      res.status(400).json({ error: "Invalid contentId" });
+      return;
+    }
 
     const quiz = userId
       ? await getQuizForContent(contentId, userId, force === "true")
@@ -49,9 +58,14 @@ router.get("/content/:contentId", optionalAuth, async (req, res) => {
  */
 router.post("/content/:contentId/submit", requireAuth, async (req, res) => {
   try {
-    const { contentId } = req.params;
+    const contentId = getParam(req.params.contentId);
     const userId = res.locals.auth.userId;
     const { answers } = req.body as { answers: Array<{ questionId: string; answerIndex: number }> };
+
+    if (!contentId) {
+      res.status(400).json({ error: "Invalid contentId" });
+      return;
+    }
 
     if (!Array.isArray(answers) || answers.length === 0) {
       res.status(400).json({ error: "Invalid answers format" });
