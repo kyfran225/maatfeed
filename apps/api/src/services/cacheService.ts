@@ -5,6 +5,10 @@ function getClient(): Redis {
   return createRedisClient();
 }
 
+function getCacheErrorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
+}
+
 export async function getCache<T>(key: string): Promise<T | null> {
   const client = getClient();
 
@@ -12,8 +16,13 @@ export async function getCache<T>(key: string): Promise<T | null> {
     return null;
   }
 
-  const value = await client.get(key);
-  return value ? (JSON.parse(value) as T) : null;
+  try {
+    const value = await client.get(key);
+    return value ? (JSON.parse(value) as T) : null;
+  } catch (error) {
+    console.warn("Cache read skipped", { key, error: getCacheErrorMessage(error) });
+    return null;
+  }
 }
 
 export async function setCache(key: string, value: unknown, ttlSeconds: number) {
@@ -23,7 +32,11 @@ export async function setCache(key: string, value: unknown, ttlSeconds: number) 
     return;
   }
 
-  await client.set(key, JSON.stringify(value), "EX", ttlSeconds);
+  try {
+    await client.set(key, JSON.stringify(value), "EX", ttlSeconds);
+  } catch (error) {
+    console.warn("Cache write skipped", { key, error: getCacheErrorMessage(error) });
+  }
 }
 
 export const cacheService = {
@@ -32,14 +45,22 @@ export const cacheService = {
   delete: async (key: string) => {
     const client = getClient();
     if (client.status !== "ready") return;
-    await client.del(key);
+    try {
+      await client.del(key);
+    } catch (error) {
+      console.warn("Cache delete skipped", { key, error: getCacheErrorMessage(error) });
+    }
   },
   deletePattern: async (pattern: string) => {
     const client = getClient();
     if (client.status !== "ready") return;
-    const keys = await client.keys(pattern);
-    if (keys.length > 0) {
-      await client.del(...keys);
+    try {
+      const keys = await client.keys(pattern);
+      if (keys.length > 0) {
+        await client.del(...keys);
+      }
+    } catch (error) {
+      console.warn("Cache pattern delete skipped", { pattern, error: getCacheErrorMessage(error) });
     }
   }
 };
@@ -51,7 +72,11 @@ export async function invalidateCacheKeys(keys: string[]) {
     return;
   }
 
-  await client.del(...keys);
+  try {
+    await client.del(...keys);
+  } catch (error) {
+    console.warn("Cache keys invalidation skipped", { keys, error: getCacheErrorMessage(error) });
+  }
 }
 
 export async function invalidateCachePattern(pattern: string) {
@@ -61,9 +86,13 @@ export async function invalidateCachePattern(pattern: string) {
     return;
   }
 
-  const keys = await client.keys(pattern);
-  if (keys.length > 0) {
-    await client.del(...keys);
+  try {
+    const keys = await client.keys(pattern);
+    if (keys.length > 0) {
+      await client.del(...keys);
+    }
+  } catch (error) {
+    console.warn("Cache pattern invalidation skipped", { pattern, error: getCacheErrorMessage(error) });
   }
 }
 
