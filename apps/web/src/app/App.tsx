@@ -6,13 +6,13 @@ import { useEffect } from "react";
 import YouTubeAPIManager from "../utils/youtubeAPIManager";
 import CookieBanner from "../components/legal/CookieBanner";
 import { ServiceWorkerUpdate, InstallPrompt, PWABadge } from "../components/pwa";
-import { isProductionDeployment } from "../config/runtime";
+import { isMaintenanceMode } from "../config/runtime";
 import { MaintenancePage } from "../pages/MaintenancePage";
 
 export default function App() {
   // Précharger l'API YouTube dès le démarrage de l'application
   useEffect(() => {
-    if (isProductionDeployment) {
+    if (isMaintenanceMode) {
       return;
     }
 
@@ -34,7 +34,7 @@ export default function App() {
     });
   }, []);
 
-  if (isProductionDeployment) {
+  if (isMaintenanceMode) {
     return <MaintenancePage />;
   }
 

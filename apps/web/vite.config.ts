@@ -4,7 +4,12 @@ import react from "@vitejs/plugin-react";
 export default defineConfig({
   plugins: [react()],
   define: {
-    __MAATFEED_MAINTENANCE__: JSON.stringify(process.env.VERCEL_ENV === "production")
+    __MAATFEED_IS_PRODUCTION_DEPLOYMENT__: JSON.stringify(
+      process.env.VERCEL_ENV === "production"
+    ),
+    __MAATFEED_MAINTENANCE_MODE__: JSON.stringify(
+      process.env.VITE_MAINTENANCE_MODE === "true"
+    )
   },
   server: {
     host: "127.0.0.1",
