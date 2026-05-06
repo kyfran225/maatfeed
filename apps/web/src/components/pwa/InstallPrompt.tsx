@@ -15,7 +15,7 @@ export function InstallPrompt() {
     const dismissed = localStorage.getItem('pwa-install-dismissed');
     const dismissedTime = dismissed ? parseInt(dismissed, 10) : 0;
     const oneDayMs = 24 * 60 * 60 * 1000;
-    
+
     // Show again after 1 day
     if (dismissed && Date.now() - dismissedTime < oneDayMs) {
       setIsDismissed(true);
@@ -28,7 +28,7 @@ export function InstallPrompt() {
       const timer = setTimeout(() => {
         setIsVisible(true);
       }, 5000);
-      
+
       return () => clearTimeout(timer);
     }
   }, [canInstall, isDismissed]);
@@ -66,10 +66,7 @@ export function InstallPrompt() {
         borderRadius: '16px',
         boxShadow: '0 8px 32px rgba(0, 0, 0, 0.5)',
         display: 'flex',
-<<<<<<< HEAD
-=======
         flexDirection: 'column',
->>>>>>> staging
         alignItems: 'center',
         gap: '16px',
         fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
@@ -90,30 +87,7 @@ export function InstallPrompt() {
           }
         }
       `}</style>
-      
-<<<<<<< HEAD
-      {/* App Icon */}
-      <div
-        style={{
-          width: '56px',
-          height: '56px',
-          background: 'linear-gradient(135deg, #D4AF37 0%, #B8941F 100%)',
-          borderRadius: '14px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          fontSize: '28px',
-          fontWeight: 'bold',
-          color: '#0B0704',
-          flexShrink: 0
-        }}
-      >
-        M
-      </div>
-      
-      {/* Content */}
-      <div style={{ flex: 1 }}>
-=======
+
       {/* Header with Logo and Title */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px', width: '100%' }}>
         {/* App Icon */}
@@ -131,8 +105,8 @@ export function InstallPrompt() {
             boxShadow: 'inset 0 0 0 1px rgba(212, 175, 55, 0.3), 0 2px 4px rgba(0,0,0,0.2)'
           }}
         >
-          <img 
-            src="/logo-kemet-site.webp" 
+          <img
+            src="/logo-kemet-site.webp"
             alt="MAATFEED"
             style={{
               width: '40px',
@@ -141,71 +115,47 @@ export function InstallPrompt() {
             }}
           />
         </div>
-        
+
         {/* Title */}
->>>>>>> staging
-        <div 
+        <div
           id="install-title"
-          style={{ 
-            fontWeight: 600, 
-<<<<<<< HEAD
-            fontSize: '16px',
-            color: '#F5F5F5',
-            marginBottom: '4px'
-=======
+          style={{
+            fontWeight: 600,
             fontSize: '18px',
             color: '#F5F5F5'
->>>>>>> staging
           }}
         >
           Installer MAATFEED
         </div>
-<<<<<<< HEAD
-        <div style={{ fontSize: '13px', color: '#A3A3A3', lineHeight: 1.4 }}>
-          Ajoutez l'application à votre écran d'accueil pour un accès rapide hors ligne
-        </div>
       </div>
-      
-      {/* Actions */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-=======
-      </div>
-      
+
       {/* Description */}
-      <div style={{ 
-        fontSize: '14px', 
-        color: '#A3A3A3', 
-        lineHeight: 1.4, 
-        textAlign: 'center',
-        width: '100%'
-      }}>
+      <div
+        style={{
+          fontSize: '14px',
+          color: '#A3A3A3',
+          lineHeight: 1.4,
+          textAlign: 'center',
+          width: '100%'
+        }}
+      >
         Ajoutez l'application à votre écran d'accueil pour un accès rapide hors ligne
       </div>
-      
+
       {/* Actions */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%' }}>
->>>>>>> staging
         <button
           onClick={handleInstall}
           style={{
             background: 'linear-gradient(135deg, #D4AF37 0%, #B8941F 100%)',
             border: 'none',
             color: '#0B0704',
-<<<<<<< HEAD
-            padding: '10px 20px',
-            borderRadius: '10px',
-            cursor: 'pointer',
-            fontSize: '13px',
-            fontWeight: 600,
-            whiteSpace: 'nowrap',
-=======
             padding: '12px 24px',
             borderRadius: '10px',
             cursor: 'pointer',
             fontSize: '14px',
             fontWeight: 600,
             width: '100%',
->>>>>>> staging
             transition: 'all 0.2s ease'
           }}
           onMouseEnter={(e) => {
@@ -219,23 +169,17 @@ export function InstallPrompt() {
         >
           Installer
         </button>
-        
+
         <button
           onClick={handleDismiss}
           style={{
             background: 'transparent',
             border: 'none',
             color: '#737373',
-<<<<<<< HEAD
-            padding: '4px',
-            cursor: 'pointer',
-            fontSize: '12px',
-=======
             padding: '8px',
             cursor: 'pointer',
             fontSize: '13px',
             width: '100%',
->>>>>>> staging
             transition: 'color 0.2s ease'
           }}
           onMouseEnter={(e) => {
@@ -261,10 +205,10 @@ export function PWABadge() {
 
   useEffect(() => {
     // Check if app is running in standalone mode (installed PWA)
-    const isStandaloneMode = 
+    const isStandaloneMode =
       window.matchMedia('(display-mode: standalone)').matches ||
       (window.navigator as any).standalone === true;
-    
+
     setIsStandalone(isStandaloneMode);
   }, []);
 
