@@ -70,7 +70,11 @@ function shouldAttemptSessionRefresh(input: string, hasRetried: boolean) {
     return false;
   }
 
-  return !NON_REFRESHABLE_ENDPOINTS.some((endpoint) => input.startsWith(endpoint));
+  return !isNonRefreshableEndpoint(input);
+}
+
+function isNonRefreshableEndpoint(input: string) {
+  return NON_REFRESHABLE_ENDPOINTS.some((endpoint) => input.startsWith(endpoint));
 }
 
 async function refreshAccessToken() {
@@ -134,10 +138,10 @@ function redirectToAuth() {
   }
 }
 
-async function handleErrorResponse(response: Response): Promise<never> {
+async function handleErrorResponse(input: string, response: Response): Promise<never> {
   const errorData = await extractErrorData(response);
 
-  if (response.status === 401) {
+  if (response.status === 401 && !isNonRefreshableEndpoint(input)) {
     redirectToAuth();
     return new Promise(() => {});
   }
@@ -167,7 +171,7 @@ async function requestJson<T>(input: string, init?: RequestInit, hasRetried = fa
     }
   }
 
-  return handleErrorResponse(response);
+  return handleErrorResponse(input, response);
 }
 
 export async function getJson<T>(input: string, init?: RequestInit): Promise<T> {
