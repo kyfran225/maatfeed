@@ -160,6 +160,13 @@ services:
     autoDeploy: false
 
   # API Staging Service
+  - type: keyvalue
+    name: maat-redis-staging
+    plan: free
+    region: oregon
+    maxmemoryPolicy: allkeys-lru
+    ipAllowList: []
+
   - type: web
     name: maat-api-staging
     runtime: node
@@ -176,7 +183,10 @@ services:
       - key: MONGODB_URI
         sync: false
       - key: REDIS_URL
-        sync: false
+        fromService:
+          type: keyvalue
+          name: maat-redis-staging
+          property: connectionString
       - key: UPSTASH_REST_TOKEN
         sync: false
       - key: JWT_ACCESS_SECRET
@@ -257,7 +267,10 @@ services:
       - key: MONGODB_URI
         sync: false
       - key: REDIS_URL
-        sync: false
+        fromService:
+          type: keyvalue
+          name: maat-redis-staging
+          property: connectionString
       - key: UPSTASH_REST_TOKEN
         sync: false
       - key: JWT_ACCESS_SECRET
