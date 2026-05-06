@@ -50,6 +50,7 @@ const envSchema = z.object({
   // External APIs
   YOUTUBE_API_KEY: z.string().optional().default(""),
   YOUTUBE_API_BASE_URL: z.string().optional().default(""),
+  YOUTUBE_CHANNEL_IDS: z.string().optional().default(""),
   TIKTOK_PROVIDER_BASE_URL: z.string().optional().default(""),
   APIFY_API_TOKEN: z.string().optional().default(""),
   GROQ_API_KEY: z.string().optional().default(""),
@@ -113,7 +114,9 @@ const envSchema = z.object({
   WORKER_MULTI_AI_CONCURRENCY: z.coerce.number().int().positive().default(2),
   WORKER_MULTI_AI_RATE_LIMIT_PER_MINUTE: z.coerce.number().int().positive().default(10),
   WORKER_AUTO_INGEST_CRON: z.string().optional().default("0 */2 * * *"),
-  WORKER_AUTO_INGEST_LIMIT_PER_PROVIDER: z.coerce.number().int().positive().default(10)
+  WORKER_AUTO_INGEST_LIMIT_PER_PROVIDER: z.coerce.number().int().positive().default(10),
+  WORKER_AUTO_INGEST_CHANNEL_LIMIT_PER_CHANNEL: z.coerce.number().int().positive().default(6),
+  FEED_MAX_ITEMS: z.coerce.number().int().positive().default(5000)
 });
 
 export const env = envSchema.parse(process.env);

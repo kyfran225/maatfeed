@@ -14,7 +14,7 @@ interface FeedItem {
     handle: string;
     avatar?: string;
   };
-  sourceProvider: "youtube" | "tiktok";
+  sourceProvider: "youtube" | "tiktok" | "internal" | "community";
   bucket: "viral" | "educational" | "deep";
   scores: {
     likes: number;
