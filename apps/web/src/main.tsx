@@ -2,11 +2,15 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import { HelmetProvider } from "react-helmet-async";
 import App from "./app/App";
-import { registerServiceWorker } from "./services/serviceWorkerRegistration";
+import { isProductionDeployment } from "./config/runtime";
+import { registerServiceWorker, unregister } from "./services/serviceWorkerRegistration";
 import "./styles/index.css";
 
-// Register Service Worker for PWA functionality
-registerServiceWorker();
+if (isProductionDeployment) {
+  unregister();
+} else {
+  registerServiceWorker();
+}
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>

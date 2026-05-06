@@ -6,10 +6,16 @@ import { useEffect } from "react";
 import YouTubeAPIManager from "../utils/youtubeAPIManager";
 import CookieBanner from "../components/legal/CookieBanner";
 import { ServiceWorkerUpdate, InstallPrompt, PWABadge } from "../components/pwa";
+import { isProductionDeployment } from "../config/runtime";
+import { MaintenancePage } from "../pages/MaintenancePage";
 
 export default function App() {
   // Précharger l'API YouTube dès le démarrage de l'application
   useEffect(() => {
+    if (isProductionDeployment) {
+      return;
+    }
+
     // Charger l'API YouTube en arrière-plan dès le démarrage
     YouTubeAPIManager.getInstance().loadAPI();
 
@@ -27,6 +33,10 @@ export default function App() {
       document.head.appendChild(link);
     });
   }, []);
+
+  if (isProductionDeployment) {
+    return <MaintenancePage />;
+  }
 
   return (
     <AppProviders>

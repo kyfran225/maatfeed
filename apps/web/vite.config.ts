@@ -3,6 +3,9 @@ import react from "@vitejs/plugin-react";
 
 export default defineConfig({
   plugins: [react()],
+  define: {
+    __MAATFEED_MAINTENANCE__: JSON.stringify(process.env.VERCEL_ENV === "production")
+  },
   server: {
     host: "127.0.0.1",
     port: 5173,
