@@ -5,11 +5,32 @@ function getClient(): Redis {
   return createRedisClient();
 }
 
+const CACHE_QUOTA_COOLDOWN_MS = 60 * 60 * 1000;
+let cacheDisabledUntil = 0;
+
+function isCacheTemporarilyDisabled(): boolean {
+  return Date.now() < cacheDisabledUntil;
+}
+
 function getCacheErrorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
 
+function handleCacheError(action: string, context: Record<string, unknown>, error: unknown) {
+  const message = getCacheErrorMessage(error);
+
+  if (message.includes("max requests limit exceeded")) {
+    cacheDisabledUntil = Date.now() + CACHE_QUOTA_COOLDOWN_MS;
+  }
+
+  console.warn(action, { ...context, error: message });
+}
+
 export async function getCache<T>(key: string): Promise<T | null> {
+  if (isCacheTemporarilyDisabled()) {
+    return null;
+  }
+
   const client = getClient();
 
   if (client.status !== "ready") {
@@ -20,12 +41,16 @@ export async function getCache<T>(key: string): Promise<T | null> {
     const value = await client.get(key);
     return value ? (JSON.parse(value) as T) : null;
   } catch (error) {
-    console.warn("Cache read skipped", { key, error: getCacheErrorMessage(error) });
+    handleCacheError("Cache read skipped", { key }, error);
     return null;
   }
 }
 
 export async function setCache(key: string, value: unknown, ttlSeconds: number) {
+  if (isCacheTemporarilyDisabled()) {
+    return;
+  }
+
   const client = getClient();
 
   if (client.status !== "ready") {
@@ -35,7 +60,7 @@ export async function setCache(key: string, value: unknown, ttlSeconds: number) 
   try {
     await client.set(key, JSON.stringify(value), "EX", ttlSeconds);
   } catch (error) {
-    console.warn("Cache write skipped", { key, error: getCacheErrorMessage(error) });
+    handleCacheError("Cache write skipped", { key }, error);
   }
 }
 
@@ -43,15 +68,17 @@ export const cacheService = {
   get: getCache,
   set: setCache,
   delete: async (key: string) => {
+    if (isCacheTemporarilyDisabled()) return;
     const client = getClient();
     if (client.status !== "ready") return;
     try {
       await client.del(key);
     } catch (error) {
-      console.warn("Cache delete skipped", { key, error: getCacheErrorMessage(error) });
+      handleCacheError("Cache delete skipped", { key }, error);
     }
   },
   deletePattern: async (pattern: string) => {
+    if (isCacheTemporarilyDisabled()) return;
     const client = getClient();
     if (client.status !== "ready") return;
     try {
@@ -60,12 +87,16 @@ export const cacheService = {
         await client.del(...keys);
       }
     } catch (error) {
-      console.warn("Cache pattern delete skipped", { pattern, error: getCacheErrorMessage(error) });
+      handleCacheError("Cache pattern delete skipped", { pattern }, error);
     }
   }
 };
 
 export async function invalidateCacheKeys(keys: string[]) {
+  if (isCacheTemporarilyDisabled()) {
+    return;
+  }
+
   const client = getClient();
 
   if (client.status !== "ready" || keys.length === 0) {
@@ -75,11 +106,15 @@ export async function invalidateCacheKeys(keys: string[]) {
   try {
     await client.del(...keys);
   } catch (error) {
-    console.warn("Cache keys invalidation skipped", { keys, error: getCacheErrorMessage(error) });
+    handleCacheError("Cache keys invalidation skipped", { keys }, error);
   }
 }
 
 export async function invalidateCachePattern(pattern: string) {
+  if (isCacheTemporarilyDisabled()) {
+    return;
+  }
+
   const client = getClient();
 
   if (client.status !== "ready") {
@@ -92,7 +127,7 @@ export async function invalidateCachePattern(pattern: string) {
       await client.del(...keys);
     }
   } catch (error) {
-    console.warn("Cache pattern invalidation skipped", { pattern, error: getCacheErrorMessage(error) });
+    handleCacheError("Cache pattern invalidation skipped", { pattern }, error);
   }
 }
 
