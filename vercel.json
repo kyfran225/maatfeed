@@ -42,6 +42,7 @@
   ],
   "env": {
     "VITE_API_URL": "https://maat-api-staging.onrender.com",
+    "VITE_MAINTENANCE_MODE": "true",
     "NODE_ENV": "production"
   }
 }

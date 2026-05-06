@@ -1,10 +1,11 @@
-import { createBrowserRouter, Navigate } from "react-router-dom";
+import { createBrowserRouter } from "react-router-dom";
 import { Suspense, lazy } from "react";
 import { AppLayout } from "../components/layout/AppLayout";
 import { AdminLayout } from "../components/layout/AdminLayout";
 import { RequireAuth } from "../components/layout/RequireAuth";
 import { AuthPage } from "../pages/AuthPage";
 import { FeedPage } from "../pages/FeedPage";
+import { MaintenancePage } from "../pages/MaintenancePage";
 import { NotFoundPage } from "../pages/NotFoundPage";
 
 // Lazy load heavy pages
@@ -17,7 +18,6 @@ const ContentDetailPage = lazy(() => import("../pages/ContentDetailPage"));
 const DebateDetailPage = lazy(() => import("../pages/DebateDetailPage"));
 const DemoSectionTitlePage = lazy(() => import("../pages/DemoSectionTitlePage"));
 const TikTokDemoPage = lazy(() => import("../pages/TikTokDemoPage"));
-const MaintenancePage = lazy(() => import("../pages/MaintenancePage"));
 const ExplorePage = lazy(() => import("../pages/ExplorePage"));
 const ForgotPasswordPage = lazy(() => import("../pages/ForgotPasswordPage"));
 const OnboardingPage = lazy(() => import("../pages/OnboardingPage"));
@@ -44,13 +44,22 @@ const LazyPage = ({ children }: { children: React.ReactNode }) => (
   <Suspense fallback={<PageLoader />}>{children}</Suspense>
 );
 
-export const router = createBrowserRouter([
+const isMaintenanceMode = import.meta.env.VITE_MAINTENANCE_MODE === "true";
+console.log('Maintenance mode:', import.meta.env.VITE_MAINTENANCE_MODE, isMaintenanceMode);
+
+export const router = createBrowserRouter(isMaintenanceMode ? [
+  {
+    path: "*",
+    element: <MaintenancePage />,
+    errorElement: <MaintenancePage />
+  }
+] : [
   {
     path: "/",
     element: <AppLayout />,
     errorElement: <NotFoundPage />,
     children: [
-      { index: true, element: <MaintenancePage /> },
+      { index: true, element: <FeedPage /> },
       { path: "enhanced-feed", element: <FeedPage /> },
       { path: "auth", element: <AuthPage /> },
       { path: "verify-email", element: <VerifyEmailPage /> },

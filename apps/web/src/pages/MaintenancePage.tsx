@@ -1,9 +1,13 @@
+import { Helmet } from "react-helmet-async";
+
 export function MaintenancePage() {
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
-      <title>Maintenance - Maatfeed</title>
-      <meta name="description" content="Maatfeed est actuellement en maintenance. Nous serons bientôt de retour !" />
-      <meta name="robots" content="noindex, nofollow" />
+      <Helmet>
+        <title>Maintenance - Maatfeed</title>
+        <meta name="description" content="Maatfeed est actuellement en maintenance. Nous serons bientôt de retour !" />
+        <meta name="robots" content="noindex, nofollow" />
+      </Helmet>
       
       <div className="max-w-md w-full text-center">
         <div className="mb-8">
@@ -50,3 +54,5 @@ export function MaintenancePage() {
     </div>
   );
 }
+
+export default MaintenancePage;

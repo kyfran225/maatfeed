@@ -1,24 +1,14 @@
-# MAAT FEED
+# Render CLI
 
-Monorepo MAATFEED : feed culturel simple en surface, avec une intelligence d'apprentissage discrète derrière.
+## Installation
 
-## Espaces de travail
+- [Homebrew](https://render.com/docs/cli#homebrew-macos-linux)
+- [Direct Download](https://render.com/docs/cli#direct-download)
 
-- `apps/api`: API Express, jobs, orchestration IA, cache et services de données
-- `apps/web`: Client React/Vite pour le feed, découvrir, échanges, audio et profils
-- `packages/shared`: Types partagés, constantes, schémas et utilitaires de scoring
-- `infra`: Scripts d'exécution locale et opérationnels
+## Documentation
 
-## Statut actuel
+Documentation is hosted at https://render.com/docs/cli.
 
-- Feed web actif avec progression discrète et score feed influencé par l'historique d'apprentissage
-- Audio, échanges, découvrir et profil actifs
-- API learning ajoutée pour progression, quiz discrets et coach IA
-- Audio "Plus tard" persisté côté API pour les utilisateurs connectés
-- IA utilisée pour aider au moment du blocage, pas comme gadget conversationnel
+## Contributing
 
-## Prochaines étapes
-
-- mesurer les reprises, corrections et retours utilisateur
-- affiner le ranking learning-based en fonction des retours réels
-- étendre le suivi audio côté utilisateur avec position d'écoute
+To create a new command, use the `cmd/template.go` template file as a starting point. Reference the [CLI Style Guide](docs/STYLE.md) to learn more about command naming, flags, arguments, and help text conventions.

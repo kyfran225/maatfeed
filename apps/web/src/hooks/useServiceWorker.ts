@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 
 interface ServiceWorkerState {
   isUpdateAvailable: boolean;
@@ -16,21 +16,46 @@ export function useServiceWorker(): ServiceWorkerState {
   const [isUpdateAvailable, setIsUpdateAvailable] = useState(false);
   const [isOfflineReady, setIsOfflineReady] = useState(false);
   const [registration, setRegistration] = useState<ServiceWorkerRegistration | null>(null);
-  let newWorker: ServiceWorker | null = null;
+  const newWorkerRef = useRef<ServiceWorker | null>(null);
+  const isReloadingRef = useRef(false);
+
+  const reloadForUpdate = useCallback(() => {
+    if (isReloadingRef.current) {
+      return;
+    }
+
+    isReloadingRef.current = true;
+    setIsUpdateAvailable(false);
+    window.location.reload();
+  }, []);
 
   const update = useCallback(() => {
-    if (newWorker) {
-      // Send skip waiting message to new service worker
-      newWorker.postMessage({ type: 'SKIP_WAITING' });
-      
-      // Reload page after new SW activates
-      newWorker.addEventListener('statechange', () => {
-        if (newWorker?.state === 'activated') {
-          window.location.reload();
-        }
-      });
+    if (!('serviceWorker' in navigator)) {
+      return;
     }
-  }, []);
+
+    const worker = newWorkerRef.current || registration?.waiting || registration?.installing;
+
+    navigator.serviceWorker.addEventListener('controllerchange', reloadForUpdate, { once: true });
+
+    if (!worker) {
+      void registration?.update();
+      return;
+    }
+
+    worker.addEventListener('statechange', () => {
+      if (worker.state === 'activated') {
+        reloadForUpdate();
+      }
+    });
+
+    if (worker.state === 'activated') {
+      reloadForUpdate();
+      return;
+    }
+
+    worker.postMessage({ type: 'SKIP_WAITING' });
+  }, [registration, reloadForUpdate]);
 
   const dismissUpdate = useCallback(() => {
     setIsUpdateAvailable(false);
@@ -41,7 +66,7 @@ export function useServiceWorker(): ServiceWorkerState {
     const handleUpdate = (event: Event) => {
       const customEvent = event as CustomEvent<ServiceWorkerRegistration>;
       setRegistration(customEvent.detail);
-      newWorker = customEvent.detail.installing || customEvent.detail.waiting;
+      newWorkerRef.current = customEvent.detail.waiting || customEvent.detail.installing;
       setIsUpdateAvailable(true);
     };
 
@@ -71,7 +96,7 @@ export function useServiceWorker(): ServiceWorkerState {
         
         // Check if there's already a waiting worker
         if (reg.waiting) {
-          newWorker = reg.waiting;
+          newWorkerRef.current = reg.waiting;
           setIsUpdateAvailable(true);
         }
       });
