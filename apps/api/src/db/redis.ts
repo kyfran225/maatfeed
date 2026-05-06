@@ -73,7 +73,8 @@ export function createRedisClient(): Redis {
       enableReadyCheck: false,
       connectTimeout: 10000,
       commandTimeout: 5000,
-      enableOfflineQueue: false,
+      enableOfflineQueue: true,
+      retryStrategy: times => Math.min(times * 100, 2000),
     });
 
     // Handle connection errors gracefully
