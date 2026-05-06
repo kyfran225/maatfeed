@@ -11,9 +11,18 @@ import { ContentModel } from "./models/Content.js";
 import { CommunityPostModel } from "./models/CommunityPost.js";
 import { AudioTrackModel } from "./models/AudioTrack.js";
 
-const ALLOWED_ORIGINS = env.NODE_ENV === "production"
+const DEFAULT_ALLOWED_ORIGINS = env.NODE_ENV === "production"
   ? ["https://www.maatfeed.com", "https://maatfeed.vercel.app", "https://maat-feed.vercel.app"]
   : ["http://localhost:5173", "http://127.0.0.1:5173"];
+
+const CONFIGURED_ALLOWED_ORIGINS = env.CORS_ORIGIN
+  .split(",")
+  .map(origin => origin.trim())
+  .filter(Boolean);
+
+const ALLOWED_ORIGINS = Array.from(
+  new Set([...DEFAULT_ALLOWED_ORIGINS, env.APP_BASE_URL, ...CONFIGURED_ALLOWED_ORIGINS].filter(Boolean))
+);
 
 export function createApp() {
   const app = express();
@@ -43,7 +52,7 @@ export function createApp() {
         if (ALLOWED_ORIGINS.includes(origin)) return callback(null, true);
         callback(new Error("Not allowed by CORS"));
       },
-      credentials: true
+      credentials: env.CORS_CREDENTIALS
     })
   );
   app.use(

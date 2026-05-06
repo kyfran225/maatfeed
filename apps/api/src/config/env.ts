@@ -41,6 +41,12 @@ const envSchema = z.object({
   // App URLs
   APP_BASE_URL: z.string().optional().default("http://localhost:5173"),
   API_BASE_URL: z.string().optional().default("http://localhost:4000"),
+  CORS_ORIGIN: z.string().optional().default(""),
+  CORS_CREDENTIALS: z
+    .enum(["true", "false"])
+    .optional()
+    .default("true")
+    .transform(value => value === "true"),
   // External APIs
   YOUTUBE_API_KEY: z.string().optional().default(""),
   YOUTUBE_API_BASE_URL: z.string().optional().default(""),

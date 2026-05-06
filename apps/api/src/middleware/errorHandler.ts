@@ -31,6 +31,14 @@ const BAD_REQUEST_MESSAGES = [
 function getStatusCode(errorMessage: string): number {
   const lowerMessage = errorMessage.toLowerCase();
 
+  if (lowerMessage.includes("not allowed by cors")) {
+    return 403;
+  }
+
+  if (lowerMessage.includes("json") && lowerMessage.includes("position")) {
+    return 400;
+  }
+
   // Check for auth errors (401)
   if (AUTH_ERROR_MESSAGES.some(msg => lowerMessage.includes(msg))) {
     return 401;
