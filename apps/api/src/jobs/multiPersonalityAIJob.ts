@@ -4,6 +4,7 @@ import { getQueueOptions } from "../queues/queueFactory.js";
 import { createAICommentForComment } from "../services/aiCommentService.js";
 import { CommentModel } from "../models/Comment.js";
 import { AIMemoryService } from "../services/aiMemoryService.js";
+import { env } from "../config/env.js";
 
 export interface MultiPersonalityAIJobData {
   contentId: string;
@@ -161,10 +162,10 @@ export async function runMultiPersonalityAIWorker() {
     },
     {
       ...queueOptions,
-      concurrency: 2, // Limit concurrent AI jobs
+      concurrency: env.WORKER_MULTI_AI_CONCURRENCY,
       limiter: {
-        max: 10,
-        duration: 60000 // 10 jobs per minute
+        max: env.WORKER_MULTI_AI_RATE_LIMIT_PER_MINUTE,
+        duration: 60000
       }
     }
   );
