@@ -3,7 +3,7 @@
  * Unified PWA Service Worker with advanced caching strategies
  */
 
-const CACHE_VERSION = 'v2.0.0';
+const CACHE_VERSION = 'v2.0.1';
 const STATIC_CACHE = `maatfeed-static-${CACHE_VERSION}`;
 const IMAGE_CACHE = `maatfeed-images-${CACHE_VERSION}`;
 const API_CACHE = `maatfeed-api-${CACHE_VERSION}`;
@@ -35,12 +35,9 @@ self.addEventListener('install', (event) => {
       })
       .then(() => {
         console.log('[SW] Precache complete');
-        return self.skipWaiting();
       })
       .catch((err) => {
         console.error('[SW] Precache failed:', err);
-        // Continue installation even if some assets fail
-        return self.skipWaiting();
       })
   );
 });
@@ -184,9 +181,10 @@ async function cacheFirstWithBackgroundUpdate(request, cacheName) {
   const cachedResponse = await caches.match(request);
   
   const fetchPromise = fetch(request).then((networkResponse) => {
+    const responseClone = networkResponse.clone(); // Clone immediately
     if (networkResponse.ok) {
       const cache = caches.open(cacheName).then((cache) => {
-        cache.put(request, networkResponse.clone());
+        cache.put(request, responseClone);
       });
     }
     return networkResponse;
@@ -317,7 +315,7 @@ self.addEventListener('message', (event) => {
   switch (data.type) {
     case 'SKIP_WAITING':
       console.log('[SW] Skipping waiting...');
-      self.skipWaiting();
+      event.waitUntil(self.skipWaiting());
       break;
       
     case 'GET_VERSION':
