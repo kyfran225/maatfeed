@@ -4,20 +4,35 @@
   "outputDirectory": "apps/web/dist",
   "installCommand": "npm install --legacy-peer-deps",
   "framework": null,
-  "routes": [
+  "rewrites": [
     {
-      "src": "/api/(.*)",
-      "dest": "https://maat-api-staging.onrender.com/api/$1"
+      "source": "/api/:path*",
+      "destination": "https://maat-api-staging.onrender.com/api/:path*"
     },
     {
-      "handle": "filesystem"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/index.html"
+      "source": "/:path*",
+      "destination": "/index.html"
     }
   ],
   "headers": [
+    {
+      "source": "/sw.js",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store, no-cache, must-revalidate, proxy-revalidate"
+        }
+      ]
+    },
+    {
+      "source": "/index.html",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, no-store, must-revalidate"
+        }
+      ]
+    },
     {
       "source": "/(.*)",
       "headers": [
@@ -42,7 +57,6 @@
   ],
   "env": {
     "VITE_API_URL": "https://maat-api-staging.onrender.com",
-    "VITE_MAINTENANCE_MODE": "true",
-    "NODE_ENV": "production"
+    "VITE_MAINTENANCE_MODE": "true"
   }
 }

@@ -6,10 +6,15 @@ import { useEffect } from "react";
 import YouTubeAPIManager from "../utils/youtubeAPIManager";
 import CookieBanner from "../components/legal/CookieBanner";
 import { ServiceWorkerUpdate, InstallPrompt, PWABadge } from "../components/pwa";
+import { isMaintenanceMode } from "../config/runtime";
 
 export default function App() {
   // Précharger l'API YouTube dès le démarrage de l'application
   useEffect(() => {
+    if (isMaintenanceMode) {
+      return;
+    }
+
     // Charger l'API YouTube en arrière-plan dès le démarrage
     YouTubeAPIManager.getInstance().loadAPI();
 
@@ -32,11 +37,14 @@ export default function App() {
     <AppProviders>
       <AccessibilityWrapper>
         <RouterProvider router={router} />
-        <CookieBanner />
-        {/* PWA Components */}
-        <ServiceWorkerUpdate />
-        <InstallPrompt />
-        <PWABadge />
+        {!isMaintenanceMode && (
+          <>
+            <CookieBanner />
+            <ServiceWorkerUpdate />
+            <InstallPrompt />
+            <PWABadge />
+          </>
+        )}
       </AccessibilityWrapper>
     </AppProviders>
   );

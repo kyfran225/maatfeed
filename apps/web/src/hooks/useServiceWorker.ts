@@ -29,17 +29,30 @@ export function useServiceWorker(): ServiceWorkerState {
     window.location.reload();
   }, []);
 
-  const update = useCallback(() => {
+  const update = useCallback(async () => {
     if (!('serviceWorker' in navigator)) {
       return;
     }
 
-    const worker = newWorkerRef.current || registration?.waiting || registration?.installing;
+    let activeRegistration = registration;
+
+    if (!activeRegistration) {
+      activeRegistration = await navigator.serviceWorker.ready;
+      setRegistration(activeRegistration);
+    }
+
+    let worker = newWorkerRef.current || activeRegistration.waiting || activeRegistration.installing;
 
     navigator.serviceWorker.addEventListener('controllerchange', reloadForUpdate, { once: true });
 
     if (!worker) {
-      void registration?.update();
+      activeRegistration = await activeRegistration.update();
+      setRegistration(activeRegistration);
+      worker = activeRegistration.waiting || activeRegistration.installing;
+    }
+
+    if (!worker) {
+      reloadForUpdate();
       return;
     }
 
@@ -55,6 +68,10 @@ export function useServiceWorker(): ServiceWorkerState {
     }
 
     worker.postMessage({ type: 'SKIP_WAITING' });
+
+    window.setTimeout(() => {
+      reloadForUpdate();
+    }, 1500);
   }, [registration, reloadForUpdate]);
 
   const dismissUpdate = useCallback(() => {

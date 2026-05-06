@@ -17,7 +17,7 @@ type Config = {
 };
 
 export function registerServiceWorker(config?: Config) {
-  if (process.env.NODE_ENV === 'production' && 'serviceWorker' in navigator) {
+  if (import.meta.env.PROD && 'serviceWorker' in navigator) {
     const publicUrl = new URL(import.meta.env.BASE_URL, window.location.href);
     
     if (publicUrl.origin !== window.location.origin) {
@@ -38,9 +38,10 @@ export function registerServiceWorker(config?: Config) {
 
 function registerValidSW(swUrl: string, config?: Config) {
   navigator.serviceWorker
-    .register(swUrl)
+    .register(swUrl, { updateViaCache: 'none' })
     .then((registration) => {
       console.log('[PWA] Service Worker registered:', registration.scope);
+      void registration.update();
 
       registration.onupdatefound = () => {
         const installingWorker = registration.installing;
@@ -106,13 +107,38 @@ function checkLocalhost(swUrl: string, config?: Config) {
 
 export function unregister() {
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.ready
-      .then((registration) => {
-        registration.unregister();
-      })
+    navigator.serviceWorker.getRegistrations()
+      .then((registrations) => Promise.all(registrations.map((registration) => registration.unregister())))
       .catch((error) => {
         console.error(error.message);
       });
+  }
+}
+
+export async function disableServiceWorkerForMaintenance() {
+  if (!('serviceWorker' in navigator)) {
+    return;
+  }
+
+  try {
+    const registrations = await navigator.serviceWorker.getRegistrations();
+    await Promise.all(registrations.map((registration) => registration.unregister()));
+
+    if ('caches' in window) {
+      const cacheNames = await caches.keys();
+      await Promise.all(
+        cacheNames
+          .filter((cacheName) => cacheName.startsWith('maatfeed-'))
+          .map((cacheName) => caches.delete(cacheName))
+      );
+    }
+
+    if (navigator.serviceWorker.controller && sessionStorage.getItem('maatfeed-maintenance-sw-reset') !== 'done') {
+      sessionStorage.setItem('maatfeed-maintenance-sw-reset', 'done');
+      window.location.reload();
+    }
+  } catch (error) {
+    console.error('[PWA] Failed to disable Service Worker for maintenance:', error);
   }
 }
 

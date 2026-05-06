@@ -7,6 +7,7 @@ import { AuthPage } from "../pages/AuthPage";
 import { FeedPage } from "../pages/FeedPage";
 import { MaintenancePage } from "../pages/MaintenancePage";
 import { NotFoundPage } from "../pages/NotFoundPage";
+import { isMaintenanceMode } from "../config/runtime";
 
 // Lazy load heavy pages
 const AdminOpsPage = lazy(() => import("../pages/AdminOpsPage"));
@@ -43,9 +44,6 @@ const PageLoader = () => (
 const LazyPage = ({ children }: { children: React.ReactNode }) => (
   <Suspense fallback={<PageLoader />}>{children}</Suspense>
 );
-
-const isMaintenanceMode = import.meta.env.VITE_MAINTENANCE_MODE === "true";
-console.log('Maintenance mode:', import.meta.env.VITE_MAINTENANCE_MODE, isMaintenanceMode);
 
 export const router = createBrowserRouter(isMaintenanceMode ? [
   {
