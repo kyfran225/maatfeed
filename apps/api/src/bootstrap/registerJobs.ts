@@ -11,7 +11,7 @@ import { scheduleAutoIngest } from "../scheduler/ingestScheduler.js";
 import { connectServices } from "./connectServices.js";
 import { getQueueOptions } from "../queues/queueFactory.js";
 import { QUEUE_NAMES } from "../queues/queueNames.js";
-import { initializePushNotificationJobs } from "../queues/pushNotificationQueue.js";
+import { createPushNotificationWorker, initializePushNotificationJobs } from "../queues/pushNotificationQueue.js";
 import { createRedisClient } from "../db/redis.js";
 import { getAllDynamicKeywords } from "../services/keywordManagementService.js";
 
@@ -62,6 +62,9 @@ export function registerJobWorkers() {
 
   // Multi-personality AI worker
   const multiPersonalityAIWorker = runMultiPersonalityAIWorker();
+
+  // Push notification worker
+  const pushNotificationWorker = createPushNotificationWorker();
 
   // Auto-ingest scheduler worker
   const autoIngestWorker = new Worker("auto-ingest-scheduler", async (job) => {

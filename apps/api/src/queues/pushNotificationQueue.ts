@@ -37,63 +37,65 @@ interface PushJobData {
   [key: string]: unknown;
 }
 
-// Worker to process push notification jobs
-export const pushNotificationWorker = new Worker<PushJobData>(
-  "push-notifications",
-  async (job: Job<PushJobData>) => {
-    const { type, ...data } = job.data;
+export function createPushNotificationWorker(): Worker<PushJobData> {
+  const pushNotificationWorker = new Worker<PushJobData>(
+    "push-notifications",
+    async (job: Job<PushJobData>) => {
+      const { type, ...data } = job.data;
 
-    logger.info({ msg: "Processing push notification job", jobId: job.id, type });
+      logger.info({ msg: "Processing push notification job", jobId: job.id, type });
 
-    switch (type) {
-      case "review-due-batch":
-        return await sendReviewDueNotifications();
+      switch (type) {
+        case "review-due-batch":
+          return await sendReviewDueNotifications();
 
-      case "reply-notification": {
-        const { parentCommentId, replyAuthorName, replyContent } = data as {
-          parentCommentId: string;
-          replyAuthorName: string;
-          replyContent: string;
-        };
-        return await sendReplyNotification(parentCommentId, replyAuthorName, replyContent);
+        case "reply-notification": {
+          const { parentCommentId, replyAuthorName, replyContent } = data as {
+            parentCommentId: string;
+            replyAuthorName: string;
+            replyContent: string;
+          };
+          return await sendReplyNotification(parentCommentId, replyAuthorName, replyContent);
+        }
+
+        case "trending-notification": {
+          const { contentId, trendingScore } = data as {
+            contentId: string;
+            trendingScore: number;
+          };
+          return await sendTrendingContentNotification(contentId, trendingScore);
+        }
+
+        case "cleanup-subscriptions":
+          return await cleanupExpiredSubscriptions();
+
+        default:
+          throw new Error(`Unknown job type: ${type}`);
       }
+    },
+    queueOptions
+  );
 
-      case "trending-notification": {
-        const { contentId, trendingScore } = data as {
-          contentId: string;
-          trendingScore: number;
-        };
-        return await sendTrendingContentNotification(contentId, trendingScore);
-      }
-
-      case "cleanup-subscriptions":
-        return await cleanupExpiredSubscriptions();
-
-      default:
-        throw new Error(`Unknown job type: ${type}`);
-    }
-  },
-  queueOptions
-);
-
-// Worker event handlers
-pushNotificationWorker.on("completed", (job) => {
-  logger.info({
-    msg: "Push notification job completed",
-    jobId: job.id,
-    type: job.data.type,
-    result: job.returnvalue
+  pushNotificationWorker.on("completed", (job) => {
+    logger.info({
+      msg: "Push notification job completed",
+      jobId: job.id,
+      type: job.data.type,
+      result: job.returnvalue
+    });
   });
-});
 
-pushNotificationWorker.on("failed", (job, err) => {
-  logger.error({
-    msg: "Push notification job failed",
-    jobId: job?.id,
-    type: job?.data.type,
-    error: err.message
+  pushNotificationWorker.on("failed", (job, err) => {
+    logger.error({
+      msg: "Push notification job failed",
+      jobId: job?.id,
+      type: job?.data.type,
+      error: err.message
+    });
   });
-});
+
+  return pushNotificationWorker;
+}
 
 // Job scheduling functions
 
