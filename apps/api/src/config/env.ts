@@ -93,7 +93,19 @@ const envSchema = z.object({
   // Cloudinary configuration
   CLOUDINARY_CLOUD_NAME: z.string().optional().default(""),
   CLOUDINARY_API_KEY: z.string().optional().default(""),
-  CLOUDINARY_API_SECRET: z.string().optional().default("")
+  CLOUDINARY_API_SECRET: z.string().optional().default(""),
+  // Worker sizing and scheduling
+  WORKER_INGEST_CONCURRENCY: z.coerce.number().int().positive().default(3),
+  WORKER_CLASSIFY_CONCURRENCY: z.coerce.number().int().positive().default(2),
+  WORKER_CLASSIFY_RATE_LIMIT_PER_MINUTE: z.coerce.number().int().positive().default(30),
+  WORKER_ENRICH_CONCURRENCY: z.coerce.number().int().positive().default(2),
+  WORKER_ENRICH_RATE_LIMIT_PER_MINUTE: z.coerce.number().int().positive().default(30),
+  WORKER_COMMUNITY_AI_CONCURRENCY: z.coerce.number().int().positive().default(2),
+  WORKER_COMMUNITY_AI_RATE_LIMIT_PER_MINUTE: z.coerce.number().int().positive().default(20),
+  WORKER_MULTI_AI_CONCURRENCY: z.coerce.number().int().positive().default(2),
+  WORKER_MULTI_AI_RATE_LIMIT_PER_MINUTE: z.coerce.number().int().positive().default(10),
+  WORKER_AUTO_INGEST_CRON: z.string().optional().default("0 */2 * * *"),
+  WORKER_AUTO_INGEST_LIMIT_PER_PROVIDER: z.coerce.number().int().positive().default(10)
 });
 
 export const env = envSchema.parse(process.env);

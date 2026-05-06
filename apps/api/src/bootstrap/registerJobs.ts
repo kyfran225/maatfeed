@@ -14,6 +14,7 @@ import { QUEUE_NAMES } from "../queues/queueNames.js";
 import { createPushNotificationWorker, initializePushNotificationJobs } from "../queues/pushNotificationQueue.js";
 import { createRedisClient } from "../db/redis.js";
 import { getAllDynamicKeywords } from "../services/keywordManagementService.js";
+import { env } from "../config/env.js";
 
 loadEnv();
 
@@ -27,35 +28,34 @@ export function registerJobWorkers() {
   // Ingest worker: higher concurrency for I/O bound operations
   const ingestWorker = new Worker(QUEUE_NAMES.ingest, processIngestJob, {
     ...queueOptions,
-    concurrency: 3
+    concurrency: env.WORKER_INGEST_CONCURRENCY
   });
 
-  // Classification worker: limited concurrency to respect Groq rate limits
-  // With 1.5s delay between requests and 3 concurrent workers = ~2 req/sec = ~120 req/min
+  // Classification worker: limited concurrency to respect LLM rate limits.
   const classifyWorker = new Worker(QUEUE_NAMES.classify, processClassificationJob, {
     ...queueOptions,
-    concurrency: 2,
+    concurrency: env.WORKER_CLASSIFY_CONCURRENCY,
     limiter: {
-      max: 30,        // Max 30 jobs
-      duration: 60000 // Per 60 seconds (1 minute)
+      max: env.WORKER_CLASSIFY_RATE_LIMIT_PER_MINUTE,
+      duration: 60000
     }
   });
 
   // Enrichment worker: limited concurrency to respect Groq rate limits
   const enrichWorker = new Worker(QUEUE_NAMES.enrich, processEnrichmentJob, {
     ...queueOptions,
-    concurrency: 2,
+    concurrency: env.WORKER_ENRICH_CONCURRENCY,
     limiter: {
-      max: 30,
+      max: env.WORKER_ENRICH_RATE_LIMIT_PER_MINUTE,
       duration: 60000
     }
   });
 
   const communityAIWorker = new Worker(QUEUE_NAMES.communityAI, processCommunityAICommentJob, {
     ...queueOptions,
-    concurrency: 2,
+    concurrency: env.WORKER_COMMUNITY_AI_CONCURRENCY,
     limiter: {
-      max: 20,
+      max: env.WORKER_COMMUNITY_AI_RATE_LIMIT_PER_MINUTE,
       duration: 60000
     }
   });
@@ -195,10 +195,16 @@ async function startWorkers() {
     logger.warn({ err }, "Failed to initialize keywords");
   }
 
-  // Schedule automatic ingestion every 2 hours
+  // Schedule automatic ingestion.
   try {
-    await scheduleAutoIngest("0 */2 * * *", 10);
-    logger.info("Auto-ingest scheduler initialized (every 2 hours)");
+    await scheduleAutoIngest(env.WORKER_AUTO_INGEST_CRON, env.WORKER_AUTO_INGEST_LIMIT_PER_PROVIDER);
+    logger.info(
+      {
+        cron: env.WORKER_AUTO_INGEST_CRON,
+        limitPerProvider: env.WORKER_AUTO_INGEST_LIMIT_PER_PROVIDER
+      },
+      "Auto-ingest scheduler initialized"
+    );
   } catch (err) {
     logger.warn({ err }, "Failed to schedule auto-ingest");
   }
