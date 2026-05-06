@@ -20,7 +20,29 @@ const CONFIGURED_ALLOWED_ORIGINS = env.CORS_ORIGIN
   .map(origin => origin.trim())
   .filter(Boolean);
 
-const ALLOWED_ORIGINS = Array.from(new Set([...DEFAULT_ALLOWED_ORIGINS, ...CONFIGURED_ALLOWED_ORIGINS]));
+const ALLOWED_ORIGINS = Array.from(
+  new Set([...DEFAULT_ALLOWED_ORIGINS, env.APP_BASE_URL, ...CONFIGURED_ALLOWED_ORIGINS].filter(Boolean))
+);
+
+function isAllowedOrigin(origin: string) {
+  if (ALLOWED_ORIGINS.includes(origin)) {
+    return true;
+  }
+
+  if (env.NODE_ENV === "staging") {
+    try {
+      const { hostname, protocol } = new URL(origin);
+      return (
+        protocol === "https:" &&
+        /^maatfeed-[a-z0-9-]+-franck-s-projects-8e4e5822\.vercel\.app$/.test(hostname)
+      );
+    } catch {
+      return false;
+    }
+  }
+
+  return false;
+}
 
 export function createApp() {
   const app = express();
@@ -47,7 +69,7 @@ export function createApp() {
       origin: (origin, callback) => {
         // Allow requests with no origin (mobile apps, curl, etc.)
         if (!origin) return callback(null, true);
-        if (ALLOWED_ORIGINS.includes(origin)) return callback(null, true);
+        if (isAllowedOrigin(origin)) return callback(null, true);
         callback(new Error("Not allowed by CORS"));
       },
       credentials: env.CORS_CREDENTIALS

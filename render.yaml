@@ -229,7 +229,7 @@ services:
       - key: JWT_REFRESH_SECRET
         generateValue: true
       - key: CORS_ORIGIN
-        value: https://maatfeed-jj356d2e7-franck-s-projects-8e4e5822.vercel.app,https://maatfeed.vercel.app
+        value: https://maatfeed-git-staging-franck-s-projects-8e4e5822.vercel.app,https://maatfeed-jj356d2e7-franck-s-projects-8e4e5822.vercel.app,https://maatfeed.vercel.app
       - key: CORS_CREDENTIALS
         value: true
       - key: YOUTUBE_API_KEY
@@ -259,7 +259,7 @@ services:
       - key: FROM_EMAIL
         value: "Maatfeed <no-reply@maatfeed.com>"
       - key: APP_BASE_URL
-        value: https://maatfeed-jj356d2e7-franck-s-projects-8e4e5822.vercel.app
+        value: https://maatfeed-git-staging-franck-s-projects-8e4e5822.vercel.app
       - key: API_BASE_URL
         value: https://maat-api-staging.onrender.com
       - key: CLOUDINARY_CLOUD_NAME
@@ -277,9 +277,9 @@ services:
       - key: PAYMENT_PROVIDER
         value: paystack
       - key: PAYMENT_SUCCESS_URL
-        value: https://maatfeed-jj356d2e7-franck-s-projects-8e4e5822.vercel.app/profile
+        value: https://maatfeed-git-staging-franck-s-projects-8e4e5822.vercel.app/profile
       - key: PAYMENT_CANCEL_URL
-        value: https://maatfeed-jj356d2e7-franck-s-projects-8e4e5822.vercel.app/profile
+        value: https://maatfeed-git-staging-franck-s-projects-8e4e5822.vercel.app/profile
       - key: SESSION_SECRET
         generateValue: true
       - key: HELMET_ENABLED
