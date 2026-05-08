@@ -9,7 +9,8 @@ export default defineConfig({
   plugins: [react()],
   envDir: rootDir,
   define: {
-    "import.meta.env.VITE_VERCEL_ENV": JSON.stringify(process.env.VERCEL_ENV ?? "")
+    "import.meta.env.VITE_VERCEL_ENV": JSON.stringify(process.env.VERCEL_ENV ?? ""),
+    "import.meta.env.VITE_VERCEL_GIT_COMMIT_REF": JSON.stringify(process.env.VERCEL_GIT_COMMIT_REF ?? "")
   },
   server: {
     host: "127.0.0.1",
