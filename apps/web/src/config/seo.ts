@@ -43,7 +43,7 @@ export const siteSEO: SEOConfig = {
   // Identité
   siteName: 'MAATFEED',
   siteTagline: 'Savoirs africains, débats et audio',
-  defaultTitle: 'MAATFEED — Savoirs africains, débats et audio',
+  defaultTitle: 'MAATFEED - Savoirs africains, débats et audio',
   defaultDescription: 'MAATFEED rassemble contenus, audio et discussions autour des savoirs africains.',
   
   // URLs - IMPORTANT: Adapter selon l'environnement
@@ -77,7 +77,7 @@ export const siteSEO: SEOConfig = {
 // Configuration par type de page pour un SEO granulaire
 export const pageSEO = {
   home: {
-    title: 'MAATFEED — Savoirs africains, débats et audio',
+    title: 'MAATFEED - Savoirs africains, débats et audio',
     description: 'Contenus, audio et discussions autour des savoirs africains.',
     keywords: ['savoir africain', 'débat', 'spiritualité', 'histoire', 'kemet'],
     robots: 'index, follow',
@@ -85,7 +85,7 @@ export const pageSEO = {
     changefreq: 'daily',
   },
   explore: {
-    title: 'Découvrir — MAATFEED',
+    title: 'Découvrir - MAATFEED',
     description: 'Explore les contenus MAATFEED.',
     keywords: ['contenu africain', 'vidéos', 'audio', 'histoire', 'spiritualité'],
     robots: 'index, follow',
@@ -93,7 +93,7 @@ export const pageSEO = {
     changefreq: 'hourly',
   },
   community: {
-    title: 'Atelier — MAATFEED',
+    title: 'Atelier - MAATFEED',
     description: 'Explique, confronte et améliore ta compréhension avec les débats et les retours de la communauté MAATFEED.',
     keywords: ['atelier', 'débats', 'explication', 'discussion', 'forum africain'],
     robots: 'index, follow',
@@ -101,7 +101,7 @@ export const pageSEO = {
     changefreq: 'hourly',
   },
   audio: {
-    title: 'Audio — MAATFEED',
+    title: 'Audio - MAATFEED',
     description: 'Écoute les pistes audio MAATFEED.',
     keywords: ['audio', 'podcast', 'spiritualité', 'histoire africaine'],
     robots: 'index, follow',
@@ -109,14 +109,14 @@ export const pageSEO = {
     changefreq: 'daily',
   },
   content: {
-    titleTemplate: (title: string) => `${title} — MAATFEED`,
+    titleTemplate: (title: string) => `${title} - MAATFEED`,
     descriptionTemplate: (desc: string) => desc,
     robots: 'index, follow',
     priority: '0.8',
     changefreq: 'weekly',
   },
   debate: {
-    titleTemplate: (title: string) => `Débat: ${title} — MAATFEED`,
+    titleTemplate: (title: string) => `Débat: ${title} - MAATFEED`,
     descriptionTemplate: (desc: string) => `Rejoins le débat sur MAATFEED: ${desc}`,
     robots: 'index, follow',
     priority: '0.7',
@@ -124,42 +124,42 @@ export const pageSEO = {
   },
   // Pages privées - NOINDEX
   auth: {
-    title: 'Connexion — MAATFEED',
+    title: 'Connexion - MAATFEED',
     description: 'Connecte-toi à MAATFEED pour accéder à ton feed personnalisé et participer aux débats.',
     robots: 'noindex, nofollow',
   },
   register: {
-    title: 'Inscription — MAATFEED',
+    title: 'Inscription - MAATFEED',
     description: 'Crée ton compte MAATFEED et rejoins la communauté du savoir africain.',
     robots: 'noindex, nofollow',
   },
   profile: {
-    title: 'Profil — MAATFEED',
+    title: 'Profil - MAATFEED',
     description: 'Gère ton profil MAATFEED et tes préférences.',
     robots: 'noindex, nofollow',
   },
   onboarding: {
-    title: 'Bienvenue — MAATFEED',
+    title: 'Bienvenue - MAATFEED',
     description: 'Personnalise ton expérience MAATFEED en choisissant tes centres d\'intérêt.',
     robots: 'noindex, nofollow',
   },
   admin: {
-    title: 'Administration — MAATFEED',
+    title: 'Administration - MAATFEED',
     description: 'Interface d\'administration MAATFEED.',
     robots: 'noindex, nofollow',
   },
   notFound: {
-    title: 'Page non trouvée — MAATFEED',
+    title: 'Page non trouvée - MAATFEED',
     description: 'La page que tu cherches n\'existe pas sur MAATFEED.',
     robots: 'noindex, nofollow',
   },
   notifications: {
-    title: 'Notifications — MAATFEED',
+    title: 'Notifications - MAATFEED',
     description: 'Centre de notifications MAATFEED.',
     robots: 'noindex, nofollow',
   },
   premium: {
-    title: 'Premium — MAATFEED',
+    title: 'Premium - MAATFEED',
     description: 'Découvre les offres Premium MAATFEED.',
     robots: 'noindex, nofollow',
   },
