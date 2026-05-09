@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useCallback, useState, useEffect, useRef } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, TrendingUp, Filter, Play, Headphones, BookOpen, Flame, Sparkles } from "lucide-react";
 import { SEO } from "../components/SEO";
@@ -12,6 +12,8 @@ import { LoadingSpinner } from "../components/ui/LoadingSpinner";
 import { CONTENT_BUCKET_LABELS } from "@maat/shared";
 import { RedditVideoPlayer } from "../components/media/RedditVideoPlayer";
 import { isYouTubeShortUrl } from "../components/media/YouTubeEmbed";
+import { preloadMediaBatch, preloadMediaCandidate } from "../utils/mediaPreload";
+import { useNearViewport } from "../hooks/useNearViewport";
 
 export const BUCKETS = [
   { id: 'viral', name: CONTENT_BUCKET_LABELS.viral, color: 'bg-red-500', gradient: 'from-red-500/30 via-orange-500/20 to-red-600/30', icon: Flame },
@@ -66,8 +68,83 @@ const ThumbnailPlaceholder = ({ bucket, mediaType, title }: { bucket: string; me
 // Storage key for persisting search state
 const EXPLORER_STATE_KEY = 'maat-explorer-state';
 
+function ExploreContentCard({
+  item,
+  index,
+  onOpen,
+}: {
+  item: ContentItem;
+  index: number;
+  onOpen: (contentId: string) => void;
+}) {
+  const [directVideoOrientation, setDirectVideoOrientation] = useState<'portrait' | 'landscape' | 'square' | null>(null);
+  const isShortFormVideo = item.videoUrl?.includes('tiktok.com') || isYouTubeShortUrl(item.videoUrl) || directVideoOrientation === 'portrait';
+  const { elementRef: mediaRef, isNearViewport } = useNearViewport<HTMLDivElement>("800px");
+  const shouldMountMedia = index < 3 || isNearViewport;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: index * 0.05 }}
+      className="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 overflow-hidden hover:bg-white/10 transition-colors cursor-pointer"
+      data-explore-content-id={item.id}
+      onPointerEnter={() => preloadMediaCandidate({ videoUrl: item.videoUrl, audioUrl: item.audioUrl, thumbnailUrl: item.thumbnailUrl })}
+      onFocus={() => preloadMediaCandidate({ videoUrl: item.videoUrl, audioUrl: item.audioUrl, thumbnailUrl: item.thumbnailUrl })}
+      onClick={() => onOpen(item.id)}
+    >
+      <TouchFeedback>
+        <div ref={mediaRef} className={`${isShortFormVideo ? 'h-[400px]' : 'aspect-video'} relative overflow-hidden`} onClick={(e) => e.stopPropagation()}>
+        {item.videoUrl && shouldMountMedia ? (
+          <RedditVideoPlayer
+            src={item.videoUrl}
+            thumbnail={item.thumbnailUrl}
+            title={item.title}
+            className="w-full h-full"
+            muted={true}
+            autoPlay={true}
+            onVideoOrientation={setDirectVideoOrientation}
+          />
+        ) : item.thumbnailUrl ? (
+          <img
+            src={item.thumbnailUrl}
+            alt={item.title}
+            loading={index < 3 ? "eager" : "lazy"}
+            decoding="async"
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <ThumbnailPlaceholder bucket={item.bucket} mediaType={item.videoUrl ? 'video' : item.audioUrl ? 'audio' : undefined} title={item.title} />
+        )}
+        <div className="absolute top-2 right-2">
+          <span className={`px-2 py-1 text-xs text-white rounded-full ${
+            BUCKETS.find(b => b.id === item.bucket)?.color || 'bg-gray-500'
+          }`}>
+            {item.bucket}
+          </span>
+        </div>
+        </div>
+      
+        <div className="p-4">
+        <h3 className="font-semibold text-white line-clamp-2 mb-2">{item.title}</h3>
+        <p className="text-sand/60 text-sm line-clamp-2 mb-3">{item.description}</p>
+        
+        <div className="flex items-center justify-between text-xs text-sand/40">
+          <span>{item.author}</span>
+          <div className="flex items-center gap-3">
+            <span>{item.likes} j'aime</span>
+            <span>{item.comments} commentaires</span>
+          </div>
+        </div>
+        </div>
+      </TouchFeedback>
+    </motion.div>
+  );
+}
+
 export default function ExplorePage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedBucket, setSelectedBucket] = useState<string | null>(null);
   const [trendingContent, setTrendingContent] = useState<TrendingContent | null>(null);
@@ -76,15 +153,21 @@ export default function ExplorePage() {
   const [isSearching, setIsSearching] = useState(false);
   const [searchResults, setSearchResults] = useState<ContentItem[]>([]);
   const [showFilters, setShowFilters] = useState(false);
+  const [pendingRestore, setPendingRestore] = useState<{ contentId?: string; scrollY?: number } | null>(null);
+  const routeRestoreHandledRef = useRef(false);
 
   // Restore saved state on mount
   useEffect(() => {
     const savedState = sessionStorage.getItem(EXPLORER_STATE_KEY);
     if (savedState) {
       try {
-        const { query, bucket } = JSON.parse(savedState);
+        const { query, bucket, contentId, scrollY } = JSON.parse(savedState);
         if (query) setSearchQuery(query);
         if (bucket) setSelectedBucket(bucket);
+        if (contentId || typeof scrollY === 'number') {
+          routeRestoreHandledRef.current = true;
+          setPendingRestore({ contentId, scrollY });
+        }
       } catch {
         // Ignore parse errors
       }
@@ -93,14 +176,32 @@ export default function ExplorePage() {
   }, []);
 
   // Save state before navigating to content detail
-  const handleCardClick = (contentId: string) => {
+  const handleCardClick = useCallback((contentId: string) => {
+    const contentSnapshot = [...searchResults, ...(trendingContent?.items ?? [])].find((item) => item.id === contentId);
+
     // Save current search state
     sessionStorage.setItem(EXPLORER_STATE_KEY, JSON.stringify({
       query: searchQuery,
-      bucket: selectedBucket
+      bucket: selectedBucket,
+      contentId,
+      scrollY: window.scrollY
     }));
-    navigate(`/content/${contentId}`);
-  };
+    if (contentSnapshot) {
+      preloadMediaCandidate({
+        videoUrl: contentSnapshot.videoUrl,
+        audioUrl: contentSnapshot.audioUrl,
+        thumbnailUrl: contentSnapshot.thumbnailUrl
+      }, "immediate");
+    }
+    navigate(`/content/${contentId}`, {
+      state: {
+        returnTo: `${location.pathname}${location.search}${location.hash}`,
+        source: "explore",
+        contentId,
+        contentSnapshot
+      }
+    });
+  }, [location.hash, location.pathname, location.search, navigate, searchQuery, searchResults, selectedBucket, trendingContent]);
 
   // Load trending content when bucket changes
   useEffect(() => {
@@ -149,64 +250,63 @@ export default function ExplorePage() {
     return () => clearTimeout(timer);
   }, [searchQuery, selectedBucket]);
 
-  const ContentCard = ({ item, index }: { item: ContentItem; index: number }) => {
-    const [directVideoOrientation, setDirectVideoOrientation] = useState<'portrait' | 'landscape' | 'square' | null>(null);
-    const isShortFormVideo = item.videoUrl?.includes('tiktok.com') || isYouTubeShortUrl(item.videoUrl) || directVideoOrientation === 'portrait';
+  useEffect(() => {
+    const routeState = location.state as {
+      restoreSource?: string;
+      restoreContentId?: string;
+    } | null;
 
-    return (
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: index * 0.05 }}
-        className="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 overflow-hidden hover:bg-white/10 transition-colors cursor-pointer"
-        onClick={() => handleCardClick(item.id)}
-      >
-        <TouchFeedback>
-          <div className={`${isShortFormVideo ? 'h-[400px]' : 'aspect-video'} relative overflow-hidden`} onClick={(e) => e.stopPropagation()}>
-          {item.videoUrl ? (
-            <RedditVideoPlayer
-              src={item.videoUrl}
-              thumbnail={item.thumbnailUrl}
-              title={item.title}
-              className="w-full h-full"
-              muted={true}
-              autoPlay={true}
-              onVideoOrientation={setDirectVideoOrientation}
-            />
-          ) : item.thumbnailUrl ? (
-            <img
-              src={item.thumbnailUrl}
-              alt={item.title}
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <ThumbnailPlaceholder bucket={item.bucket} mediaType={item.videoUrl ? 'video' : item.audioUrl ? 'audio' : undefined} title={item.title} />
-          )}
-          <div className="absolute top-2 right-2">
-            <span className={`px-2 py-1 text-xs text-white rounded-full ${
-              BUCKETS.find(b => b.id === item.bucket)?.color || 'bg-gray-500'
-            }`}>
-              {item.bucket}
-            </span>
-          </div>
-          </div>
-        
-          <div className="p-4">
-          <h3 className="font-semibold text-white line-clamp-2 mb-2">{item.title}</h3>
-          <p className="text-sand/60 text-sm line-clamp-2 mb-3">{item.description}</p>
-          
-          <div className="flex items-center justify-between text-xs text-sand/40">
-            <span>{item.author}</span>
-            <div className="flex items-center gap-3">
-              <span>{item.likes} j'aime</span>
-              <span>{item.comments} commentaires</span>
-            </div>
-          </div>
-          </div>
-        </TouchFeedback>
-      </motion.div>
+    if (routeState?.restoreSource === "explore" && !pendingRestore) {
+      if (routeRestoreHandledRef.current) return;
+      routeRestoreHandledRef.current = true;
+      setPendingRestore({ contentId: routeState.restoreContentId });
+    }
+  }, [location.state, pendingRestore]);
+
+  useEffect(() => {
+    if (!pendingRestore || isLoading || isSearching) {
+      return;
+    }
+
+    const visibleItems = searchQuery ? searchResults : trendingContent?.items ?? [];
+    if (visibleItems.length === 0) {
+      return;
+    }
+
+    window.requestAnimationFrame(() => {
+      const target = pendingRestore.contentId
+        ? Array.from(document.querySelectorAll<HTMLElement>("[data-explore-content-id]"))
+            .find((element) => element.dataset.exploreContentId === pendingRestore.contentId)
+        : null;
+
+      if (target) {
+        target.scrollIntoView({ block: "center" });
+      } else if (typeof pendingRestore.scrollY === 'number') {
+        window.scrollTo({ top: pendingRestore.scrollY });
+      }
+
+      sessionStorage.setItem(EXPLORER_STATE_KEY, JSON.stringify({
+        query: searchQuery,
+        bucket: selectedBucket
+      }));
+      setPendingRestore(null);
+    });
+  }, [isLoading, isSearching, pendingRestore, searchQuery, searchResults, selectedBucket, trendingContent]);
+
+  useEffect(() => {
+    const visibleItems = searchQuery ? searchResults : trendingContent?.items ?? [];
+    if (visibleItems.length === 0) {
+      return;
+    }
+
+    preloadMediaBatch(
+      visibleItems.slice(0, 6).map((item) => ({
+        videoUrl: item.videoUrl,
+        audioUrl: item.audioUrl,
+        thumbnailUrl: item.thumbnailUrl
+      }))
     );
-  };
+  }, [searchQuery, searchResults, trendingContent]);
 
   return (
     <>
@@ -298,7 +398,7 @@ export default function ExplorePage() {
             ) : searchResults.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {searchResults.map((item, index) => (
-                  <ContentCard key={item.id} item={item} index={index} />
+                  <ExploreContentCard key={item.id} item={item} index={index} onOpen={handleCardClick} />
                 ))}
               </div>
             ) : (
@@ -331,7 +431,7 @@ export default function ExplorePage() {
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {trendingContent.items.map((item, index) => (
-                    <ContentCard key={item.id} item={item} index={index} />
+                    <ExploreContentCard key={item.id} item={item} index={index} onOpen={handleCardClick} />
                   ))}
                 </div>
               </div>

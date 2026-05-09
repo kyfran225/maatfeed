@@ -6,7 +6,9 @@ export function useGlobalFeed(params?: FeedParams) {
   return useQuery({
     queryKey: ["feed", "global", params],
     queryFn: () => getGlobalFeed(params),
-    staleTime: 30_000, // 30 seconds
+    staleTime: 2 * 60_000,
+    gcTime: 15 * 60_000,
+    refetchOnMount: false,
   });
 }
 
@@ -16,7 +18,9 @@ export function useInfiniteGlobalFeed() {
     queryFn: ({ pageParam }: { pageParam: string | null }) => getGlobalFeed({ cursor: pageParam, limit: 10 }),
     initialPageParam: null,
     getNextPageParam: (lastPage) => lastPage.nextCursor,
-    staleTime: 30_000,
+    staleTime: 2 * 60_000,
+    gcTime: 15 * 60_000,
+    refetchOnMount: false,
   });
 }
 
@@ -27,7 +31,9 @@ export function usePersonalizedFeed(params?: FeedParams) {
     queryKey: ["feed", "personalized", profile?.id, params],
     queryFn: () => getPersonalizedFeed(params),
     enabled: !!profile, // Only run when authenticated
-    staleTime: 30_000,
+    staleTime: 2 * 60_000,
+    gcTime: 15 * 60_000,
+    refetchOnMount: false,
   });
 }
 
@@ -40,6 +46,8 @@ export function useInfinitePersonalizedFeed() {
     initialPageParam: null,
     getNextPageParam: (lastPage) => lastPage.nextCursor,
     enabled: !!profile,
-    staleTime: 30_000,
+    staleTime: 2 * 60_000,
+    gcTime: 15 * 60_000,
+    refetchOnMount: false,
   });
 }

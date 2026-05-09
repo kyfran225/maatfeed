@@ -34,6 +34,7 @@ interface YouTubeEmbedProps {
   layout?: "responsive" | "fill";
   autoplayWhenVisible?: boolean;
   visibilityThreshold?: number;
+  loading?: "eager" | "lazy";
   options?: YouTubeEmbedOptions;
 }
 
@@ -114,6 +115,7 @@ export function YouTubeEmbed({
   layout = "responsive",
   autoplayWhenVisible = false,
   visibilityThreshold = 0.6,
+  loading = "lazy",
   options = {}
 }: YouTubeEmbedProps) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
@@ -156,6 +158,7 @@ export function YouTubeEmbed({
       src={embedUrl}
       title={title}
       className={`${layoutClassName} ${className} ${iframeClassName}`}
+      loading={loading}
       allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
       allowFullScreen={mergedOptions.fullscreen}
     />

@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { Check, Play, RotateCcw, Search, HelpCircle, Volume2 } from "lucide-react";
 import { SEO } from "../components/SEO";
 import { useAuth } from "../hooks/useAuth";
 import { useInfiniteGlobalFeed } from "../hooks/useFeed";
+import { useNearViewport } from "../hooks/useNearViewport";
 import { useVideoPlayer } from "../contexts/VideoPlayerContext";
 import type { FeedResponse } from "../services/feedService";
 import {
@@ -20,6 +21,8 @@ import { QuizRecapCard } from "../components/feed/QuizRecapCard";
 import { getActiveSponsors, incrementSponsorStats, type Sponsor } from "../services/sponsorService";
 import { RedditVideoPlayer } from "../components/media/RedditVideoPlayer";
 import { extractYouTubeVideoId, isYouTubeShortUrl, YouTubeEmbed } from "../components/media/YouTubeEmbed";
+import { preloadMediaBatch, preloadMediaCandidate } from "../utils/mediaPreload";
+import type { ContentItem } from "../services/contentService";
 
 type FeedItem = FeedResponse["items"][number];
 type LearningStatus = "new" | "learned" | "review";
@@ -33,6 +36,7 @@ interface QuizRecapItem {
 type FeedWithInjections = FeedItem | { type: "sponsor"; data: Sponsor } | QuizRecapItem;
 
 const STORAGE_KEY = "maatfeed-learning-state";
+const FEED_RETURN_STATE_KEY = "maatfeed-feed-return-state";
 const DESKTOP_FEED_QUERY = "(min-width: 768px)";
 
 function useIsDesktopFeed() {
@@ -80,29 +84,72 @@ function getStatusLabel(status?: LearningStatus) {
   return "Nouveau";
 }
 
+function feedItemToContentSnapshot(item: FeedItem): ContentItem {
+  return {
+    id: item.id,
+    title: item.title,
+    description: item.description || item.summary || "",
+    author: item.creator.name || item.creator.handle,
+    thumbnailUrl: item.thumbnailUrl,
+    videoUrl: item.mediaType === "video" ? item.mediaUrl : undefined,
+    audioUrl: item.mediaType === "audio" ? item.mediaUrl : undefined,
+    bucket: item.bucket,
+    score: item.scores.finalScore,
+    likes: item.scores.likes,
+    comments: item.scores.comments,
+    views: item.scores.views,
+    createdAt: item.createdAt,
+    tags: item.tags
+  };
+}
+
 function FeedItemCard({
   item,
   status,
   allowAutoPlay,
+  eagerMedia,
   onSetStatus,
   onOpenQuiz,
 }: {
   item: FeedItem;
   status?: LearningStatus;
   allowAutoPlay: boolean;
+  eagerMedia: boolean;
   onSetStatus: (status: LearningStatus) => void;
   onOpenQuiz: (contentId: string) => void;
 }) {
+  const location = useLocation();
   const [directVideoOrientation, setDirectVideoOrientation] = useState<'portrait' | 'landscape' | 'square' | null>(null);
   const { mediaSoundEnabled, activateMediaSound } = useVideoPlayer();
   const isTikTokVideo = item.mediaUrl?.includes('tiktok.com');
   const isShortFormVideo = isTikTokVideo || isYouTubeShortUrl(item.mediaUrl) || directVideoOrientation === 'portrait';
   const isYouTubeVideo = Boolean(item.mediaUrl && extractYouTubeVideoId(item.mediaUrl));
+  const { elementRef: mediaRef, isNearViewport } = useNearViewport<HTMLDivElement>("800px");
+  const shouldMountMedia = eagerMedia || isNearViewport;
+  const returnTo = `${location.pathname}${location.search}${location.hash}`;
+  const detailRouteState = {
+    returnTo,
+    source: "feed" as const,
+    contentId: item.id,
+    contentSnapshot: feedItemToContentSnapshot(item)
+  };
+  const saveReturnState = () => {
+    sessionStorage.setItem(FEED_RETURN_STATE_KEY, JSON.stringify({
+      contentId: item.id,
+      scrollY: window.scrollY
+    }));
+    preloadMediaCandidate({ mediaUrl: item.mediaUrl, thumbnailUrl: item.thumbnailUrl, sourceProvider: item.sourceProvider }, "immediate");
+  };
 
   return (
-    <article className="overflow-hidden rounded-lg border border-white/10 bg-white/[0.035]">
-      <div className={`relative ${isShortFormVideo ? 'h-[400px]' : 'aspect-video'} overflow-hidden bg-stone/25`}>
-        {item.mediaType === 'video' && item.mediaUrl ? (
+    <article
+      className="overflow-hidden rounded-lg border border-white/10 bg-white/[0.035]"
+      data-feed-content-id={item.id}
+      onPointerEnter={() => preloadMediaCandidate({ mediaUrl: item.mediaUrl, thumbnailUrl: item.thumbnailUrl, sourceProvider: item.sourceProvider })}
+      onFocus={() => preloadMediaCandidate({ mediaUrl: item.mediaUrl, thumbnailUrl: item.thumbnailUrl, sourceProvider: item.sourceProvider })}
+    >
+      <div ref={mediaRef} className={`relative ${isShortFormVideo ? 'h-[400px]' : 'aspect-video'} overflow-hidden bg-stone/25`}>
+        {item.mediaType === 'video' && item.mediaUrl && shouldMountMedia ? (
           <div className="h-full w-full">
             {isYouTubeVideo ? (
               <div className="relative h-full w-full">
@@ -110,6 +157,7 @@ function FeedItemCard({
                   videoUrl={item.mediaUrl}
                   title={item.title}
                   layout="fill"
+                  loading={eagerMedia || allowAutoPlay ? "eager" : "lazy"}
                   autoplayWhenVisible={allowAutoPlay}
                   options={{
                     controls: true,
@@ -148,7 +196,7 @@ function FeedItemCard({
             )}
           </div>
         ) : item.thumbnailUrl ? (
-          <img src={item.thumbnailUrl} alt="" className="h-full w-full object-cover" />
+          <img src={item.thumbnailUrl} alt="" className="h-full w-full object-cover" loading={eagerMedia ? "eager" : "lazy"} decoding="async" />
         ) : (
           <div className="flex h-full w-full items-center justify-center bg-[linear-gradient(135deg,_rgba(197,162,76,0.18),_rgba(24,93,83,0.2),_rgba(96,65,130,0.16))]">
             <Play className="h-8 w-8 text-sand/65" aria-hidden="true" />
@@ -171,7 +219,12 @@ function FeedItemCard({
           ))}
         </div>
 
-        <Link to={`/content/${item.id}`} className="group">
+        <Link
+          to={`/content/${item.id}`}
+          state={detailRouteState}
+          onClick={saveReturnState}
+          className="group"
+        >
           <h2 className="line-clamp-2 text-lg font-semibold leading-6 text-white group-hover:text-gold">
             {item.title}
           </h2>
@@ -186,6 +239,8 @@ function FeedItemCard({
         <div className="mt-4 flex flex-wrap gap-2">
           <Link
             to={`/content/${item.id}`}
+            state={detailRouteState}
+            onClick={saveReturnState}
             className="inline-flex items-center gap-2 rounded-md bg-gold px-3 py-2 text-sm font-semibold text-ink transition hover:bg-gold/90"
           >
             <Play className="h-4 w-4" aria-hidden="true" />
@@ -231,8 +286,10 @@ function FeedItemCard({
 }
 
 export function FeedPage() {
+  const location = useLocation();
   const { isAuthenticated } = useAuth();
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
+  const feedRestoreHandledRef = useRef(false);
   const isDesktopFeed = useIsDesktopFeed();
   const {
     data,
@@ -326,6 +383,61 @@ export function FeedPage() {
       cancelled = true;
     };
   }, [contentIds, isAuthenticated]);
+
+  useEffect(() => {
+    if (items.length === 0) {
+      return;
+    }
+
+    preloadMediaBatch(
+      items.slice(0, 6).map((item) => ({
+        mediaUrl: item.mediaUrl,
+        thumbnailUrl: item.thumbnailUrl,
+        sourceProvider: item.sourceProvider
+      }))
+    );
+  }, [items]);
+
+  useEffect(() => {
+    const routeState = location.state as {
+      restoreSource?: string;
+      restoreContentId?: string;
+    } | null;
+
+    if (routeState?.restoreSource !== "feed" || items.length === 0) {
+      return;
+    }
+
+    if (feedRestoreHandledRef.current) {
+      return;
+    }
+    feedRestoreHandledRef.current = true;
+
+    let savedState: { contentId?: string; scrollY?: number } = {};
+    try {
+      savedState = JSON.parse(sessionStorage.getItem(FEED_RETURN_STATE_KEY) || "{}");
+    } catch {
+      savedState = {};
+    }
+
+    const contentId = routeState.restoreContentId ?? savedState.contentId;
+    const scrollY = savedState.scrollY;
+
+    window.requestAnimationFrame(() => {
+      const target = contentId
+        ? Array.from(document.querySelectorAll<HTMLElement>("[data-feed-content-id]"))
+            .find((element) => element.dataset.feedContentId === contentId)
+        : null;
+
+      if (target) {
+        target.scrollIntoView({ block: "center" });
+      } else if (typeof scrollY === "number") {
+        window.scrollTo({ top: scrollY });
+      }
+
+      sessionStorage.removeItem(FEED_RETURN_STATE_KEY);
+    });
+  }, [items.length, location.state]);
 
   const localMarkedCount = useMemo(
     () => items.filter((item) => learningState[item.id] === "learned" || learningState[item.id] === "review").length,
@@ -476,6 +588,7 @@ export function FeedPage() {
                 item={feedItem}
                 status={learningState[feedItem.id]}
                 allowAutoPlay={!isDesktopFeed}
+                eagerMedia={index < 3}
                 onSetStatus={(status) => setStatus(feedItem.id, status)}
                 onOpenQuiz={(contentId) => setQuizContentId(contentId)}
               />

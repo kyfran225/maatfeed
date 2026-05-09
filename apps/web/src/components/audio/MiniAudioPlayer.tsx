@@ -49,8 +49,8 @@ export function MiniAudioPlayer() {
           initial={{ opacity: 0, y: 18 }}
           animate={{ opacity: 1, y: 0 }}
           className={`fixed left-3 right-3 z-[190] ${
-            hideBottomNav ? "bottom-3" : "bottom-[5.35rem]"
-          } lg:left-6 lg:right-6 lg:bottom-6`}
+            hideBottomNav ? "bottom-safe-floating" : "bottom-safe-nav"
+          } lg:left-6 lg:right-6`}
         >
           <div className="mx-auto max-w-2xl overflow-hidden rounded-[1.2rem] border border-gold/20 bg-ink/94 shadow-2xl shadow-black/60 backdrop-blur-xl">
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(212,175,55,0.16),_transparent_42%),linear-gradient(135deg,_rgba(255,255,255,0.05),_transparent_60%)]" />
@@ -134,8 +134,8 @@ export function MiniAudioPlayer() {
         initial={{ opacity: 0, y: 24 }}
         animate={{ opacity: 1, y: 0 }}
         className={`fixed left-3 right-3 z-[190] ${
-          hideBottomNav ? "bottom-3" : "bottom-[5.5rem]"
-        } lg:left-6 lg:right-6 lg:bottom-6`}
+          hideBottomNav ? "bottom-safe-floating" : "bottom-safe-nav"
+        } lg:left-6 lg:right-6`}
       >
         <div className="mx-auto max-w-3xl overflow-hidden rounded-[1.4rem] border border-gold/20 bg-ink/95 shadow-2xl shadow-black/60 backdrop-blur-xl">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(212,175,55,0.18),_transparent_42%),linear-gradient(135deg,_rgba(255,255,255,0.06),_transparent_60%)]" />

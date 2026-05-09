@@ -3,6 +3,7 @@ import { useRef, useEffect, useState, useCallback, forwardRef, useImperativeHand
 import { FeedResponse } from "../../services/feedService";
 import { YouTubeDirectEmbed, YouTubePlayerRef } from "./YouTubeDirectEmbed";
 import { TikTokEmbed, TikTokEmbedRef } from "./TikTokEmbed";
+import { preloadMediaBatch, preloadMediaCandidate } from "../../utils/mediaPreload";
 
 export interface EnhancedFeedMediaRef {
   seekTo: (time: number) => void;
@@ -100,6 +101,22 @@ export const EnhancedFeedMedia = forwardRef<EnhancedFeedMediaRef, EnhancedFeedMe
   useEffect(() => {
     setIsMediaReady(false);
   }, [item.id, item.mediaUrl, item.sourceProvider]);
+
+  useEffect(() => {
+    preloadMediaCandidate({
+      mediaUrl: item.mediaUrl,
+      thumbnailUrl: item.thumbnailUrl,
+      sourceProvider: item.sourceProvider
+    }, isActive ? "immediate" : "nearby");
+
+    preloadMediaBatch(
+      nextItems.slice(0, 3).map((nextItem) => ({
+        mediaUrl: nextItem.mediaUrl,
+        thumbnailUrl: nextItem.thumbnailUrl,
+        sourceProvider: nextItem.sourceProvider
+      }))
+    );
+  }, [isActive, item.mediaUrl, item.thumbnailUrl, item.sourceProvider, nextItems]);
 
   // Handle TikTok play/pause using the official embed API.
   useEffect(() => {
@@ -273,6 +290,7 @@ export const EnhancedFeedMedia = forwardRef<EnhancedFeedMediaRef, EnhancedFeedMe
           loop
           playsInline
           muted
+          preload={isActive ? "auto" : "metadata"}
           autoPlay={isActive && !isPaused}
           onClick={handleVideoClick}
           onLoadedData={() => setIsMediaReady(true)}

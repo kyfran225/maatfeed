@@ -2,8 +2,17 @@
   "name": "MAATFEED",
   "short_name": "MAATFEED",
   "description": "Plateforme de débats, d'apprentissage et de découverte autour du savoir africain. Explore l'histoire, la spiritualité et les idées contemporaines.",
+  "id": "/",
   "start_url": "/",
+  "launch_handler": {
+    "client_mode": "navigate-existing"
+  },
   "display": "standalone",
+  "display_override": [
+    "standalone",
+    "minimal-ui",
+    "browser"
+  ],
   "background_color": "#0B0704",
   "theme_color": "#0B0704",
   "orientation": "portrait-primary",

@@ -288,10 +288,10 @@ const RevolutionaryPostCard = ({ post, onSelect, onUpvote }: {
         {post.mediaUrl && (
           <div className="mb-3 rounded-lg overflow-hidden">
             {post.mediaType === "image" && (
-              <img src={post.mediaUrl} alt="" className="w-full h-48 object-cover" />
+              <img src={post.mediaUrl} alt="" className="w-full h-48 object-cover" loading="lazy" decoding="async" />
             )}
             {post.mediaType === "video" && (
-              <video className="w-full h-48 object-cover" controls>
+              <video className="w-full h-48 object-cover" controls preload="metadata" playsInline>
                 <source src={post.mediaUrl} />
               </video>
             )}

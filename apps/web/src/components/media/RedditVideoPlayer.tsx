@@ -395,7 +395,7 @@ export function RedditVideoPlayer({
           ) : (
             <div className="w-full h-full relative">
               {thumbnail ? (
-                <img src={thumbnail} alt={title} className="w-full h-full object-cover" />
+                <img src={thumbnail} alt={title} className="w-full h-full object-cover" loading="lazy" decoding="async" />
               ) : (
                 <div className="w-full h-full bg-black/80 flex items-center justify-center" />
               )}
@@ -420,7 +420,8 @@ export function RedditVideoPlayer({
             poster={thumbnail}
             className="w-full h-full object-contain"
             muted={isMuted}
-            preload="metadata"
+            preload={autoPlay ? "auto" : "metadata"}
+            playsInline
             onLoadedMetadata={handleLoadedMetadata}
             onTimeUpdate={handleTimeUpdate}
             onEnded={handleEnded}
@@ -436,7 +437,7 @@ export function RedditVideoPlayer({
       ) : (
         <div className="w-full h-full bg-black relative">
           {thumbnail ? (
-            <img src={thumbnail} alt={title} className="w-full h-full object-cover" />
+            <img src={thumbnail} alt={title} className="w-full h-full object-cover" loading="lazy" decoding="async" />
           ) : (
             <div className="w-full h-full bg-black/80 flex items-center justify-center" />
           )}

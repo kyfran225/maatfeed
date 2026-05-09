@@ -15,7 +15,7 @@ export function BottomNav() {
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-[200]">
-      <div className="mx-auto max-w-lg px-3 pb-3 pt-1">
+      <div className="mx-auto max-w-lg px-3 pb-safe-bottom pt-1">
         <div className="grid grid-cols-5 rounded-lg border border-gold/20 bg-ink/92 px-1 py-2 shadow-2xl shadow-black/50 backdrop-blur-xl">
           {navItems.map(({ to, label, Icon }) => (
             <NavLink
@@ -43,7 +43,7 @@ export function BottomNav() {
             Légal
           </button>
           {showLegalMenu && (
-            <div className="absolute bottom-20 left-1/2 w-44 -translate-x-1/2 rounded-lg border border-gold/20 bg-ink/95 p-2 shadow-xl backdrop-blur-xl">
+            <div className="legal-menu absolute left-1/2 w-44 -translate-x-1/2 rounded-lg border border-gold/20 bg-ink/95 p-2 shadow-xl backdrop-blur-xl">
               <div className="grid gap-1">
                 <a href="/privacy-policy" className="rounded-md px-2 py-1 text-xs text-sand/70 transition hover:bg-white/10 hover:text-sand">Confidentialité</a>
                 <a href="/terms-of-service" className="rounded-md px-2 py-1 text-xs text-sand/70 transition hover:bg-white/10 hover:text-sand">CGU</a>

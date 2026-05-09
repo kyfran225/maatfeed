@@ -353,6 +353,8 @@ export const YouTubeDirectEmbed = forwardRef<YouTubePlayerRef, YouTubeDirectEmbe
             src={thumbnailUrl}
             alt={item.title || "YouTube video"}
             className="absolute left-0 right-0 w-full object-cover"
+            loading={isActive ? "eager" : "lazy"}
+            decoding="async"
             style={{ top: '-160px', height: 'calc(100% + 160px)', objectPosition: 'center 20%' }}
             onError={() => setThumbnailError(true)}
           />
@@ -398,6 +400,7 @@ export const YouTubeDirectEmbed = forwardRef<YouTubePlayerRef, YouTubeDirectEmbe
             enableJsApi: true
           })}
           className="absolute left-0 right-0 w-full border-0"
+          loading={isActive ? "eager" : "lazy"}
           style={{
             pointerEvents: 'none',
             opacity: isLoaded ? 1 : 0,

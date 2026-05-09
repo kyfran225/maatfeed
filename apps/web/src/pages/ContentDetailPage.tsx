@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowLeft, Heart, MessageCircle, Share2, Bookmark, Eye, Check, Compass } from "lucide-react";
 import { SEO } from "../components/SEO";
@@ -10,6 +10,7 @@ import { TouchFeedback } from "../components/ui/TouchFeedback";
 import { LoadingState } from "../components/ui/LoadingState";
 import { RedditVideoPlayer } from "../components/media/RedditVideoPlayer";
 import { extractYouTubeVideoId, isYouTubeShortUrl } from "../components/media/YouTubeEmbed";
+import { preloadMediaCandidate } from "../utils/mediaPreload";
 
 const BUCKET_CONFIG: Record<string, { color: string; gradient: string; label: string }> = {
   viral: { color: 'bg-red-500', gradient: 'from-red-500/20 to-orange-500/10', label: 'Viral' },
@@ -17,12 +18,23 @@ const BUCKET_CONFIG: Record<string, { color: string; gradient: string; label: st
   deep: { color: 'bg-purple-500', gradient: 'from-purple-500/20 to-pink-500/10', label: 'Profond' }
 };
 
+type ContentDetailRouteState = {
+  returnTo?: string;
+  source?: "feed" | "explore";
+  contentId?: string;
+  contentSnapshot?: ContentItem;
+};
+
 export default function ContentDetailPage() {
   const { contentId } = useParams<{ contentId: string }>();
   const navigate = useNavigate();
-  const [content, setContent] = useState<ContentItem | null>(null);
+  const location = useLocation();
+  const routeState = location.state as ContentDetailRouteState | null;
+  const routeContentSnapshot = routeState?.contentSnapshot;
+  const initialContent = routeContentSnapshot && routeContentSnapshot.id === contentId ? routeContentSnapshot : null;
+  const [content, setContent] = useState<ContentItem | null>(initialContent);
   const [engagement, setEngagement] = useState<EngagementData | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(!initialContent);
   const [error, setError] = useState<string | null>(null);
   
   // Load dynamic SEO meta tags
@@ -39,7 +51,7 @@ export default function ContentDetailPage() {
 
   useEffect(() => {
     if (contentId) {
-      loadContent(contentId);
+      loadContent(contentId, Boolean(initialContent));
       loadEngagement(contentId);
     }
   }, [contentId]);
@@ -48,20 +60,36 @@ export default function ContentDetailPage() {
     setDirectVideoOrientation(null);
   }, [content?.videoUrl]);
 
-  const loadContent = async (id: string) => {
+  useEffect(() => {
+    if (!content) return;
+
+    preloadMediaCandidate({
+      videoUrl: content.videoUrl,
+      audioUrl: content.audioUrl,
+      thumbnailUrl: content.thumbnailUrl
+    }, "immediate");
+  }, [content]);
+
+  const loadContent = async (id: string, background = false) => {
     try {
-      setIsLoading(true);
+      if (!background) {
+        setIsLoading(true);
+      }
       setError(null);
       const item = await contentService.getContentById(id);
       if (item) {
         setContent(item);
-      } else {
+      } else if (!background) {
         setError('Contenu non trouvé');
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erreur lors du chargement');
+      if (!background) {
+        setError(err instanceof Error ? err.message : 'Erreur lors du chargement');
+      }
     } finally {
-      setIsLoading(false);
+      if (!background) {
+        setIsLoading(false);
+      }
     }
   };
 
@@ -77,7 +105,17 @@ export default function ContentDetailPage() {
   };
 
   const handleBack = () => {
-    // Navigate back to explore - state will be restored from sessionStorage
+    if (routeState?.returnTo) {
+      navigate(routeState.returnTo, {
+        replace: true,
+        state: {
+          restoreSource: routeState.source,
+          restoreContentId: routeState.contentId ?? contentId
+        }
+      });
+      return;
+    }
+
     navigate('/explore');
   };
 
@@ -151,11 +189,11 @@ export default function ContentDetailPage() {
           <div className="flex flex-col gap-3">
             <TouchFeedback>
               <button
-                onClick={() => navigate('/explore')}
+                onClick={handleBack}
                 className="bg-orange hover:bg-orange/90 text-white py-3 px-6 rounded-xl font-medium flex items-center justify-center gap-2 transition-colors"
               >
                 <Compass className="w-5 h-5" />
-                Retour à l'exploration
+                Retour
               </button>
             </TouchFeedback>
             <TouchFeedback>

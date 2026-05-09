@@ -318,6 +318,7 @@ export const TikTokEmbed = forwardRef<TikTokEmbedRef, TikTokEmbedProps>(function
           ref={iframeRef}
           src={`https://www.tiktok.com/player/v1/${videoId}?${buildUrlParams()}`}
           title={title}
+          loading="lazy"
           style={{
             width: '100%',
             height: '400px',

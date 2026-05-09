@@ -41,7 +41,7 @@ export function EmailVerificationBanner({ isVerified, onVerificationSent }: Emai
   };
 
   return (
-    <div className="fixed top-16 left-0 right-0 z-[100] bg-gradient-to-r from-amber-500/90 to-orange-500/90 backdrop-blur-md border-b border-amber-500/50 shadow-lg">
+    <div className="email-verification-banner fixed left-0 right-0 z-[100] bg-gradient-to-r from-amber-500/90 to-orange-500/90 backdrop-blur-md border-b border-amber-500/50 shadow-lg">
       <div className="max-w-7xl mx-auto px-4 py-2 flex items-center justify-between gap-3">
         <div className="flex items-center gap-2 min-w-0">
           <span className="text-xl flex-shrink-0">📧</span>
