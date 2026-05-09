@@ -1,5 +1,9 @@
 import { NotificationModel, type NotificationType, NotificationTemplates } from "../models/Notification.js";
-import { UserNotificationPreferencesModel, getDefaultNotificationPreferences } from "../models/UserNotificationPreferences.js";
+import {
+  UserNotificationPreferencesModel,
+  getDefaultNotificationPreferences,
+  type WebPushSubscriptionToken
+} from "../models/UserNotificationPreferences.js";
 import { UserModel, type TrustLevel } from "../models/User.js";
 import { ProfileModel } from "../models/Profile.js";
 import { ContentModel } from "../models/Content.js";
@@ -30,6 +34,12 @@ const TrustLevelConfig: Record<TrustLevel, { displayName: string; benefits: stri
     requirements: "Engagement soutenu et contributions de qualité"
   }
 };
+
+function getPushTokenEndpoint(token: string | WebPushSubscriptionToken): string | null {
+  if (typeof token === "string") return token;
+  if (webPushService.isValidSubscription(token)) return token.endpoint;
+  return null;
+}
 
 // Create a new notification
 interface CreateNotificationInput {
@@ -302,8 +312,9 @@ async function sendPushNotification(notification: any) {
     if (results.expired > 0) {
       const validTokens = prefs.pushTokens.filter((token: any) => {
         if (token.platform !== "web") return true;
-        const expired = !webSubscriptions.find(
-          (sub: webPushService.PushSubscription) => sub.endpoint === token.token.endpoint
+        const endpoint = getPushTokenEndpoint(token.token);
+        const expired = !endpoint || !webSubscriptions.find(
+          (sub: webPushService.PushSubscription) => sub.endpoint === endpoint
         );
         return !expired;
       });
@@ -657,15 +668,11 @@ export async function sendSecurityAlert(input: {
 
 // Subscribe to web push notifications
 export async function subscribeToPush(userId: string, subscription: webPushService.PushSubscription, deviceId?: string) {
-  const prefs = await UserNotificationPreferencesModel.findOne({ userId });
-
-  if (!prefs) {
-    throw new Error("Notification preferences not found");
-  }
+  const prefs = await initializeNotificationPreferences(userId);
 
   // Check if subscription already exists
   const existingIndex = prefs.pushTokens.findIndex(
-    (token: any) => token.token.endpoint === subscription.endpoint
+    (token: any) => getPushTokenEndpoint(token.token) === subscription.endpoint
   );
 
   const pushToken = {
@@ -711,7 +718,7 @@ export async function unsubscribeFromPush(userId: string, endpoint: string) {
 
   const initialCount = prefs.pushTokens.length;
   prefs.pushTokens = prefs.pushTokens.filter(
-    (token: any) => token.token.endpoint !== endpoint
+    (token: any) => getPushTokenEndpoint(token.token) !== endpoint
   );
 
   await prefs.save();

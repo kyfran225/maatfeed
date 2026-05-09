@@ -1,6 +1,15 @@
 import mongoose, { model, Schema } from "mongoose";
 import type { NotificationChannel, NotificationType } from "./Notification.js";
 
+export interface WebPushSubscriptionToken {
+  endpoint: string;
+  expirationTime?: number | null;
+  keys: {
+    p256dh: string;
+    auth: string;
+  };
+}
+
 export interface IUserNotificationPreferences {
   _id: mongoose.Types.ObjectId;
   userId: mongoose.Types.ObjectId;
@@ -28,7 +37,7 @@ export interface IUserNotificationPreferences {
   
   // Device tokens for push notifications
   pushTokens: {
-    token: string;
+    token: string | WebPushSubscriptionToken;
     platform: "ios" | "android" | "web";
     deviceId?: string;
     lastUsedAt: Date;
@@ -98,7 +107,7 @@ const userNotificationPreferencesSchema = new Schema<IUserNotificationPreference
     },
     pushTokens: {
       type: [{
-        token: { type: String, required: true },
+        token: { type: Schema.Types.Mixed, required: true },
         platform: { type: String, enum: ["ios", "android", "web"], required: true },
         deviceId: { type: String },
         lastUsedAt: { type: Date, default: Date.now },
