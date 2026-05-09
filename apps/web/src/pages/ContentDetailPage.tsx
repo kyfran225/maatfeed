@@ -9,6 +9,7 @@ import { interactionService, EngagementData } from "../services/interactionServi
 import { TouchFeedback } from "../components/ui/TouchFeedback";
 import { LoadingState } from "../components/ui/LoadingState";
 import { RedditVideoPlayer } from "../components/media/RedditVideoPlayer";
+import { extractYouTubeVideoId, isYouTubeShortUrl } from "../components/media/YouTubeEmbed";
 
 const BUCKET_CONFIG: Record<string, { color: string; gradient: string; label: string }> = {
   viral: { color: 'bg-red-500', gradient: 'from-red-500/20 to-orange-500/10', label: 'Viral' },
@@ -34,6 +35,7 @@ export default function ContentDetailPage() {
   const [hasLiked, setHasLiked] = useState(false);
   const [hasSaved, setHasSaved] = useState(false);
   const [showShareToast, setShowShareToast] = useState(false);
+  const [directVideoOrientation, setDirectVideoOrientation] = useState<'portrait' | 'landscape' | 'square' | null>(null);
 
   useEffect(() => {
     if (contentId) {
@@ -41,6 +43,10 @@ export default function ContentDetailPage() {
       loadEngagement(contentId);
     }
   }, [contentId]);
+
+  useEffect(() => {
+    setDirectVideoOrientation(null);
+  }, [content?.videoUrl]);
 
   const loadContent = async (id: string) => {
     try {
@@ -168,6 +174,11 @@ export default function ContentDetailPage() {
   }
 
   const bucketConfig = BUCKET_CONFIG[content!.bucket] || BUCKET_CONFIG.deep;
+  const isShortFormVideo = content.videoUrl?.includes('tiktok.com') || isYouTubeShortUrl(content.videoUrl) || directVideoOrientation === 'portrait';
+  const shouldAutoplayVideo = Boolean(
+    content.videoUrl?.includes('tiktok.com') ||
+    (content.videoUrl && extractYouTubeVideoId(content.videoUrl))
+  );
 
   return (
     <>
@@ -198,12 +209,14 @@ export default function ContentDetailPage() {
       </div>
 
       {/* Media Player / Thumbnail */}
-      <div className={`relative ${content.videoUrl?.includes('tiktok.com') ? 'aspect-[9/16]' : 'aspect-video'} overflow-hidden bg-gradient-to-br ${bucketConfig.gradient}`}>
+      <div className={`relative ${isShortFormVideo ? 'h-[400px]' : 'aspect-video'} overflow-hidden bg-gradient-to-br ${bucketConfig.gradient}`}>
         <RedditVideoPlayer
           src={content.videoUrl || content.audioUrl || ''}
           thumbnail={content.thumbnailUrl}
           title={content.title}
           className="w-full h-full"
+          autoPlay={shouldAutoplayVideo}
+          onVideoOrientation={setDirectVideoOrientation}
         />
 
         {/* Bucket Badge */}

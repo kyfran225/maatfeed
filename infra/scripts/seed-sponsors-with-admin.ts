@@ -82,11 +82,11 @@ async function seedSponsors() {
     
     const sponsors = [
       {
-        name: "Wave",
+        name: "African Leadership Academy",
         logo: "https://images.unsplash.com/photo-1563013544-824ae1b704d3?w=400&h=400&fit=crop",
-        description: "Mobile Money simplifié pour l'Afrique. Transferts instantanés, paiements sans frais. Disponible au Sénégal, Côte d'Ivoire, Mali, Burkina.",
-        website: "https://www.wave.com",
-        ctaText: "Télécharger l'app",
+        description: "Institution panafricaine qui forme de jeunes leaders africains avec des programmes d'éducation, d'entrepreneuriat et d'impact social.",
+        website: "https://www.africanleadershipacademy.org",
+        ctaText: "Découvrir l'académie",
         isActive: true,
         priority: 100,
         startDate: now,
@@ -94,11 +94,11 @@ async function seedSponsors() {
         stats: { impressions: 0, clicks: 0 }
       },
       {
-        name: "Paystack",
+        name: "VC4A Startup Network",
         logo: "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=400&h=400&fit=crop",
-        description: "Paiements en ligne pour l'Afrique. Acceptez les paiements par mobile money, carte bancaire. Intégration simple, commissions réduites.",
-        website: "https://paystack.com",
-        ctaText: "Commencer gratuitement",
+        description: "Réseau pour fondateurs, mentors et investisseurs actifs dans l'écosystème startup africain, avec opportunités, programmes et communautés.",
+        website: "https://vc4a.com",
+        ctaText: "Rejoindre le réseau",
         isActive: true,
         priority: 95,
         startDate: now,
@@ -106,11 +106,11 @@ async function seedSponsors() {
         stats: { impressions: 0, clicks: 0 }
       },
       {
-        name: "Andela",
+        name: "MEST Africa",
         logo: "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=400&h=400&fit=crop",
-        description: "Formez les meilleurs développeurs d'Afrique. Bootcamps intensifs, placement international. Plus de 100,000 développeurs formés.",
-        website: "https://andela.com",
-        ctaText: "Postuler au bootcamp",
+        description: "Programme panafricain de formation, incubation et investissement pour entrepreneurs tech, avec une communauté active sur plusieurs marchés africains.",
+        website: "https://www.meltwater.org",
+        ctaText: "Voir le programme",
         isActive: true,
         priority: 90,
         startDate: now,
@@ -118,11 +118,11 @@ async function seedSponsors() {
         stats: { impressions: 0, clicks: 0 }
       },
       {
-        name: "Afrique Innovation",
+        name: "Tony Elumelu Foundation",
         logo: "https://images.unsplash.com/photo-1559136555-9303baea8ebd?w=400&h=400&fit=crop",
-        description: "Incubateur de startups tech en Afrique francophone. Accompagnement de 6 mois, accès aux investisseurs, mentors expérimentés.",
-        website: "https://afriqueinnovation.com",
-        ctaText: "Candidater",
+        description: "Fondation dédiée à l'entrepreneuriat africain, avec programmes de formation, mentorat et financement pour entrepreneurs du continent.",
+        website: "https://www.tonyelumelufoundation.org",
+        ctaText: "Découvrir les programmes",
         isActive: true,
         priority: 85,
         startDate: now,
@@ -131,11 +131,11 @@ async function seedSponsors() {
         stats: { impressions: 0, clicks: 0 }
       },
       {
-        name: "Orange Digital Academy",
+        name: "Orange Digital Centers",
         logo: "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=400&h=400&fit=crop",
-        description: "Formations digitales gratuites par Orange. Coding, data, cloud, cybersecurity. Certification reconnue par les entreprises.",
-        website: "https://digitalacademy.orange.com",
-        ctaText: "S'inscrire gratuitement",
+        description: "Réseau de centres numériques pour la formation, l'accompagnement de startups et l'inclusion digitale dans plusieurs pays.",
+        website: "https://www.orange.com/en/orange-digital-centers",
+        ctaText: "Explorer les centres",
         isActive: true,
         priority: 80,
         startDate: now,
@@ -143,11 +143,11 @@ async function seedSponsors() {
         stats: { impressions: 0, clicks: 0 }
       },
       {
-        name: "MooV Africa",
+        name: "Startupbootcamp AfriTech",
         logo: "https://images.unsplash.com/photo-1556742044-3c52d6e88c62?w=400&h=400&fit=crop",
-        description: "Transport et logistique digitalisés. Bus entre villes, livraison express, marchandises. Application disponible sur iOS et Android.",
-        website: "https://moov.africa",
-        ctaText: "Réserver un trajet",
+        description: "Accélérateur orienté startups africaines innovantes, avec accompagnement, mentorat et accès à un réseau international d'investisseurs.",
+        website: "https://www.startupbootcamp.org/accelerator/afritech",
+        ctaText: "Voir l'accélérateur",
         isActive: true,
         priority: 75,
         startDate: now,

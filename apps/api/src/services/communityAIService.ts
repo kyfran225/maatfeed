@@ -1,6 +1,9 @@
 import { CommunityPostModel, type CommunityPostDocument } from "../models/CommunityPost.js";
 import { CommentModel } from "../models/Comment.js";
+import { ContentClassificationModel } from "../models/ContentClassification.js";
+import { ContentEnrichmentModel } from "../models/ContentEnrichment.js";
 import { ContentModel, type ContentDocument } from "../models/Content.js";
+import { ContentScoreModel } from "../models/ContentScore.js";
 import { ProfileModel } from "../models/Profile.js";
 import { cacheService } from "./cacheService.js";
 import OpenAI from "openai";
@@ -282,6 +285,49 @@ ${context.topComments}`
       });
 
       const savedContent = await newContent.save();
+
+      await Promise.all([
+        ContentClassificationModel.findOneAndUpdate(
+          { contentId: savedContent._id },
+          {
+            $set: {
+              bucket: "deep",
+              debateScore: Math.min(100, Math.max(55, post.viralityScore)),
+              emotionScore: Math.round((post.controversy || 0) * 100),
+              educationScore: Math.min(88, 45 + post.participantCount * 4),
+              confidence: 0.78
+            }
+          },
+          { upsert: true, new: true }
+        ),
+        ContentEnrichmentModel.findOneAndUpdate(
+          { contentId: savedContent._id },
+          {
+            $set: {
+              summary: feedContent.description,
+              keyIdeas: post.tags.slice(0, 5),
+              debatePrompt: `Quelle position faut-il défendre ou contester sur "${feedContent.title}" ?`,
+              thematicTags: [...post.tags, "community-generated"]
+            }
+          },
+          { upsert: true, new: true }
+        ),
+        ContentScoreModel.findOneAndUpdate(
+          { contentId: savedContent._id },
+          {
+            $set: {
+              likes: Math.max(0, post.upvotes || 0),
+              comments: Math.max(0, post.participantCount || 0),
+              views: Math.max(0, (post.engagementMetrics?.views || 0) + post.participantCount * 8),
+              debateScore: Math.min(100, Math.max(20, post.viralityScore || 0)),
+              recencyBoost: 15,
+              finalScore: Math.min(1000, Math.round((post.viralityScore || 0) * 2 + post.participantCount * 12)),
+              scoreVersion: "community-feed-v1"
+            }
+          },
+          { upsert: true, new: true }
+        )
+      ]);
 
       // Mettre à jour le post communautaire
       await CommunityPostModel.findByIdAndUpdate(postId, {

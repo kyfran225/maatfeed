@@ -42,6 +42,8 @@ services:
         value: true
       - key: YOUTUBE_API_KEY
         sync: false
+      - key: YOUTUBE_CHANNEL_IDS
+        sync: false
       - key: TIKTOK_PROVIDER_BASE_URL
         value: https://api.apify.com/v2/acts/clockworks~tiktok-scraper/run-sync-get-dataset-items
       - key: APIFY_API_TOKEN
@@ -164,7 +166,11 @@ services:
         value: "0 */3 * * *"
       - key: WORKER_AUTO_INGEST_LIMIT_PER_PROVIDER
         value: 8
+      - key: WORKER_AUTO_INGEST_CHANNEL_LIMIT_PER_CHANNEL
+        value: 6
       - key: YOUTUBE_API_KEY
+        sync: false
+      - key: YOUTUBE_CHANNEL_IDS
         sync: false
       - key: APIFY_API_TOKEN
         sync: false
@@ -233,6 +239,8 @@ services:
       - key: CORS_CREDENTIALS
         value: true
       - key: YOUTUBE_API_KEY
+        sync: false
+      - key: YOUTUBE_CHANNEL_IDS
         sync: false
       - key: TIKTOK_PROVIDER_BASE_URL
         value: https://api.apify.com/v2/acts/clockworks~tiktok-scraper/run-sync-get-dataset-items
@@ -314,6 +322,14 @@ services:
         sync: false
       - key: YOUTUBE_API_KEY
         sync: false
+      - key: YOUTUBE_CHANNEL_IDS
+        sync: false
+      - key: WORKER_AUTO_INGEST_CRON
+        value: "0 */2 * * *"
+      - key: WORKER_AUTO_INGEST_LIMIT_PER_PROVIDER
+        value: 10
+      - key: WORKER_AUTO_INGEST_CHANNEL_LIMIT_PER_CHANNEL
+        value: 6
       - key: APIFY_API_TOKEN
         sync: false
       - key: HUGGINGFACE_API_KEY

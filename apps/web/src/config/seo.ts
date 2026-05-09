@@ -54,9 +54,9 @@ export const siteSEO: SEOConfig = {
   defaultLocale: 'fr_FR',
   alternateLocales: ['en_US', 'en_GB'],
   
-  // Images - Toutes les images doivent être en 1200x630 pour OG
-  ogImage: 'https://maatfeed.com/og-image.webp',
-  twitterImage: 'https://maatfeed.com/og-image.webp',
+  // Images
+  ogImage: 'https://maatfeed.com/og-image.webp?v=20260508',
+  twitterImage: 'https://maatfeed.com/og-image.webp?v=20260508',
   favicon: '/favicon.ico',
   
   // Réseaux sociaux (à remplir quand disponible)
@@ -173,7 +173,7 @@ export const structuredData = {
     '@type': 'Organization',
     name: 'MAATFEED',
     url: 'https://maatfeed.com',
-    logo: 'https://maatfeed.com/favicon_io/android-chrome-512x512.png',
+    logo: 'https://maatfeed.com/favicon_io/android-chrome-512x512.png?v=20260508-circle',
     description: 'Plateforme de contenus, débats et audio autour du savoir africain.',
     sameAs: [
       // À ajouter quand les comptes sociaux seront créés
@@ -214,7 +214,7 @@ export const structuredData = {
     browserRequirements: 'requires HTML5 support',
     description: 'Plateforme sociale de débats et de découverte du savoir africain.',
     url: 'https://maatfeed.com',
-    screenshot: 'https://maatfeed.com/og-image.png',
+    screenshot: 'https://maatfeed.com/og-image.webp?v=20260508',
     featureList: [
       'Feed personnalisé',
       'Débats communautaires',

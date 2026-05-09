@@ -22,14 +22,14 @@ async function seedSponsors() {
     const now = new Date();
     const nextYear = new Date(now.getFullYear() + 1, now.getMonth(), now.getDate());
     
-    // Créer des sponsors réels pour l'Afrique francophone
+    // Créer des sponsors avec des liens publics vérifiés.
     const realSponsors = [
       {
-        name: "AfroTech Hub",
+        name: "African Leadership Academy",
         logo: "https://images.unsplash.com/photo-1552664730-d307ca884978?w=400&h=400&fit=crop&crop=center",
-        description: "Plateforme panafricaine de formation en technologies. Plus de 10,000 développeurs formés dans 15 pays africains. Cours gratuits en français et anglais.",
-        website: "https://afrotech-hub.com",
-        ctaText: "Commencer l'apprentissage",
+        description: "Institution panafricaine qui forme de jeunes leaders africains avec des programmes d'éducation, d'entrepreneuriat et d'impact social.",
+        website: "https://www.africanleadershipacademy.org",
+        ctaText: "Découvrir l'académie",
         isActive: true,
         priority: 100,
         startDate: now,
@@ -39,11 +39,11 @@ async function seedSponsors() {
         }
       },
       {
-        name: "Culture247 Magazine",
+        name: "MEST Africa",
         logo: "https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=400&h=400&fit=crop&crop=center",
-        description: "Média panafricain dédié à la culture contemporaine. Découvrez les artistes émergents, les festivals culturels et les mouvements artistiques du continent.",
-        website: "https://culture247.africa",
-        ctaText: "Découvrir les talents",
+        description: "Programme panafricain de formation, incubation et investissement pour entrepreneurs tech, avec une communauté active sur plusieurs marchés africains.",
+        website: "https://www.meltwater.org",
+        ctaText: "Voir le programme",
         isActive: true,
         priority: 90,
         startDate: now,
@@ -53,10 +53,10 @@ async function seedSponsors() {
         }
       },
       {
-        name: "StartUp Africa Network",
+        name: "VC4A Startup Network",
         logo: "https://images.unsplash.com/photo-1556761175-5973dc0f32e7?w=400&h=400&fit=crop&crop=center",
-        description: "Réseau d'accélération de startups africaines. Plus de 500 startups accompagnées, 50 millions de dollars levés. Focus sur l'innovation sociale et technologique.",
-        website: "https://startup-africa.co",
+        description: "Réseau pour fondateurs, mentors et investisseurs actifs dans l'écosystème startup africain, avec opportunités, programmes et communautés.",
+        website: "https://vc4a.com",
         ctaText: "Rejoindre le réseau",
         isActive: true,
         priority: 95,
@@ -67,11 +67,11 @@ async function seedSponsors() {
         }
       },
       {
-        name: "AfriBusiness Forum",
+        name: "Tony Elumelu Foundation",
         logo: "https://images.unsplash.com/photo-1556761175-b413da4baf72?w=400&h=400&fit=crop&crop=center",
-        description: "Forum annuel des entrepreneurs africains. Connectez-vous avec des investisseurs, mentors et entrepreneurs du continent. Édition 2025 à Dakar.",
-        website: "https://afribusiness-forum.com",
-        ctaText: "S'inscrire à l'événement",
+        description: "Fondation dédiée à l'entrepreneuriat africain, avec programmes de formation, mentorat et financement pour entrepreneurs du continent.",
+        website: "https://www.tonyelumelufoundation.org",
+        ctaText: "Découvrir les programmes",
         isActive: true,
         priority: 85,
         startDate: now,
@@ -82,11 +82,11 @@ async function seedSponsors() {
         }
       },
       {
-        name: "TechCité Dakar",
+        name: "Orange Digital Centers",
         logo: "https://images.unsplash.com/photo-1497366216548-37526070297c?w=400&h=400&fit=crop&crop=center",
-        description: "Premier technopôle d'Afrique de l'Ouest. Espace de coworking, incubateur et communauté tech à Dakar. Plus de 200 startups hébergées.",
-        website: "https://techcite.sn",
-        ctaText: "Visiter l'espace",
+        description: "Réseau de centres numériques pour la formation, l'accompagnement de startups et l'inclusion digitale dans plusieurs pays.",
+        website: "https://www.orange.com/en/orange-digital-centers",
+        ctaText: "Explorer les centres",
         isActive: true,
         priority: 80,
         startDate: now,
@@ -96,11 +96,11 @@ async function seedSponsors() {
         }
       },
       {
-        name: "AfroDigital Academy",
+        name: "Startupbootcamp AfriTech",
         logo: "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=400&h=400&fit=crop&crop=center",
-        description: "Formation digitale pour les jeunes africains. Cours en ligne gratuits en marketing digital, e-commerce et entrepreneuriat. Certifiés par Google.",
-        website: "https://afrodigital.academy",
-        ctaText: "Accéder aux cours",
+        description: "Accélérateur orienté startups africaines innovantes, avec accompagnement, mentorat et accès à un réseau international d'investisseurs.",
+        website: "https://www.startupbootcamp.org/accelerator/afritech",
+        ctaText: "Voir l'accélérateur",
         isActive: true,
         priority: 75,
         startDate: now,
@@ -110,11 +110,11 @@ async function seedSponsors() {
         }
       },
       {
-        name: "GreenAfrica Initiative",
+        name: "Seedstars",
         logo: "https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=400&h=400&fit=crop&crop=center",
-        description: "Initiative panafricaine pour le développement durable. Projets d'agroforesterie, énergies renouvelables et économie circulaire dans 8 pays.",
-        website: "https://greenafrica.org",
-        ctaText: "Participer aux projets",
+        description: "Plateforme mondiale d'investissement et de programmes d'accélération pour entrepreneurs dans les marchés émergents, dont l'Afrique.",
+        website: "https://www.seedstars.com",
+        ctaText: "Découvrir Seedstars",
         isActive: true,
         priority: 70,
         startDate: now,
@@ -124,11 +124,11 @@ async function seedSponsors() {
         }
       },
       {
-        name: "AfroFashion Week",
+        name: "AfricArena",
         logo: "https://images.unsplash.com/photo-1445205170230-053b83016050?w=400&h=400&fit=crop&crop=center",
-        description: "Semaine de la mode africaine contemporaine. Découvrez les créateurs émergents, les tissus wax innovants et la mode durable du continent.",
-        website: "https://afrofashionweek.com",
-        ctaText: "Voir le programme",
+        description: "Sommet et réseau tech africain connectant startups, investisseurs et grandes entreprises autour de l'innovation sur le continent.",
+        website: "https://www.africarena.com",
+        ctaText: "Voir les événements",
         isActive: true,
         priority: 65,
         startDate: now,

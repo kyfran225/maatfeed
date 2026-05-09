@@ -24,6 +24,7 @@
     "workers": "npm --workspace @maat/api run worker",
     "readiness": "npm --workspace @maat/api run readiness",
     "check:duplicates": "npx tsx infra/scripts/check-duplicates.ts",
+    "check:sponsor-links": "npx tsx infra/scripts/check-sponsor-links.ts",
     "cache:clear": "npx tsx infra/scripts/rebuild-feed-cache.ts",
     "cleanup:community": "npx tsx infra/scripts/cleanup-community-data.ts",
     "test:zero-community": "npx tsx infra/scripts/cleanup-and-test.ts"

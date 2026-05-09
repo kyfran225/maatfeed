@@ -7,7 +7,7 @@ import { ContentScoreModel } from "../models/ContentScore.js";
 
 export type ContentCardSource = {
   id: string;
-  source: "youtube" | "tiktok" | "internal";
+  source: "youtube" | "tiktok" | "internal" | "community";
   sourceUrl: string;
   title: string;
   description: string;

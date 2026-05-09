@@ -19,6 +19,7 @@ const ContentDetailPage = lazy(() => import("../pages/ContentDetailPage"));
 const DebateDetailPage = lazy(() => import("../pages/DebateDetailPage"));
 const DemoSectionTitlePage = lazy(() => import("../pages/DemoSectionTitlePage"));
 const TikTokDemoPage = lazy(() => import("../pages/TikTokDemoPage"));
+const YouTubeDemoPage = lazy(() => import("../pages/YouTubeDemoPage"));
 const ExplorePage = lazy(() => import("../pages/ExplorePage"));
 const ForgotPasswordPage = lazy(() => import("../pages/ForgotPasswordPage"));
 const OnboardingPage = lazy(() => import("../pages/OnboardingPage"));
@@ -88,6 +89,7 @@ export const router = createBrowserRouter(isMaintenanceMode ? [
       { path: "sponsor", element: <LazyPage><SponsorPage /></LazyPage> },
       { path: "demo-section-title", element: <DemoSectionTitlePage /> },
       { path: "tiktok-demo", element: <LazyPage><TikTokDemoPage /></LazyPage> },
+      { path: "youtube-demo", element: <LazyPage><YouTubeDemoPage /></LazyPage> },
       {
         path: "profile",
         element: (

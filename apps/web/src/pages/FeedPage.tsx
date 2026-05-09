@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { Check, Play, RotateCcw, Search, HelpCircle } from "lucide-react";
+import { Check, Play, RotateCcw, Search, HelpCircle, Volume2 } from "lucide-react";
 import { SEO } from "../components/SEO";
 import { useAuth } from "../hooks/useAuth";
-import { useGlobalFeed } from "../hooks/useFeed";
+import { useInfiniteGlobalFeed } from "../hooks/useFeed";
+import { useVideoPlayer } from "../contexts/VideoPlayerContext";
 import type { FeedResponse } from "../services/feedService";
 import {
   getLearningProgress,
@@ -18,6 +19,7 @@ import { SponsorCard } from "../components/feed/SponsorCard";
 import { QuizRecapCard } from "../components/feed/QuizRecapCard";
 import { getActiveSponsors, incrementSponsorStats, type Sponsor } from "../services/sponsorService";
 import { RedditVideoPlayer } from "../components/media/RedditVideoPlayer";
+import { extractYouTubeVideoId, isYouTubeShortUrl, YouTubeEmbed } from "../components/media/YouTubeEmbed";
 
 type FeedItem = FeedResponse["items"][number];
 type LearningStatus = "new" | "learned" | "review";
@@ -31,6 +33,25 @@ interface QuizRecapItem {
 type FeedWithInjections = FeedItem | { type: "sponsor"; data: Sponsor } | QuizRecapItem;
 
 const STORAGE_KEY = "maatfeed-learning-state";
+const DESKTOP_FEED_QUERY = "(min-width: 768px)";
+
+function useIsDesktopFeed() {
+  const [isDesktop, setIsDesktop] = useState(false);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia(DESKTOP_FEED_QUERY);
+    const update = () => setIsDesktop(mediaQuery.matches);
+
+    update();
+    mediaQuery.addEventListener("change", update);
+
+    return () => {
+      mediaQuery.removeEventListener("change", update);
+    };
+  }, []);
+
+  return isDesktop;
+}
 
 function readLearningState(): LearningState {
   try {
@@ -62,29 +83,69 @@ function getStatusLabel(status?: LearningStatus) {
 function FeedItemCard({
   item,
   status,
+  allowAutoPlay,
   onSetStatus,
   onOpenQuiz,
 }: {
   item: FeedItem;
   status?: LearningStatus;
+  allowAutoPlay: boolean;
   onSetStatus: (status: LearningStatus) => void;
   onOpenQuiz: (contentId: string) => void;
 }) {
+  const [directVideoOrientation, setDirectVideoOrientation] = useState<'portrait' | 'landscape' | 'square' | null>(null);
+  const { mediaSoundEnabled, activateMediaSound } = useVideoPlayer();
   const isTikTokVideo = item.mediaUrl?.includes('tiktok.com');
+  const isShortFormVideo = isTikTokVideo || isYouTubeShortUrl(item.mediaUrl) || directVideoOrientation === 'portrait';
+  const isYouTubeVideo = Boolean(item.mediaUrl && extractYouTubeVideoId(item.mediaUrl));
 
   return (
     <article className="overflow-hidden rounded-lg border border-white/10 bg-white/[0.035]">
-      <div className={`relative ${isTikTokVideo ? 'aspect-[9/16]' : 'aspect-video'} overflow-hidden bg-stone/25`}>
+      <div className={`relative ${isShortFormVideo ? 'h-[400px]' : 'aspect-video'} overflow-hidden bg-stone/25`}>
         {item.mediaType === 'video' && item.mediaUrl ? (
           <div className="h-full w-full">
-            <RedditVideoPlayer
-              src={item.mediaUrl}
-              thumbnail={item.thumbnailUrl}
-              title={item.title}
-              className="w-full h-full"
-              muted={true}
-              autoPlay={false}
-            />
+            {isYouTubeVideo ? (
+              <div className="relative h-full w-full">
+                <YouTubeEmbed
+                  videoUrl={item.mediaUrl}
+                  title={item.title}
+                  layout="fill"
+                  autoplayWhenVisible={allowAutoPlay}
+                  options={{
+                    controls: true,
+                    autoplay: false,
+                    muted: allowAutoPlay || !mediaSoundEnabled,
+                    enableJsApi: true,
+                    fullscreen: true
+                  }}
+                />
+                {allowAutoPlay && !mediaSoundEnabled && (
+                  <button
+                    type="button"
+                    aria-label="Activer le son pour toutes les vidéos"
+                    title="Activer le son"
+                    className="absolute right-3 top-3 z-10 inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/20 bg-black/55 text-white backdrop-blur transition hover:bg-black/70"
+                    onClick={(event) => {
+                      event.preventDefault();
+                      event.stopPropagation();
+                      activateMediaSound();
+                    }}
+                  >
+                    <Volume2 className="h-5 w-5" aria-hidden="true" />
+                  </button>
+                )}
+              </div>
+            ) : (
+              <RedditVideoPlayer
+                src={item.mediaUrl}
+                thumbnail={item.thumbnailUrl}
+                title={item.title}
+                className="w-full h-full"
+                muted={allowAutoPlay && !mediaSoundEnabled}
+                autoPlay={allowAutoPlay && isTikTokVideo}
+                onVideoOrientation={setDirectVideoOrientation}
+              />
+            )}
           </div>
         ) : item.thumbnailUrl ? (
           <img src={item.thumbnailUrl} alt="" className="h-full w-full object-cover" />
@@ -171,8 +232,21 @@ function FeedItemCard({
 
 export function FeedPage() {
   const { isAuthenticated } = useAuth();
-  const { data, isLoading, error, refetch } = useGlobalFeed({ limit: 12 });
-  const items = useMemo(() => data?.items?.filter((item) => item?.id) ?? [], [data]);
+  const loadMoreRef = useRef<HTMLDivElement | null>(null);
+  const isDesktopFeed = useIsDesktopFeed();
+  const {
+    data,
+    isLoading,
+    error,
+    refetch,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage
+  } = useInfiniteGlobalFeed();
+  const items = useMemo(
+    () => data?.pages.flatMap((page) => page.items).filter((item) => item?.id) ?? [],
+    [data]
+  );
   const contentIds = useMemo(() => items.map((item) => item.id), [items]);
   const [learningState, setLearningState] = useState<LearningState>({});
   const [serverSummary, setServerSummary] = useState<LearningSummary | null>(null);
@@ -186,6 +260,28 @@ export function FeedPage() {
   useEffect(() => {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(learningState));
   }, [learningState]);
+
+  useEffect(() => {
+    const node = loadMoreRef.current;
+    if (!node || !hasNextPage || isFetchingNextPage) {
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry?.isIntersecting) {
+          void fetchNextPage();
+        }
+      },
+      { rootMargin: "700px 0px" }
+    );
+
+    observer.observe(node);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
 
   // Charger les sponsors depuis l'API
   useEffect(() => {
@@ -379,12 +475,24 @@ export function FeedPage() {
                 key={feedItem.id}
                 item={feedItem}
                 status={learningState[feedItem.id]}
+                allowAutoPlay={!isDesktopFeed}
                 onSetStatus={(status) => setStatus(feedItem.id, status)}
                 onOpenQuiz={(contentId) => setQuizContentId(contentId)}
               />
             );
           })}
         </section>
+
+        {!isLoading && !error && items.length > 0 && (
+          <div ref={loadMoreRef} className="flex min-h-24 items-center justify-center py-6">
+            {isFetchingNextPage && <LoadingState message="Chargement de la suite..." />}
+            {!hasNextPage && (
+              <p className="text-sm text-sand/52">
+                Tu as parcouru toute la sélection disponible.
+              </p>
+            )}
+          </div>
+        )}
 
         <QuizModal
           contentId={quizContentId ?? ""}

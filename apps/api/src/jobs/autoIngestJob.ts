@@ -1,5 +1,5 @@
 import type { Job } from "bullmq";
-import { ingestByKeyword } from "../services/contentIngestionService.js";
+import { ingestByKeyword, ingestConfiguredYoutubeChannels } from "../services/contentIngestionService.js";
 import {
   getEnabledKeywords,
   type DynamicKeyword
@@ -95,18 +95,22 @@ export async function processAutoIngestJob(
 
   const succeeded = results.filter((r) => r.status === "fulfilled").map((r) => r.value);
   const failed = results.filter((r) => r.status === "rejected").map((r) => (r as PromiseRejectedResult).reason);
+  const channelResult = await ingestConfiguredYoutubeChannels();
 
   const totalPersisted = succeeded.reduce((sum, r) => sum + r.counts.persisted, 0);
   const totalYouTube = succeeded.reduce((sum, r) => sum + r.counts.youtube, 0);
   const totalTikTok = succeeded.reduce((sum, r) => sum + r.counts.tiktok, 0);
+  const channelPersisted = channelResult.counts.persisted;
+  const channelYouTube = channelResult.counts.youtube;
 
   logger.info(
     {
       jobId: job.id,
       keywordsUsed: keywordsToUse,
-      totalPersisted,
-      totalYouTube,
+      totalPersisted: totalPersisted + channelPersisted,
+      totalYouTube: totalYouTube + channelYouTube,
       totalTikTok,
+      channelIngestion: channelResult.counts,
       succeeded: succeeded.length,
       failed: failed.length,
       failures: failed.map((f) => f?.message || String(f))
@@ -117,9 +121,15 @@ export async function processAutoIngestJob(
   return {
     success: failed.length === 0,
     keywordsUsed: keywordsToUse,
-    totalPersisted,
-    totalYouTube,
+    totalPersisted: totalPersisted + channelPersisted,
+    totalYouTube: totalYouTube + channelYouTube,
     totalTikTok,
+    channelIngestion: {
+      persisted: channelPersisted,
+      youtube: channelYouTube,
+      channels: channelResult.counts.channels,
+      failures: channelResult.failures ?? []
+    },
     results: succeeded.map((r) => ({
       keyword: r.keyword,
       persisted: r.counts.persisted,

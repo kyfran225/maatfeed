@@ -4,10 +4,11 @@ import { ContentEnrichmentModel } from "../models/ContentEnrichment.js";
 import type { Types } from "mongoose";
 
 const BASE_URL = process.env.APP_BASE_URL || "https://www.maatfeed.com";
+const ASSET_VERSION = "20260508-circle";
 const DEFAULT_META = {
   title: "MAAT FEED - Culture & Apprentissage Africain",
   description: "Découvrez une culture africaine riche et diverse. MAAT FEED vous aide à apprendre et retenir ce qui compte vraiment.",
-  image: `${BASE_URL}/og-image.webp`,
+  image: `${BASE_URL}/og-image.webp?v=${ASSET_VERSION}`,
   type: "website" as const,
   keywords: ["culture africaine", "histoire", "apprentissage", "education", "kemet", "maat"]
 };
@@ -86,7 +87,7 @@ export async function getContentMetaTags(contentId: string): Promise<MetaTagsDTO
       name: "MAAT FEED",
       logo: {
         "@type": "ImageObject",
-        url: `${BASE_URL}/favicon/android-chrome-192x192.png`
+        url: `${BASE_URL}/favicon_io/android-chrome-192x192.png?v=${ASSET_VERSION}`
       }
     }
   };

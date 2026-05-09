@@ -10,6 +10,7 @@ import { CommentModel } from "../models/Comment.js";
 import { CommunityPostModel } from "../models/CommunityPost.js";
 import { ReplyModel } from "../models/Reply.js";
 import { decodeCursor, encodeCursor } from "@maat/shared";
+import { env } from "../config/env.js";
 
 interface CursorData {
   index: number;
@@ -23,7 +24,7 @@ const CACHE_TTL = {
 };
 
 // Maximum items to fetch for feed cache (all published content)
-const MAX_FEED_ITEMS = 2000;
+const MAX_FEED_ITEMS = env.FEED_MAX_ITEMS;
 
 // Shuffle array using Fisher-Yates algorithm
 function shuffleArray<T>(array: T[]): T[] {
@@ -47,7 +48,7 @@ export interface FeedItem {
     handle: string;
     avatar?: string;
   };
-  sourceProvider: "youtube" | "tiktok";
+  sourceProvider: "youtube" | "tiktok" | "internal" | "community";
   bucket: "viral" | "educational" | "deep";
   scores: {
     likes: number;
@@ -84,6 +85,20 @@ export interface FeedCacheData {
   version: string;
   createdAt: string;
 }
+
+const feedContentSelector = {
+  processingStatus: "published",
+  $or: [
+    {
+      mediaType: "video",
+      sourceProvider: { $in: ["youtube", "tiktok", "internal", "community"] }
+    },
+    {
+      mediaType: "audio",
+      sourceProvider: "internal"
+    }
+  ]
+};
 
 interface DiscussionSignal {
   totalCommentCount: number;
@@ -706,17 +721,13 @@ export async function getGlobalFeed(cursor?: string, limit = 20, shuffle = true)
   }
 
   // Cache miss - build from database
-  // Get ALL published video content from YouTube/TikTok only (no internal/audio)
-  const contents = await ContentModel.find({
-    processingStatus: "published",
-    sourceProvider: { $in: ["youtube", "tiktok"] },
-    mediaType: "video"
-  })
+  // Get published feed-safe content from stable/free sources first. TikTok remains eligible when available.
+  const contents = await ContentModel.find(feedContentSelector)
     .sort({ createdAt: -1 })
-    .limit(MAX_FEED_ITEMS);
+    .limit(MAX_FEED_ITEMS) as any[];
 
   // Get classifications for content filtering
-  const contentIds = contents.map(c => c._id);
+  const contentIds = contents.map((content) => content._id);
   const classifications = await ContentClassificationModel.find({
     contentId: { $in: contentIds },
     bucket: { $in: ["viral", "educational", "deep"] }
@@ -724,7 +735,7 @@ export async function getGlobalFeed(cursor?: string, limit = 20, shuffle = true)
 
   // Filter to only content with valid bucket classifications
   const validContentIds = new Set(classifications.map(c => c.contentId.toString()));
-  const validContents = contents.filter(c => validContentIds.has(c._id.toString()));
+  const validContents = contents.filter((content) => validContentIds.has(content._id.toString()));
   const discussionSignals = await getDiscussionSignals(validContents.map((content) => content._id.toString()));
 
   let items = await Promise.all(
@@ -751,7 +762,7 @@ export async function getGlobalFeed(cursor?: string, limit = 20, shuffle = true)
   await storeFeedSnapshot({
     scope: "global",
     scopeId: "default",
-    contentIds: validContents.map(c => c._id),
+    contentIds: validContents.map((content) => content._id),
     nextCursor: cacheData.nextCursor
   });
 
@@ -866,13 +877,11 @@ export async function getSessionFeed(sessionId: string): Promise<FeedResponse | 
     return null;
   }
 
-  // Rehydrate content from snapshot (filter to video content only)
+  // Rehydrate content from snapshot using the same feed-safe source rules.
   const contents = await ContentModel.find({
     _id: { $in: snapshot.contentIds },
-    processingStatus: "published",
-    sourceProvider: { $in: ["youtube", "tiktok"] },
-    mediaType: "video"
-  });
+    ...feedContentSelector
+  }) as any[];
 
   const items = await Promise.all(
     contents.map(content => buildFeedItemFromContent(content))

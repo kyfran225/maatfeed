@@ -306,7 +306,7 @@ export const EnhancedFeedCard = memo(function EnhancedFeedCard({ item, index, is
   useEffect(() => {
     if (isActive) {
       const ytAudioUnlocked = YouTubeAPIManager.getInstance().hasAudioUnlocked();
-      const shouldAutoplay = (item.sourceProvider !== 'youtube' && item.sourceProvider !== 'tiktok') || ytAudioUnlocked;
+      const shouldAutoplay = item.sourceProvider !== 'youtube' || ytAudioUnlocked;
       setPaused(!shouldAutoplay);
     } else {
       setPaused(true); // Auto-pause when inactive
@@ -399,7 +399,7 @@ export const EnhancedFeedCard = memo(function EnhancedFeedCard({ item, index, is
         <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" style={{ pointerEvents: 'none' }} />
 
         {/* Overlay rendered in-page to mask native player controls above the bottom nav */}
-        {isActive && item.mediaType === "video" && (
+        {isActive && item.mediaType === "video" && item.sourceProvider !== 'tiktok' && (
           <div
             aria-hidden="true"
             className={`absolute left-0 right-0 z-[55] ${nativeControlsOverlayHeightClass} bg-ink transition-all duration-300`}
@@ -669,8 +669,8 @@ export const EnhancedFeedCard = memo(function EnhancedFeedCard({ item, index, is
           )}
         </div>
 
-        {/* Video Progress Bar - For YouTube, TikTok, and direct videos */}
-        {isActive && (item.sourceProvider === 'youtube' || item.sourceProvider === 'tiktok') && (
+        {/* Video Progress Bar - YouTube only. TikTok uses the same native controls as the demo player. */}
+        {isActive && item.sourceProvider === 'youtube' && (
           <VideoProgressBar
             currentTime={videoProgress.currentTime}
             duration={videoProgress.duration}

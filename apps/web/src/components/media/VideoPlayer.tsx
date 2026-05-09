@@ -1,6 +1,9 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Play, Headphones, ExternalLink } from 'lucide-react';
 import { TouchFeedback } from '../ui/TouchFeedback';
+import { TikTokEmbed } from '../feed/TikTokEmbed';
+import { extractYouTubeVideoId, YouTubeEmbed } from './YouTubeEmbed';
+import { useVideoPlayer } from '../../contexts/VideoPlayerContext';
 
 interface VideoPlayerProps {
   videoUrl?: string;
@@ -29,50 +32,27 @@ const detectPlatform = (url: string): 'youtube' | 'tiktok' | 'direct' | 'unknown
   return 'unknown';
 };
 
-// Convert YouTube URL to embed URL with mobile-friendly parameters
-const getYouTubeEmbedUrl = (url: string, autoplay = true): string | null => {
-  const videoId = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\s?]+)/)?.[1];
-  if (videoId) {
-    // Preload version: no autoplay, just load the player
-    // enablejsapi=1 allows JavaScript API control via postMessage
-    // mute=1 helps with autoplay policies on some browsers
-    const params = new URLSearchParams({
-      rel: '0',
-      playsinline: '1',
-      enablejsapi: '1',
-      modestbranding: '1',
-      ...(autoplay && { autoplay: '1', mute: '0' }),
-    });
-    return `https://www.youtube.com/embed/${videoId}?${params.toString()}`;
-  }
-  return null;
-};
-
 // Check if device is mobile
 const isMobile = () => {
   if (typeof window === 'undefined' || !navigator) return false;
   return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 };
 
-// Convert TikTok URL to embed URL
-const getTikTokEmbedUrl = (url: string): string | null => {
-  // TikTok embed requires their embed script, so we'll open in new tab
-  return null;
-};
-
 export function VideoPlayer({ videoUrl, audioUrl, thumbnailUrl, title, bucket }: VideoPlayerProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isPreloaded, setIsPreloaded] = useState(false);
+  const [isVisible, setIsVisible] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const iframeRef = useRef<HTMLIFrameElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const preloadTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const { mediaSoundEnabled, activateMediaSound } = useVideoPlayer();
 
   const platform = videoUrl ? detectPlatform(videoUrl) : 'unknown';
-  const embedUrl = videoUrl && platform === 'youtube' ? getYouTubeEmbedUrl(videoUrl, false) : null;
+  const youtubeVideoId = videoUrl && platform === 'youtube' ? extractYouTubeVideoId(videoUrl) : null;
 
   // Preload iframe after a short delay when component mounts
   useEffect(() => {
-    if (platform === 'youtube' && embedUrl && !isPreloaded) {
+    if (platform === 'youtube' && youtubeVideoId && !isPreloaded) {
       // Delay preload slightly to not block initial render
       preloadTimeoutRef.current = setTimeout(() => {
         setIsPreloaded(true);
@@ -84,7 +64,7 @@ export function VideoPlayer({ videoUrl, audioUrl, thumbnailUrl, title, bucket }:
         clearTimeout(preloadTimeoutRef.current);
       }
     };
-  }, [platform, embedUrl, isPreloaded]);
+  }, [platform, youtubeVideoId, isPreloaded]);
 
   const hasVideo = !!videoUrl;
   const hasAudio = !!audioUrl;
@@ -98,29 +78,12 @@ export function VideoPlayer({ videoUrl, audioUrl, thumbnailUrl, title, bucket }:
     .slice(0, 2);
 
   const handlePlay = useCallback(() => {
+    activateMediaSound();
     console.log('Playing:', { videoUrl, audioUrl, platform, isMobile: isMobile(), isPreloaded });
 
     if (platform === 'youtube') {
-      // On mobile, open YouTube app directly for better controls
-      // On desktop, use embedded player
-      if (isMobile() && videoUrl) {
-        window.location.href = videoUrl;
-        return;
-      }
-
-      if (embedUrl) {
+      if (youtubeVideoId) {
         setIsPlaying(true);
-        // If preloaded, try to trigger play via postMessage
-        if (isPreloaded && iframeRef.current?.contentWindow) {
-          try {
-            iframeRef.current.contentWindow.postMessage(
-              JSON.stringify({ event: 'command', func: 'playVideo' }),
-              '*'
-            );
-          } catch (e) {
-            console.warn('Could not trigger play via postMessage:', e);
-          }
-        }
         return;
       }
     }
@@ -134,23 +97,58 @@ export function VideoPlayer({ videoUrl, audioUrl, thumbnailUrl, title, bucket }:
     if (videoUrl) {
       window.open(videoUrl, '_blank');
     }
-  }, [videoUrl, audioUrl, platform, embedUrl, isPreloaded]);
+  }, [activateMediaSound, videoUrl, audioUrl, platform, youtubeVideoId, isPreloaded]);
+
+  useEffect(() => {
+    if ((platform !== 'tiktok' && platform !== 'youtube') || !containerRef.current) return;
+
+    const observer = new IntersectionObserver(([entry]) => {
+      const nextIsVisible = Boolean(entry?.isIntersecting);
+      setIsVisible(nextIsVisible);
+      if (platform === 'youtube') {
+        setIsPlaying(nextIsVisible);
+      }
+    }, { threshold: 0.6 });
+
+    observer.observe(containerRef.current);
+    return () => observer.disconnect();
+  }, [platform]);
+
+  if (platform === 'tiktok' && videoUrl) {
+    return (
+      <div ref={containerRef} className="w-full h-full bg-black relative flex items-center justify-center">
+        <TikTokEmbed
+          videoUrl={videoUrl}
+          title={title}
+          className="w-full"
+          options={{ autoplay: isVisible }}
+          onPlay={() => setIsPlaying(true)}
+          onPause={() => setIsPlaying(false)}
+          onError={(message) => setError(message)}
+        />
+      </div>
+    );
+  }
 
   // YouTube player with preloading
-  if (platform === 'youtube' && embedUrl) {
+  if (platform === 'youtube' && videoUrl && youtubeVideoId) {
     return (
       <div className="w-full h-full bg-black relative">
         {/* Preloaded iframe - always rendered but hidden until playing */}
-        <iframe
-          ref={iframeRef}
-          src={embedUrl}
+        <YouTubeEmbed
+          videoUrl={videoUrl}
           title={title}
+          layout="fill"
+          options={{
+            autoplay: isPlaying,
+            muted: !mediaSoundEnabled,
+            controls: true,
+            enableJsApi: true,
+            fullscreen: true
+          }}
           className={`w-full h-full absolute inset-0 transition-opacity duration-300 ${
             isPlaying ? 'opacity-100 z-10' : 'opacity-0 pointer-events-none'
           }`}
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-          allowFullScreen
-          loading="eager"
         />
 
         {/* Thumbnail overlay - shown until user clicks play */}

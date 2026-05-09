@@ -1,5 +1,7 @@
 import { useRef, useEffect, useState, useCallback, forwardRef, useImperativeHandle } from "react";
 import YouTubeAPIManager from "../../utils/youtubeAPIManager";
+import { buildYouTubeEmbedUrl, extractYouTubeVideoId } from "../media/YouTubeEmbed";
+import { useVideoPlayer } from "../../contexts/VideoPlayerContext";
 
 interface YouTubeDirectEmbedProps {
   item: any;
@@ -16,16 +18,6 @@ export interface YouTubePlayerRef {
   getCurrentTime: () => number;
   getDuration: () => number;
 }
-
-// Fonction utilitaire pour extraire l'ID YouTube
-const extractVideoId = (url: string): string | null => {
-  if (url.includes("youtube.com/watch?v=")) {
-    return url.split("v=")[1]?.split("&")[0];
-  } else if (url.includes("youtu.be/")) {
-    return url.split("youtu.be/")[1]?.split("?")[0];
-  }
-  return null;
-};
 
 // Cache des thumbnails déjà préchargés pour éviter les requêtes répétées
 const preloadedThumbnails = new Set<string>();
@@ -58,21 +50,37 @@ export const YouTubeDirectEmbed = forwardRef<YouTubePlayerRef, YouTubeDirectEmbe
   const [isLoaded, setIsLoaded] = useState(false);
   const [player, setPlayer] = useState<any>(null);
   const [isAPIReady, setIsAPIReady] = useState(false);
-  const [userHasInteracted, setUserHasInteracted] = useState(() => YouTubeAPIManager.getInstance().hasAudioUnlocked());
+  const { mediaSoundEnabled, activateMediaSound } = useVideoPlayer();
+  const [userHasInteracted, setUserHasInteracted] = useState(() => (
+    YouTubeAPIManager.getInstance().hasAudioUnlocked() || mediaSoundEnabled
+  ));
   const [thumbnailError, setThumbnailError] = useState(false);
   const playerRef = useRef<any>(null);
   const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const initTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Extract YouTube video ID
-  const videoId = extractVideoId(item.mediaUrl);
+  const videoId = extractYouTubeVideoId(item.mediaUrl);
+
+  useEffect(() => {
+    if (mediaSoundEnabled) {
+      YouTubeAPIManager.getInstance().markAudioUnlocked();
+      setUserHasInteracted(true);
+      try {
+        playerRef.current?.unMute?.();
+        playerRef.current?.setVolume?.(50);
+      } catch {
+        // Ignore player API timing errors.
+      }
+    }
+  }, [mediaSoundEnabled]);
 
   // Précharger les thumbnails des vidéos suivantes (une seule fois)
   const hasPreloadedNext = useRef(false);
   useEffect(() => {
     if (hasPreloadedNext.current) return;
     if (preloadNext.length > 0) {
-      const ids = preloadNext.map(url => extractVideoId(url)).filter(Boolean) as string[];
+      const ids = preloadNext.map(url => extractYouTubeVideoId(url)).filter(Boolean) as string[];
       if (ids.length > 0) {
         hasPreloadedNext.current = true;
         preloadThumbnails(ids);
@@ -174,20 +182,16 @@ export const YouTubeDirectEmbed = forwardRef<YouTubePlayerRef, YouTubeDirectEmbe
         videoId: videoId,
         playerVars: {
           autoplay: 1,
-          mute: 1,
           playsinline: 1,
           loop: 1,
           playlist: videoId,
           controls: 0,
-          showinfo: 0,
           rel: 0,
-          modestbranding: 1,
           fs: 0,
           cc_load_policy: 0,
           iv_load_policy: 3,
           origin: window.location.origin,
           enablejsapi: 1,
-          // Optimisations pour réduire le temps de chargement
           start: 0, // Commencer au début pour éviter la recherche
           wmode: 'transparent', // Meilleure performance de rendu
           vq: 'hd720', // Qualité par défaut raisonnable pour un chargement rapide
@@ -205,7 +209,12 @@ export const YouTubeDirectEmbed = forwardRef<YouTubePlayerRef, YouTubeDirectEmbe
 
             if (isActive && !isPaused) {
               console.log('Auto-playing YouTube video');
-              event.target.mute();
+              if (mediaSoundEnabled) {
+                event.target.unMute();
+                event.target.setVolume(50);
+              } else {
+                event.target.mute();
+              }
               event.target.playVideo();
             }
           },
@@ -228,14 +237,14 @@ export const YouTubeDirectEmbed = forwardRef<YouTubePlayerRef, YouTubeDirectEmbe
         }
       });
     }
-  }, [videoId, isAPIReady, player, isActive, isPaused, onReady]);
+  }, [videoId, isAPIReady, player, isActive, isPaused, mediaSoundEnabled, onReady]);
 
   // Handle play/pause with proper state management
   useEffect(() => {
     if (player && isLoaded) {
       try {
         if (isActive && !isPaused) {
-          const audioUnlocked = YouTubeAPIManager.getInstance().hasAudioUnlocked();
+          const audioUnlocked = YouTubeAPIManager.getInstance().hasAudioUnlocked() || mediaSoundEnabled;
 
           if (!audioUnlocked) {
             player.pauseVideo();
@@ -262,11 +271,12 @@ export const YouTubeDirectEmbed = forwardRef<YouTubePlayerRef, YouTubeDirectEmbe
         console.log('Player control error:', error);
       }
     }
-  }, [isActive, isPaused, player, isLoaded, userHasInteracted]);
+  }, [isActive, isPaused, player, isLoaded, mediaSoundEnabled, userHasInteracted]);
 
   // Handle click for play/pause and enable sound
   const handlePlayPause = useCallback(() => {
     YouTubeAPIManager.getInstance().markAudioUnlocked();
+    activateMediaSound();
     setUserHasInteracted(true);
     
     if (player) {
@@ -297,7 +307,7 @@ export const YouTubeDirectEmbed = forwardRef<YouTubePlayerRef, YouTubeDirectEmbe
       }
     }
     setPaused(!isPaused);
-  }, [isPaused, player, setPaused]);
+  }, [activateMediaSound, isPaused, player, setPaused]);
 
   if (!videoId) {
     return (
@@ -379,7 +389,14 @@ export const YouTubeDirectEmbed = forwardRef<YouTubePlayerRef, YouTubeDirectEmbe
       <div className="absolute inset-0 overflow-hidden">
         <iframe
           ref={iframeRef}
-          src={`https://www.youtube.com/embed/${videoId}?enablejsapi=1&origin=${window.location.origin}`}
+          src={buildYouTubeEmbedUrl(videoId, {
+            autoplay: true,
+            controls: false,
+            loop: true,
+            fullscreen: false,
+            keyboardControls: false,
+            enableJsApi: true
+          })}
           className="absolute left-0 right-0 w-full border-0"
           style={{
             pointerEvents: 'none',

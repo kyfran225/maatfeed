@@ -11,6 +11,7 @@ import { TouchFeedback } from "../components/ui/TouchFeedback";
 import { LoadingSpinner } from "../components/ui/LoadingSpinner";
 import { CONTENT_BUCKET_LABELS } from "@maat/shared";
 import { RedditVideoPlayer } from "../components/media/RedditVideoPlayer";
+import { isYouTubeShortUrl } from "../components/media/YouTubeEmbed";
 
 export const BUCKETS = [
   { id: 'viral', name: CONTENT_BUCKET_LABELS.viral, color: 'bg-red-500', gradient: 'from-red-500/30 via-orange-500/20 to-red-600/30', icon: Flame },
@@ -148,16 +149,20 @@ export default function ExplorePage() {
     return () => clearTimeout(timer);
   }, [searchQuery, selectedBucket]);
 
-  const ContentCard = ({ item, index }: { item: ContentItem; index: number }) => (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.05 }}
-      className="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 overflow-hidden hover:bg-white/10 transition-colors cursor-pointer"
-      onClick={() => handleCardClick(item.id)}
-    >
-      <TouchFeedback>
-        <div className={`${item.videoUrl?.includes('tiktok.com') ? 'aspect-[9/16]' : 'aspect-video'} relative overflow-hidden`} onClick={(e) => e.stopPropagation()}>
+  const ContentCard = ({ item, index }: { item: ContentItem; index: number }) => {
+    const [directVideoOrientation, setDirectVideoOrientation] = useState<'portrait' | 'landscape' | 'square' | null>(null);
+    const isShortFormVideo = item.videoUrl?.includes('tiktok.com') || isYouTubeShortUrl(item.videoUrl) || directVideoOrientation === 'portrait';
+
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: index * 0.05 }}
+        className="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 overflow-hidden hover:bg-white/10 transition-colors cursor-pointer"
+        onClick={() => handleCardClick(item.id)}
+      >
+        <TouchFeedback>
+          <div className={`${isShortFormVideo ? 'h-[400px]' : 'aspect-video'} relative overflow-hidden`} onClick={(e) => e.stopPropagation()}>
           {item.videoUrl ? (
             <RedditVideoPlayer
               src={item.videoUrl}
@@ -166,6 +171,7 @@ export default function ExplorePage() {
               className="w-full h-full"
               muted={true}
               autoPlay={true}
+              onVideoOrientation={setDirectVideoOrientation}
             />
           ) : item.thumbnailUrl ? (
             <img
@@ -183,9 +189,9 @@ export default function ExplorePage() {
               {item.bucket}
             </span>
           </div>
-        </div>
+          </div>
         
-        <div className="p-4">
+          <div className="p-4">
           <h3 className="font-semibold text-white line-clamp-2 mb-2">{item.title}</h3>
           <p className="text-sand/60 text-sm line-clamp-2 mb-3">{item.description}</p>
           
@@ -196,10 +202,11 @@ export default function ExplorePage() {
               <span>{item.comments} commentaires</span>
             </div>
           </div>
-        </div>
-      </TouchFeedback>
-    </motion.div>
-  );
+          </div>
+        </TouchFeedback>
+      </motion.div>
+    );
+  };
 
   return (
     <>

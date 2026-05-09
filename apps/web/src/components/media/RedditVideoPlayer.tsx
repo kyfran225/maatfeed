@@ -1,6 +1,9 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Play, Pause, Volume2, VolumeX, Settings, Share2, Maximize, Minimize, ExternalLink } from 'lucide-react';
+import { Play, Pause, Volume2, VolumeX, Settings, Share2, Maximize, Minimize } from 'lucide-react';
 import { TouchFeedback } from '../ui/TouchFeedback';
+import { TikTokEmbed } from '../feed/TikTokEmbed';
+import { extractYouTubeVideoId, YouTubeEmbed } from './YouTubeEmbed';
+import { useVideoPlayer } from '../../contexts/VideoPlayerContext';
 
 interface RedditVideoPlayerProps {
   src: string;
@@ -9,6 +12,7 @@ interface RedditVideoPlayerProps {
   className?: string;
   autoPlay?: boolean;
   muted?: boolean;
+  onVideoOrientation?: (orientation: 'portrait' | 'landscape' | 'square') => void;
   onTimeUpdate?: (currentTime: number, duration: number) => void;
   onPlay?: () => void;
   onPause?: () => void;
@@ -26,34 +30,6 @@ const detectPlatform = (url: string): PlatformType => {
   return 'unknown';
 };
 
-const getYouTubeEmbedUrl = (url: string, autoplay = false, muted = true): string | null => {
-  const videoId = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\s?]+)/)?.[1];
-  if (!videoId) return null;
-
-  const params = new URLSearchParams({
-    rel: '0',
-    playsinline: '1',
-    modestbranding: '1',
-    enablejsapi: '1',
-    ...(autoplay && { autoplay: '1' }),
-    ...(muted && { mute: '1' }),
-  });
-
-  return `https://www.youtube.com/embed/${videoId}?${params.toString()}`;
-};
-
-const getTikTokEmbedUrl = (url: string): string | null => {
-  const tiktokId = url.match(/tiktok\.com\/@[^/]+\/video\/(\d+)/)?.[1]
-    || url.match(/vm\.tiktok\.com\/(\w+)/)?.[1]
-    || url.match(/tiktok\.com\/t\/(\w+)/)?.[1];
-
-  if (!tiktokId) {
-    return null;
-  }
-
-  return `https://www.tiktok.com/embed/v2/${tiktokId}?lang=fr-FR&playsinline=1`;
-};
-
 const formatTime = (time: number): string => {
   const minutes = Math.floor(time / 60);
   const seconds = Math.floor(time % 60);
@@ -67,6 +43,7 @@ export function RedditVideoPlayer({
   className = '',
   autoPlay = false,
   muted = false,
+  onVideoOrientation,
   onTimeUpdate,
   onPlay,
   onPause,
@@ -89,13 +66,29 @@ export function RedditVideoPlayer({
   const [shouldAutoPlay, setShouldAutoPlay] = useState(false);
 
   const platform = detectPlatform(src);
-  const youtubeEmbedUrl = platform === 'youtube' ? getYouTubeEmbedUrl(src, isPlaying, isMuted) : null;
-  const tiktokEmbedUrl = platform === 'tiktok' ? getTikTokEmbedUrl(src) : null;
+  const youtubeVideoId = platform === 'youtube' ? extractYouTubeVideoId(src) : null;
   const isDirectVideo = platform === 'direct';
   const isAudioFile = platform === 'audio';
   const isYoutube = platform === 'youtube';
   const isTiktok = platform === 'tiktok';
-  const isTiktokEmbeddable = Boolean(tiktokEmbedUrl);
+  const { mediaSoundEnabled, activateMediaSound, deactivateMediaSound } = useVideoPlayer();
+
+  useEffect(() => {
+    if (mediaSoundEnabled) {
+      setIsMuted(false);
+      if (videoRef.current) {
+        videoRef.current.muted = false;
+      }
+      return;
+    }
+
+    if (muted) {
+      setIsMuted(true);
+      if (videoRef.current) {
+        videoRef.current.muted = true;
+      }
+    }
+  }, [mediaSoundEnabled, muted, src]);
 
   const resetControlsTimeout = useCallback(() => {
     setShowControls(true);
@@ -117,7 +110,11 @@ export function RedditVideoPlayer({
     }
   }, [isPlaying]);
 
-  const handlePlay = useCallback(async () => {
+  const handlePlay = useCallback(async (userInitiated = false) => {
+    if (userInitiated) {
+      activateMediaSound();
+    }
+
     if (isYoutube) {
       setIsPlaying(true);
       onPlay?.();
@@ -125,22 +122,15 @@ export function RedditVideoPlayer({
     }
 
     if (isTiktok) {
-      if (isTiktokEmbeddable) {
-        setIsPlaying(true);
-        onPlay?.();
-        return;
-      }
-
-      if (src) {
-        window.open(src, '_blank');
-      }
+      setIsPlaying(true);
+      onPlay?.();
       return;
     }
 
     if (isDirectVideo) {
       if (!videoRef.current) return;
       try {
-        videoRef.current.muted = isMuted;
+        videoRef.current.muted = userInitiated || mediaSoundEnabled ? false : isMuted;
         videoRef.current.volume = volume;
         await videoRef.current.play();
         setIsPlaying(true);
@@ -154,6 +144,7 @@ export function RedditVideoPlayer({
 
     if (isAudioFile && videoRef.current) {
       try {
+        videoRef.current.muted = userInitiated || mediaSoundEnabled ? false : isMuted;
         await videoRef.current.play();
         setIsPlaying(true);
         onPlay?.();
@@ -169,28 +160,26 @@ export function RedditVideoPlayer({
     }
 
     window.open(src, '_blank');
-  }, [isDirectVideo, isMuted, isTiktok, isTiktokEmbeddable, isAudioFile, isYoutube, onPlay, src, volume]);
+  }, [activateMediaSound, isAudioFile, isDirectVideo, isMuted, isTiktok, isYoutube, mediaSoundEnabled, onPlay, volume]);
 
   const togglePlay = useCallback(async () => {
     if (isYoutube) {
+      activateMediaSound();
       setIsPlaying((prev) => !prev);
       return;
     }
 
     if (isTiktok) {
-      if (isTiktokEmbeddable) {
-        setIsPlaying((prev) => {
-          const next = !prev;
-          if (next) {
-            onPlay?.();
-          } else {
-            onPause?.();
-          }
-          return next;
-        });
-      } else {
-        await handlePlay();
-      }
+      activateMediaSound();
+      setIsPlaying((prev) => {
+        const next = !prev;
+        if (next) {
+          onPlay?.();
+        } else {
+          onPause?.();
+        }
+        return next;
+      });
       return;
     }
 
@@ -202,6 +191,9 @@ export function RedditVideoPlayer({
         setIsPlaying(false);
         onPause?.();
       } else {
+        activateMediaSound();
+        videoRef.current.muted = false;
+        setIsMuted(false);
         await videoRef.current.play();
         setIsPlaying(true);
         onPlay?.();
@@ -209,24 +201,41 @@ export function RedditVideoPlayer({
     } catch (err) {
       console.error('Toggle play failed', err);
     }
-  }, [isPlaying, onPause, onPlay, isYoutube, isTiktok, isTiktokEmbeddable, handlePlay]);
+  }, [activateMediaSound, isPlaying, onPause, onPlay, isYoutube, isTiktok]);
 
   const handleVolumeChange = useCallback((newVolume: number) => {
     if (!videoRef.current) return;
     videoRef.current.volume = newVolume;
     setVolume(newVolume);
     setIsMuted(newVolume === 0);
-  }, []);
+    if (newVolume === 0) {
+      deactivateMediaSound();
+    } else {
+      activateMediaSound();
+    }
+  }, [activateMediaSound, deactivateMediaSound]);
 
   const toggleMute = useCallback(() => {
     if (!videoRef.current) {
-      setIsMuted((prev) => !prev);
+      setIsMuted((prev) => {
+        if (prev) {
+          activateMediaSound();
+        } else {
+          deactivateMediaSound();
+        }
+        return !prev;
+      });
       return;
     }
     const nextMuted = !isMuted;
     videoRef.current.muted = nextMuted;
     setIsMuted(nextMuted);
-  }, [isMuted]);
+    if (nextMuted) {
+      deactivateMediaSound();
+    } else {
+      activateMediaSound();
+    }
+  }, [activateMediaSound, deactivateMediaSound, isMuted]);
 
   const toggleFullscreen = useCallback(async () => {
     if (!containerRef.current) return;
@@ -263,12 +272,24 @@ export function RedditVideoPlayer({
   }, [onTimeUpdate]);
 
   const handleLoadedMetadata = useCallback(() => {
-    setDuration(videoRef.current?.duration || 0);
+    const video = videoRef.current;
+    setDuration(video?.duration || 0);
     setIsLoading(false);
+
+    if (video && video.videoWidth > 0 && video.videoHeight > 0) {
+      if (video.videoHeight > video.videoWidth) {
+        onVideoOrientation?.('portrait');
+      } else if (video.videoWidth > video.videoHeight) {
+        onVideoOrientation?.('landscape');
+      } else {
+        onVideoOrientation?.('square');
+      }
+    }
+
     if (autoPlay && isMuted && !isPlaying && isDirectVideo) {
       void handlePlay();
     }
-  }, [autoPlay, handlePlay, isDirectVideo, isMuted, isPlaying]);
+  }, [autoPlay, handlePlay, isDirectVideo, isMuted, isPlaying, onVideoOrientation]);
 
   const handleEnded = useCallback(() => {
     setIsPlaying(false);
@@ -276,24 +297,39 @@ export function RedditVideoPlayer({
   }, [onEnded]);
 
   useEffect(() => {
-    if (!autoPlay || !isDirectVideo || !containerRef.current || !videoRef.current) return;
+    if (!autoPlay || (!isDirectVideo && !isTiktok && !isYoutube) || !containerRef.current) return;
 
     const observer = new IntersectionObserver((entries) => {
       if (!entries[0]) return;
       if (entries[0].isIntersecting) {
         setShouldAutoPlay(true);
-        if (!isPlaying) {
+        if (isDirectVideo && !isPlaying) {
           void handlePlay();
+        } else if (isTiktok) {
+          setIsPlaying(true);
+          onPlay?.();
+        } else if (isYoutube) {
+          setIsPlaying(true);
+          onPlay?.();
         }
-      } else if (isPlaying) {
-        videoRef.current?.pause();
+      } else {
+        setShouldAutoPlay(false);
+        if (isDirectVideo) {
+          videoRef.current?.pause();
+        }
         setIsPlaying(false);
+        if (isTiktok) {
+          onPause?.();
+        }
+        if (isYoutube) {
+          onPause?.();
+        }
       }
     }, { threshold: 0.6 });
 
     observer.observe(containerRef.current);
     return () => observer.disconnect();
-  }, [autoPlay, handlePlay, isDirectVideo, isPlaying]);
+  }, [autoPlay, handlePlay, isDirectVideo, isPlaying, isTiktok, isYoutube, onPause, onPlay]);
 
   useEffect(() => {
     return () => {
@@ -301,6 +337,33 @@ export function RedditVideoPlayer({
       window.clearTimeout((handleMouseLeave as any).timeoutId);
     };
   }, [handleMouseLeave, resetControlsTimeout]);
+
+  if (isTiktok) {
+    return (
+      <div
+        ref={containerRef}
+        className={`relative flex items-center justify-center bg-black rounded-lg overflow-hidden ${className}`}
+        tabIndex={0}
+      >
+        <TikTokEmbed
+          videoUrl={src}
+          title={title || 'TikTok video'}
+          className="w-full"
+          options={{ autoplay: autoPlay && shouldAutoPlay }}
+          onReady={() => setIsLoading(false)}
+          onPlay={() => {
+            setIsPlaying(true);
+            onPlay?.();
+          }}
+          onPause={() => {
+            setIsPlaying(false);
+            onPause?.();
+          }}
+          onError={(message) => setError(message)}
+        />
+      </div>
+    );
+  }
 
   const progressPercentage = duration > 0 ? (currentTime / duration) * 100 : 0;
   const showOverlay = !isPlaying || (!isDirectVideo && !isYoutube && !isAudioFile);
@@ -313,15 +376,21 @@ export function RedditVideoPlayer({
       onMouseLeave={handleMouseLeave}
       tabIndex={0}
     >
-      {isYoutube && youtubeEmbedUrl ? (
+      {isYoutube && youtubeVideoId ? (
         <div className="w-full h-full relative bg-black">
           {isPlaying ? (
-            <iframe
-              src={youtubeEmbedUrl}
+            <YouTubeEmbed
+              videoUrl={src}
               title={title || 'YouTube video'}
+              layout="fill"
+              options={{
+                autoplay: true,
+                muted: !mediaSoundEnabled,
+                controls: true,
+                enableJsApi: true,
+                fullscreen: true
+              }}
               className="w-full h-full absolute inset-0"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
             />
           ) : (
             <div className="w-full h-full relative">
@@ -333,7 +402,7 @@ export function RedditVideoPlayer({
               <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
                 <TouchFeedback>
                   <button
-                    onClick={handlePlay}
+                    onClick={() => void handlePlay(true)}
                     className="w-20 h-20 rounded-full bg-white/20 border border-white/30 flex items-center justify-center hover:bg-white/30 transition"
                   >
                     <Play className="w-8 h-8 text-white" />
@@ -364,35 +433,6 @@ export function RedditVideoPlayer({
             </div>
           )}
         </div>
-      ) : isTiktok ? (
-        <div className="w-full h-full bg-black relative">
-          {isPlaying && tiktokEmbedUrl ? (
-            <iframe
-              src={tiktokEmbedUrl}
-              title={title || 'TikTok video'}
-              className="w-full h-full absolute inset-0"
-              allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
-              loading="lazy"
-              allowFullScreen
-            />
-          ) : thumbnail ? (
-            <img src={thumbnail} alt={title} className="w-full h-full object-cover" />
-          ) : (
-            <div className="w-full h-full bg-black/80 flex items-center justify-center" />
-          )}
-          {!isPlaying && (
-            <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
-              <TouchFeedback>
-                <button
-                  onClick={handlePlay}
-                  className="w-20 h-20 rounded-full bg-white/20 border border-white/30 flex items-center justify-center hover:bg-white/30 transition"
-                >
-                  <ExternalLink className="w-6 h-6 text-white" />
-                </button>
-              </TouchFeedback>
-            </div>
-          )}
-        </div>
       ) : (
         <div className="w-full h-full bg-black relative">
           {thumbnail ? (
@@ -403,14 +443,10 @@ export function RedditVideoPlayer({
           <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
             <TouchFeedback>
               <button
-                onClick={handlePlay}
+                onClick={() => void handlePlay(true)}
                 className="w-20 h-20 rounded-full bg-white/20 border border-white/30 flex items-center justify-center hover:bg-white/30 transition"
               >
-                {isTiktok ? (
-                  <ExternalLink className="w-6 h-6 text-white" />
-                ) : (
-                  <Play className="w-8 h-8 text-white" />
-                )}
+                <Play className="w-8 h-8 text-white" />
               </button>
             </TouchFeedback>
           </div>

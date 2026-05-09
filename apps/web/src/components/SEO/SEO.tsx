@@ -23,7 +23,7 @@ export interface SEOProps {
   title?: string;
   /** Description de la page */
   description?: string;
-  /** URL de l'image Open Graph (1200x630 recommandé) */
+  /** URL de l'image Open Graph */
   image?: string;
   /** URL canonique de la page */
   url?: string;
@@ -151,8 +151,8 @@ export function SEO({
       <meta property="og:description" content={finalDescription} />
       <meta property="og:url" content={finalUrl} />
       <meta property="og:image" content={finalImage} />
-      <meta property="og:image:width" content="1200" />
-      <meta property="og:image:height" content="630" />
+      <meta property="og:image:width" content="1254" />
+      <meta property="og:image:height" content="1254" />
       <meta property="og:locale" content={lang === 'fr' ? 'fr_FR' : 'en_US'} />
       
       {/* Twitter Cards */}
@@ -211,8 +211,8 @@ function generateArticleStructuredData(
     image: {
       '@type': 'ImageObject',
       url: image,
-      width: 1200,
-      height: 630,
+      width: 1254,
+      height: 1254,
     },
     url: url,
     mainEntityOfPage: {
@@ -232,7 +232,7 @@ function generateArticleStructuredData(
       name: 'MAATFEED',
       logo: {
         '@type': 'ImageObject',
-        url: 'https://maatfeed.com/favicon_io/android-chrome-512x512.png',
+        url: 'https://maatfeed.com/favicon_io/android-chrome-512x512.png?v=20260508-circle',
       },
     },
   };
