@@ -4,6 +4,7 @@ import { CommentModel } from "../models/Comment.js";
 import { CommunityPostModel } from "../models/CommunityPost.js";
 import { LearningProgressModel } from "../models/LearningProgress.js";
 import { sendPushToMany, type PushNotificationPayload } from "./webPushService.js";
+import { notifyTrendingContentUsers } from "./notificationService.js";
 import { logger } from "../config/logger.js";
 
 const BASE_URL = process.env.APP_BASE_URL || "https://www.maatfeed.com";
@@ -258,7 +259,10 @@ export async function sendTrendingContentNotification(
     if (recentSubscribers.length === 0) return false;
 
     // Limit to first 100 subscribers for trending notifications (avoid spamming everyone)
-    const targetUserIds = recentSubscribers.slice(0, 100);
+    const targetUserIds = recentSubscribers.filter(Boolean).slice(0, 100);
+    const targetUserIdStrings = targetUserIds.map((userId) => userId.toString());
+
+    await notifyTrendingContentUsers(contentId, targetUserIdStrings, trendingScore);
 
     const subscriptions = await PushSubscriptionModel.find({
       userId: { $in: targetUserIds },

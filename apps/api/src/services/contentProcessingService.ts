@@ -7,6 +7,7 @@ import { classifyContent } from "../ai/classificationEngine.js";
 import { enrichContent } from "../ai/enrichmentEngine.js";
 import { logger } from "../config/logger.js";
 import { computeContentScore } from "./scoringService.js";
+import { notifyContentPublished } from "./notificationService.js";
 
 export async function classifyContentStep(input: { contentId: string }) {
   const contentId = new mongoose.Types.ObjectId(input.contentId);
@@ -109,6 +110,7 @@ export async function enrichContentStep(input: { contentId: string }) {
   content.processingStatus = "published";
   content.publishedAt = content.publishedAt ?? new Date();
   await content.save();
+  await notifyContentPublished(content._id.toString());
 
   return {
     status: "ok",

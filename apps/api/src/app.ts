@@ -29,6 +29,18 @@ function isAllowedOrigin(origin: string) {
     return true;
   }
 
+  if (env.NODE_ENV === "development" || env.NODE_ENV === "test") {
+    try {
+      const { hostname, protocol } = new URL(origin);
+      return (
+        (protocol === "http:" || protocol === "https:") &&
+        (hostname === "localhost" || hostname === "127.0.0.1")
+      );
+    } catch {
+      return false;
+    }
+  }
+
   if (env.NODE_ENV === "staging") {
     try {
       const { hostname, protocol } = new URL(origin);

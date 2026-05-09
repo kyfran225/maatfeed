@@ -24,6 +24,15 @@ interface TemplateResult {
   attachments?: EmailAttachment[];
 }
 
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
 // Welcome email template
 function getWelcomeEmail(displayName: string, loginUrl: string): TemplateResult {
   return {
@@ -39,6 +48,33 @@ function getWelcomeEmail(displayName: string, loginUrl: string): TemplateResult 
 <div class="footer"><p>© 2024 MAAT FEED. Tous droits réservés.</p></div></div>
 </body></html>`,
     text: `Bienvenue sur MAAT FEED, ${displayName} !\n\nVous faites maintenant partie de notre communauté dédiée à la sagesse Kemet et à la philosophie africaine.\n\nCommencez votre voyage : ${loginUrl}\n\nLa vérité (Maat) vous guidera.\n\n© 2024 MAAT FEED`
+  };
+}
+
+function getGenericNotificationEmail(
+  displayName: string,
+  title: string,
+  message: string,
+  actionUrl: string,
+  actionText = "Ouvrir MAAT FEED"
+): TemplateResult {
+  const safeDisplayName = escapeHtml(displayName);
+  const safeTitle = escapeHtml(title);
+  const safeMessage = escapeHtml(message);
+  const safeActionText = escapeHtml(actionText);
+
+  return {
+    subject: `${title} - MAAT FEED`,
+    html: `<!DOCTYPE html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>body{font-family:Georgia,serif;background:#201713;color:#e8e8e8;margin:0;padding:0}.container{max-width:600px;margin:0 auto;padding:40px 20px}.header{text-align:center;margin-bottom:30px}.logo{font-size:28px;font-weight:bold;color:#d4af37;letter-spacing:2px}.content{background:rgba(255,255,255,0.05);padding:30px;border-radius:12px;border:1px solid rgba(212,175,55,0.3)}h1{color:#d4af37;font-size:24px;margin-bottom:20px}p{line-height:1.6;margin-bottom:16px}.cta-button{display:inline-block;background:linear-gradient(135deg,#d4af37,#b8941f);color:#201713;padding:14px 32px;text-decoration:none;border-radius:8px;font-weight:bold;margin:20px 0}.footer{text-align:center;margin-top:30px;font-size:12px;color:#888}</style>
+</head><body>
+<div class="container"><div class="header"><div class="logo">MAAT FEED</div></div>
+<div class="content"><h1>${safeTitle}</h1><p>Bonjour ${safeDisplayName},</p><p>${safeMessage}</p>
+<center><a href="${actionUrl}" class="cta-button">${safeActionText}</a></center></div>
+<div class="footer"><p>© 2024 MAAT FEED. Tous droits réservés.</p></div></div>
+</body></html>`,
+    text: `${title}\n\nBonjour ${displayName},\n\n${message}\n\n${actionText}: ${actionUrl}\n\n© 2024 MAAT FEED`
   };
 }
 
@@ -277,5 +313,19 @@ export async function sendSecurityAlertEmail(to: string, displayName: string, al
 // Public API - Trust level upgraded
 export async function sendTrustLevelUpgradedEmail(to: string, displayName: string, newLevel: string, benefits: string[]) {
   const result = getTrustLevelEmail(displayName, newLevel, benefits, `${APP_BASE_URL}/`);
+  return sendEmailInternal(to, result);
+}
+
+// Public API - Generic notification email
+export async function sendNotificationEmail(
+  to: string,
+  displayName: string,
+  title: string,
+  message: string,
+  actionUrl: string,
+  actionText?: string
+) {
+  const absoluteUrl = actionUrl.startsWith("http") ? actionUrl : `${APP_BASE_URL}${actionUrl}`;
+  const result = getGenericNotificationEmail(displayName, title, message, absoluteUrl, actionText);
   return sendEmailInternal(to, result);
 }

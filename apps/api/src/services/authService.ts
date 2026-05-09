@@ -31,6 +31,9 @@ type LoginInput = {
   password: string;
 };
 
+const MAX_LOGIN_ATTEMPTS = 5;
+const LOGIN_LOCK_DURATION_MS = 15 * 60 * 1000;
+
 function toProfileDto(
   userId: string,
   email: string,
@@ -303,9 +306,30 @@ export async function login(input: LoginInput, ipAddress?: string) {
     throw new Error("Identifiants invalides.");
   }
 
+  if (user.lockUntil && user.lockUntil > new Date()) {
+    throw new Error("Compte temporairement verrouillé. Réessayez plus tard.");
+  }
+
   const passwordMatches = await bcrypt.compare(input.password, user.passwordHash);
 
   if (!passwordMatches) {
+    user.loginAttempts = (user.loginAttempts || 0) + 1;
+
+    if (user.loginAttempts >= MAX_LOGIN_ATTEMPTS) {
+      user.lockUntil = new Date(Date.now() + LOGIN_LOCK_DURATION_MS);
+      await user.save();
+
+      await notificationService.sendSecurityAlert({
+        userId: user._id.toString(),
+        alertType: "Tentatives de connexion échouées",
+        details: "Votre compte a été temporairement verrouillé après plusieurs tentatives de connexion échouées.",
+        ipAddress,
+        url: "/auth"
+      });
+    } else {
+      await user.save();
+    }
+
     throw new Error("Identifiants invalides.");
   }
 

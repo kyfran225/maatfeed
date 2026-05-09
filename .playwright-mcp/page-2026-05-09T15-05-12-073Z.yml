@@ -1,0 +1,66 @@
+- generic [ref=e3]:
+  - generic [ref=e4]:
+    - generic [ref=e6]:
+      - banner [ref=e7]:
+        - link "Maat Feed" [ref=e8] [cursor=pointer]:
+          - /url: /
+          - img "Maat Feed" [ref=e9]
+        - link "Accès" [ref=e11] [cursor=pointer]:
+          - /url: /auth
+      - main [ref=e12]:
+        - main "MAATFEED" [ref=e14]:
+          - generic [ref=e15]:
+            - generic [ref=e16]:
+              - paragraph [ref=e17]: Pour toi
+              - heading "MAATFEED" [level=1] [ref=e18]
+              - paragraph [ref=e19]: Ta sélection du moment.
+            - link "Chercher" [ref=e21] [cursor=pointer]:
+              - /url: /explore
+              - img [ref=e22]
+              - text: Chercher
+          - paragraph [ref=e28]: Chargement...
+    - navigation [ref=e29]:
+      - generic [ref=e30]:
+        - generic [ref=e31]:
+          - link "Accueil" [ref=e32] [cursor=pointer]:
+            - /url: /
+            - img [ref=e33]
+            - generic [ref=e36]: Accueil
+          - link "Découvrir" [ref=e37] [cursor=pointer]:
+            - /url: /explore
+            - img [ref=e38]
+            - generic [ref=e41]: Découvrir
+          - link "Échanges" [ref=e42] [cursor=pointer]:
+            - /url: /community
+            - img [ref=e43]
+            - generic [ref=e45]: Échanges
+          - link "Audio" [ref=e46] [cursor=pointer]:
+            - /url: /audio
+            - img [ref=e47]
+            - generic [ref=e49]: Audio
+          - link "Profil" [ref=e50] [cursor=pointer]:
+            - /url: /profile
+            - img [ref=e51]
+            - generic [ref=e54]: Profil
+        - button "Légal" [ref=e56] [cursor=pointer]
+  - generic [ref=e58]:
+    - generic [ref=e59]:
+      - generic [ref=e60]:
+        - img [ref=e61]
+        - generic [ref=e63]:
+          - paragraph [ref=e64]: MAAT FEED utilise des cookies pour améliorer votre expérience
+          - paragraph [ref=e65]: Certains cookies sont essentiels au fonctionnement du site, d'autres nous aident à personnaliser votre contenu et à analyser notre trafic.
+      - generic [ref=e66]:
+        - button "Personnaliser" [ref=e67] [cursor=pointer]:
+          - img [ref=e68]
+          - text: Personnaliser
+        - button "Tout accepter" [ref=e71] [cursor=pointer]
+        - button "Refuser" [ref=e72] [cursor=pointer]
+    - generic [ref=e73]:
+      - link "Politique de confidentialité" [ref=e74] [cursor=pointer]:
+        - /url: /privacy-policy
+      - generic [ref=e75]: •
+      - link "Mentions légales" [ref=e76] [cursor=pointer]:
+        - /url: /legal-notice
+      - generic [ref=e77]: •
+      - button "Gérer les cookies" [ref=e78] [cursor=pointer]

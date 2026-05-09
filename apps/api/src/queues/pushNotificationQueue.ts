@@ -10,6 +10,7 @@ import {
   sendTrendingContentNotification,
   cleanupExpiredSubscriptions
 } from "../services/pushTriggerService.js";
+import { sendWeeklyDigestNotifications } from "../services/notificationService.js";
 
 // Queue for push notification jobs
 export const pushNotificationQueue = new Queue("push-notifications", {
@@ -30,6 +31,7 @@ type PushJobType =
   | "review-due-batch"
   | "reply-notification"
   | "trending-notification"
+  | "weekly-digest"
   | "cleanup-subscriptions";
 
 interface PushJobData {
@@ -65,6 +67,9 @@ export function createPushNotificationWorker(): Worker<PushJobData> {
           };
           return await sendTrendingContentNotification(contentId, trendingScore);
         }
+
+        case "weekly-digest":
+          return await sendWeeklyDigestNotifications();
 
         case "cleanup-subscriptions":
           return await cleanupExpiredSubscriptions();
@@ -198,11 +203,36 @@ export async function scheduleSubscriptionCleanupJob(): Promise<void> {
 }
 
 /**
+ * Schedule weekly digest notifications (runs Mondays at 09:00 UTC)
+ */
+export async function scheduleWeeklyDigestJob(): Promise<void> {
+  const repeatables = await pushNotificationQueue.getRepeatableJobs();
+  const existing = repeatables.find((r) => r.name === "weekly-digest");
+  if (existing) {
+    await pushNotificationQueue.removeRepeatableByKey(existing.key);
+  }
+
+  await pushNotificationQueue.add(
+    "weekly-digest",
+    { type: "weekly-digest" },
+    {
+      repeat: {
+        pattern: "0 9 * * 1"
+      },
+      jobId: "weekly-digest-periodic"
+    }
+  );
+
+  logger.info({ msg: "Scheduled weekly digest notification job" });
+}
+
+/**
  * Initialize all push notification jobs
  */
 export async function initializePushNotificationJobs(): Promise<void> {
   try {
     await scheduleReviewDueJob();
+    await scheduleWeeklyDigestJob();
     await scheduleSubscriptionCleanupJob();
     logger.info({ msg: "Push notification jobs initialized successfully" });
   } catch (error) {

@@ -4,6 +4,7 @@ import { computeContentScore } from "./scoringService.js";
 import { ContentModel } from "../models/Content.js";
 import { updateCommunityProfileSignals } from "./communityScoreService.js";
 import { InteractionModel } from "../models/Interaction.js";
+import { notifyContentSaved } from "./notificationService.js";
 
 export type DiscussionAnalyticsEventName =
   | "discussion_sort_selected"
@@ -85,6 +86,7 @@ export async function recordSave(input: {
   if (input.userId) {
     const { onInteractionUpdate } = await import("./profileService.js");
     await onInteractionUpdate(input.userId, input.contentId, "save");
+    await notifyContentSaved(input.contentId, input.userId);
   }
 
   // Invalidate relevant caches

@@ -6,6 +6,7 @@ import { ContentModel, type ContentDocument } from "../models/Content.js";
 import { ContentScoreModel } from "../models/ContentScore.js";
 import { ProfileModel } from "../models/Profile.js";
 import { cacheService } from "./cacheService.js";
+import { notifyContentPublished } from "./notificationService.js";
 import OpenAI from "openai";
 import type { Types } from "mongoose";
 
@@ -285,6 +286,7 @@ ${context.topComments}`
       });
 
       const savedContent = await newContent.save();
+      await notifyContentPublished(savedContent._id.toString());
 
       await Promise.all([
         ContentClassificationModel.findOneAndUpdate(

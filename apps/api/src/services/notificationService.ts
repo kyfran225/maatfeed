@@ -2,6 +2,7 @@ import { NotificationModel, type NotificationType, NotificationTemplates } from 
 import { UserNotificationPreferencesModel, getDefaultNotificationPreferences } from "../models/UserNotificationPreferences.js";
 import { UserModel, type TrustLevel } from "../models/User.js";
 import { ProfileModel } from "../models/Profile.js";
+import { ContentModel } from "../models/Content.js";
 import * as emailService from "./emailService.js";
 import * as webPushService from "./webPushService.js";
 import { logger } from "../config/logger.js";
@@ -39,6 +40,27 @@ interface CreateNotificationInput {
   data?: Record<string, unknown>;
   priority?: "low" | "normal" | "high" | "urgent";
   channels?: ("in_app" | "email" | "push")[];
+}
+
+interface ContentNotificationTarget {
+  _id: { toString(): string };
+  title: string;
+  tags?: string[];
+  processingStatus?: string;
+  publishedAt?: Date;
+  uploadedBy?: { toString(): string } | string | null;
+  metadata?: {
+    originalAuthor?: { toString(): string } | string | null;
+  } | null;
+}
+
+function toIdString(value: { toString(): string } | string | null | undefined): string | null {
+  if (!value) return null;
+  return typeof value === "string" ? value : value.toString();
+}
+
+function resolveContentOwnerId(content: ContentNotificationTarget): string | null {
+  return toIdString(content.metadata?.originalAuthor) ?? toIdString(content.uploadedBy);
 }
 
 export async function createNotification(input: CreateNotificationInput) {
@@ -218,7 +240,14 @@ async function sendEmailNotification(notification: any) {
         );
         break;
       default:
-        // For other types, we could send generic emails or skip
+        await emailService.sendNotificationEmail(
+          user.email,
+          displayName,
+          notification.title,
+          notification.message,
+          typeof notification.data?.url === "string" ? notification.data.url : "/notifications",
+          typeof notification.data?.actionText === "string" ? notification.data.actionText : undefined
+        );
         break;
     }
   } catch (error) {
@@ -389,6 +418,240 @@ export async function getUnreadCount(userId: string) {
   return NotificationModel.countDocuments({
     userId,
     status: { $in: ["pending", "sent", "delivered"] }
+  });
+}
+
+export async function notifyContentPublished(contentId: string) {
+  const content = await ContentModel.findById(contentId)
+    .select("_id title processingStatus publishedAt metadata uploadedBy")
+    .lean() as ContentNotificationTarget | null;
+
+  if (!content || content.processingStatus !== "published") {
+    return { skipped: true, reason: "content_not_published" };
+  }
+
+  const ownerId = resolveContentOwnerId(content);
+  if (!ownerId) {
+    return { skipped: true, reason: "content_has_no_owner" };
+  }
+
+  const alreadyExists = await NotificationModel.exists({
+    userId: ownerId,
+    type: "content_published",
+    "data.contentId": content._id.toString()
+  });
+
+  if (alreadyExists) {
+    return { skipped: true, reason: "already_notified" };
+  }
+
+  return createNotification({
+    userId: ownerId,
+    type: "content_published",
+    title: "📝 Votre contenu est publié",
+    message: `"${content.title}" est maintenant disponible dans le feed MAAT FEED.`,
+    data: {
+      contentId: content._id.toString(),
+      url: `/content/${content._id.toString()}`,
+      actionText: "Voir le contenu"
+    }
+  });
+}
+
+export async function notifyContentSaved(contentId: string, saverUserId?: string | null) {
+  if (!saverUserId) {
+    return { skipped: true, reason: "anonymous_save" };
+  }
+
+  const content = await ContentModel.findById(contentId)
+    .select("_id title metadata uploadedBy")
+    .lean() as ContentNotificationTarget | null;
+
+  if (!content) {
+    return { skipped: true, reason: "content_not_found" };
+  }
+
+  const ownerId = resolveContentOwnerId(content);
+  if (!ownerId || ownerId === saverUserId) {
+    return { skipped: true, reason: "no_external_owner" };
+  }
+
+  const alreadyExists = await NotificationModel.exists({
+    userId: ownerId,
+    type: "save_received",
+    "data.contentId": content._id.toString(),
+    "data.userId": saverUserId
+  });
+
+  if (alreadyExists) {
+    return { skipped: true, reason: "already_notified" };
+  }
+
+  return createNotification({
+    userId: ownerId,
+    type: "save_received",
+    title: "🔖 Votre contenu a été sauvegardé",
+    message: `Quelqu'un a sauvegardé "${content.title}".`,
+    data: {
+      contentId: content._id.toString(),
+      userId: saverUserId,
+      url: `/content/${content._id.toString()}`,
+      actionText: "Voir le contenu"
+    }
+  });
+}
+
+export async function notifyTrendingContentUsers(contentId: string, userIds: string[], trendingScore: number) {
+  const uniqueUserIds = Array.from(new Set(userIds)).filter(Boolean);
+  if (uniqueUserIds.length === 0) {
+    return { created: 0, skipped: 0 };
+  }
+
+  const content = await ContentModel.findById(contentId)
+    .select("_id title processingStatus")
+    .lean() as ContentNotificationTarget | null;
+
+  if (!content || content.processingStatus !== "published") {
+    return { created: 0, skipped: uniqueUserIds.length };
+  }
+
+  let created = 0;
+  let skipped = 0;
+
+  for (const userId of uniqueUserIds) {
+    const alreadyExists = await NotificationModel.exists({
+      userId,
+      type: "trending_content",
+      "data.contentId": content._id.toString()
+    });
+
+    if (alreadyExists) {
+      skipped++;
+      continue;
+    }
+
+    const result = await createNotification({
+      userId,
+      type: "trending_content",
+      title: "🔥 Contenu tendance",
+      message: `"${content.title}" est en train de faire réagir la communauté.`,
+      data: {
+        contentId: content._id.toString(),
+        trendingScore,
+        url: `/content/${content._id.toString()}`,
+        actionText: "Découvrir"
+      }
+    });
+
+    if ("success" in result && result.success) {
+      created++;
+    } else {
+      skipped++;
+    }
+  }
+
+  return { created, skipped };
+}
+
+export async function sendWeeklyDigestNotifications() {
+  const since = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+  const digestWeek = since.toISOString().slice(0, 10);
+
+  const [publishedCount, topContentRaw] = await Promise.all([
+    ContentModel.countDocuments({
+      processingStatus: "published",
+      publishedAt: { $gte: since }
+    }),
+    ContentModel.find({
+      processingStatus: "published",
+      publishedAt: { $gte: since }
+    })
+      .sort({ publishedAt: -1 })
+      .limit(3)
+      .select("_id title")
+      .lean()
+  ]);
+  const topContent = topContentRaw as unknown as ContentNotificationTarget[];
+
+  if (publishedCount === 0) {
+    return { created: 0, skipped: 0, reason: "no_new_content" };
+  }
+
+  const prefsRaw = await UserNotificationPreferencesModel.find({
+    emailEnabled: { $ne: false },
+    "preferences.weekly_digest.enabled": { $ne: false }
+  })
+    .select("userId")
+    .lean();
+  const prefs = prefsRaw as unknown as Array<{ userId: { toString(): string } }>;
+
+  let created = 0;
+  let skipped = 0;
+  const highlights = topContent.map((content) => content.title).join(", ");
+  const message =
+    publishedCount === 1
+      ? `Cette semaine, 1 nouveau contenu a été publié sur MAAT FEED. À découvrir : ${highlights}.`
+      : `Cette semaine, ${publishedCount} nouveaux contenus ont été publiés sur MAAT FEED. À découvrir : ${highlights}.`;
+
+  for (const pref of prefs) {
+    const userId = pref.userId.toString();
+    const alreadyExists = await NotificationModel.exists({
+      userId,
+      type: "weekly_digest",
+      "data.digestWeek": digestWeek
+    });
+
+    if (alreadyExists) {
+      skipped++;
+      continue;
+    }
+
+    const result = await createNotification({
+      userId,
+      type: "weekly_digest",
+      title: "📊 Votre résumé de la semaine",
+      message,
+      data: {
+        digestWeek,
+        publishedCount,
+        topContent: topContent.map((content) => ({
+          contentId: content._id.toString(),
+          title: content.title
+        })),
+        url: "/explore",
+        actionText: "Explorer"
+      }
+    });
+
+    if ("success" in result && result.success) {
+      created++;
+    } else {
+      skipped++;
+    }
+  }
+
+  return { created, skipped, publishedCount };
+}
+
+export async function sendSecurityAlert(input: {
+  userId: string;
+  alertType: string;
+  details: string;
+  ipAddress?: string;
+  url?: string;
+}) {
+  return createNotification({
+    userId: input.userId,
+    type: "security_alert",
+    title: "🛡️ Alerte de sécurité",
+    message: input.details,
+    priority: "urgent",
+    data: {
+      alertType: input.alertType,
+      ipAddress: input.ipAddress,
+      url: input.url || "/profile",
+      actionText: "Vérifier mon compte"
+    }
   });
 }
 
