@@ -24,6 +24,26 @@ const ALLOWED_ORIGINS = Array.from(
   new Set([...DEFAULT_ALLOWED_ORIGINS, env.APP_BASE_URL, ...CONFIGURED_ALLOWED_ORIGINS].filter(Boolean))
 );
 
+function isAllowedOrigin(origin: string) {
+  if (ALLOWED_ORIGINS.includes(origin)) {
+    return true;
+  }
+
+  if (env.NODE_ENV === "development" || env.NODE_ENV === "test") {
+    try {
+      const { hostname, protocol } = new URL(origin);
+      return (
+        (protocol === "http:" || protocol === "https:") &&
+        (hostname === "localhost" || hostname === "127.0.0.1")
+      );
+    } catch {
+      return false;
+    }
+  }
+
+  return false;
+}
+
 export function createApp() {
   const app = express();
 
@@ -49,7 +69,7 @@ export function createApp() {
       origin: (origin, callback) => {
         // Allow requests with no origin (mobile apps, curl, etc.)
         if (!origin) return callback(null, true);
-        if (ALLOWED_ORIGINS.includes(origin)) return callback(null, true);
+        if (isAllowedOrigin(origin)) return callback(null, true);
         callback(new Error("Not allowed by CORS"));
       },
       credentials: env.CORS_CREDENTIALS

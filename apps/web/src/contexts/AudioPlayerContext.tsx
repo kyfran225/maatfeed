@@ -70,6 +70,10 @@ export function AudioPlayerProvider({ children }: PropsWithChildren) {
   const currentTrackRef = useRef<AudioTrack | null>(null);
   const queueRef = useRef<AudioTrack[]>([]);
   const currentIndexRef = useRef(0);
+  const currentTimeRef = useRef(0);
+  const durationRef = useRef(0);
+  const isPlayingRef = useRef(false);
+  const playbackRequestIdRef = useRef(0);
   const playCountsRef = useRef<Record<string, number>>({});
   const sessionListenMsRef = useRef(0);
   const lastPlayStartPositionRef = useRef(0);
@@ -85,6 +89,21 @@ export function AudioPlayerProvider({ children }: PropsWithChildren) {
   const [duration, setDuration] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [likedTrackIds, setLikedTrackIds] = useState<string[]>([]);
+
+  const setCurrentTimeState = useCallback((value: number) => {
+    currentTimeRef.current = value;
+    setCurrentTime(value);
+  }, []);
+
+  const setDurationState = useCallback((value: number) => {
+    durationRef.current = value;
+    setDuration(value);
+  }, []);
+
+  const setIsPlayingState = useCallback((value: boolean) => {
+    isPlayingRef.current = value;
+    setIsPlaying(value);
+  }, []);
 
   useEffect(() => {
     currentTrackRef.current = currentTrack;
@@ -145,8 +164,8 @@ export function AudioPlayerProvider({ children }: PropsWithChildren) {
       metadata?: Record<string, unknown> | null;
     }
   ) => {
-    const effectiveDuration = overrides?.trackDurationSeconds ?? (duration || track.duration);
-    const stopPosition = overrides?.stopPositionSeconds ?? audioRef.current?.currentTime ?? currentTime;
+    const effectiveDuration = overrides?.trackDurationSeconds ?? (durationRef.current || track.duration);
+    const stopPosition = overrides?.stopPositionSeconds ?? audioRef.current?.currentTime ?? currentTimeRef.current;
 
     void trackAudioInteraction({
       trackId: track.id,
@@ -164,7 +183,11 @@ export function AudioPlayerProvider({ children }: PropsWithChildren) {
     }).catch((interactionError) => {
       console.error(`Audio ${interactionType} tracking failed:`, interactionError);
     });
-  }, [currentTime, duration]);
+  }, []);
+
+  const isAbortPlaybackError = useCallback((playbackError: unknown) => (
+    playbackError instanceof DOMException && playbackError.name === "AbortError"
+  ), []);
 
   const playQueueIndex = useCallback(async (nextIndex: number, nextQueue?: AudioTrack[]) => {
     const audio = audioRef.current;
@@ -176,11 +199,11 @@ export function AudioPlayerProvider({ children }: PropsWithChildren) {
     }
 
     const previousTrack = currentTrackRef.current;
-    const previousPosition = audio.currentTime || currentTime;
+    const previousPosition = audio.currentTime || currentTimeRef.current;
     if (previousTrack && previousTrack.id !== track.id && !hasCompletedTrackRef.current) {
       suppressPauseTrackingRef.current = true;
       const flushed = flushListeningProgress(previousPosition);
-      const previousDuration = duration || previousTrack.duration;
+      const previousDuration = durationRef.current || previousTrack.duration;
       const completionRatio = previousDuration > 0 ? Math.min(1, previousPosition / previousDuration) : 0;
 
       sendInteraction(previousTrack, "skip", {
@@ -204,8 +227,8 @@ export function AudioPlayerProvider({ children }: PropsWithChildren) {
     setCurrentIndex(nextIndex);
     currentTrackRef.current = track;
     setCurrentTrack(track);
-    setCurrentTime(0);
-    setDuration(track.duration || 0);
+    setCurrentTimeState(0);
+    setDurationState(track.duration || 0);
     setError(null);
     setIsLoading(true);
     sessionListenMsRef.current = 0;
@@ -213,7 +236,15 @@ export function AudioPlayerProvider({ children }: PropsWithChildren) {
     hasCompletedTrackRef.current = false;
     countNextPlayRef.current = true;
 
+    const requestId = playbackRequestIdRef.current + 1;
+    playbackRequestIdRef.current = requestId;
+
     try {
+      if (!audio.paused) {
+        suppressPauseTrackingRef.current = true;
+        audio.pause();
+      }
+
       if (audio.src !== track.mediaUrl) {
         audio.src = track.mediaUrl;
       }
@@ -222,12 +253,23 @@ export function AudioPlayerProvider({ children }: PropsWithChildren) {
       audio.load();
       await audio.play();
     } catch (playbackError) {
+      if (requestId !== playbackRequestIdRef.current || isAbortPlaybackError(playbackError)) {
+        return;
+      }
+
       setIsLoading(false);
-      setIsPlaying(false);
+      setIsPlayingState(false);
       setError("Cette piste audio est indisponible pour le moment.");
       console.error("Audio playback failed:", playbackError);
     }
-  }, [currentTime, duration, flushListeningProgress, sendInteraction]);
+  }, [
+    flushListeningProgress,
+    isAbortPlaybackError,
+    sendInteraction,
+    setCurrentTimeState,
+    setDurationState,
+    setIsPlayingState
+  ]);
 
   const playNext = useCallback(async () => {
     const nextIndex = currentIndexRef.current + 1;
@@ -258,7 +300,7 @@ export function AudioPlayerProvider({ children }: PropsWithChildren) {
     };
 
     const handleLoadedMetadata = () => {
-      setDuration(
+      setDurationState(
         Number.isFinite(audio.duration) && audio.duration > 0
           ? audio.duration
           : currentTrackRef.current?.duration || 0
@@ -271,7 +313,7 @@ export function AudioPlayerProvider({ children }: PropsWithChildren) {
     };
 
     const handleTimeUpdate = () => {
-      setCurrentTime(audio.currentTime || 0);
+      setCurrentTimeState(audio.currentTime || 0);
     };
 
     const handlePlay = () => {
@@ -300,14 +342,14 @@ export function AudioPlayerProvider({ children }: PropsWithChildren) {
         });
       }
 
-      setIsPlaying(true);
+      setIsPlayingState(true);
       setIsLoading(false);
     };
 
     const handlePause = () => {
       if (suppressPauseTrackingRef.current) {
         suppressPauseTrackingRef.current = false;
-        setIsPlaying(false);
+        setIsPlayingState(false);
         return;
       }
 
@@ -326,7 +368,7 @@ export function AudioPlayerProvider({ children }: PropsWithChildren) {
         });
       }
 
-      setIsPlaying(false);
+      setIsPlayingState(false);
     };
 
     const handleWaiting = () => {
@@ -340,8 +382,8 @@ export function AudioPlayerProvider({ children }: PropsWithChildren) {
 
       hasCompletedTrackRef.current = true;
       countNextPlayRef.current = true;
-      setCurrentTime(finalPosition);
-      setIsPlaying(false);
+      setCurrentTimeState(finalPosition);
+      setIsPlayingState(false);
 
       if (track) {
         sendInteraction(track, "complete", {
@@ -359,7 +401,7 @@ export function AudioPlayerProvider({ children }: PropsWithChildren) {
 
     const handleError = () => {
       setIsLoading(false);
-      setIsPlaying(false);
+      setIsPlayingState(false);
       setError("Le chargement de cet audio a échoué.");
     };
 
@@ -374,6 +416,7 @@ export function AudioPlayerProvider({ children }: PropsWithChildren) {
     audio.addEventListener("error", handleError);
 
     return () => {
+      playbackRequestIdRef.current += 1;
       audio.pause();
       audio.removeEventListener("loadstart", handleLoadStart);
       audio.removeEventListener("loadedmetadata", handleLoadedMetadata);
@@ -387,10 +430,12 @@ export function AudioPlayerProvider({ children }: PropsWithChildren) {
       audio.src = "";
       audioRef.current = null;
     };
-  }, [flushListeningProgress, playNext, sendInteraction]);
+  }, [flushListeningProgress, playNext, sendInteraction, setCurrentTimeState, setDurationState, setIsPlayingState]);
 
   const pause = useCallback(() => {
+    playbackRequestIdRef.current += 1;
     audioRef.current?.pause();
+    setIsLoading(false);
   }, []);
 
   const resume = useCallback(async () => {
@@ -399,15 +444,25 @@ export function AudioPlayerProvider({ children }: PropsWithChildren) {
       return;
     }
 
+    const requestId = playbackRequestIdRef.current + 1;
+    playbackRequestIdRef.current = requestId;
+
     try {
       setError(null);
+      setIsLoading(true);
       await audio.play();
     } catch (playbackError) {
-      setIsPlaying(false);
+      if (requestId !== playbackRequestIdRef.current || isAbortPlaybackError(playbackError)) {
+        setIsLoading(false);
+        return;
+      }
+
+      setIsPlayingState(false);
+      setIsLoading(false);
       setError("La reprise de lecture a échoué.");
       console.error("Audio resume failed:", playbackError);
     }
-  }, []);
+  }, [isAbortPlaybackError, setIsPlayingState]);
 
   const playTrack = useCallback(async (track: AudioTrack, trackQueue?: AudioTrack[]) => {
     const existingQueue = trackQueue ?? queueRef.current;
@@ -415,8 +470,8 @@ export function AudioPlayerProvider({ children }: PropsWithChildren) {
     const resolvedQueue = nextIndex >= 0 ? existingQueue : [track];
     const resolvedIndex = nextIndex >= 0 ? nextIndex : 0;
 
-    if (!trackQueue && currentTrackRef.current?.id === track.id) {
-      if (isPlaying) {
+    if (currentTrackRef.current?.id === track.id) {
+      if (isPlayingRef.current) {
         pause();
       } else {
         await resume();
@@ -451,9 +506,9 @@ export function AudioPlayerProvider({ children }: PropsWithChildren) {
       flushListeningProgress(audio.currentTime || 0);
     }
     audio.currentTime = boundedTime;
-    setCurrentTime(boundedTime);
+    setCurrentTimeState(boundedTime);
     lastPlayStartPositionRef.current = boundedTime;
-  }, [duration, flushListeningProgress]);
+  }, [duration, flushListeningProgress, setCurrentTimeState]);
 
   const likeCurrentTrack = useCallback(async () => {
     const track = currentTrackRef.current;

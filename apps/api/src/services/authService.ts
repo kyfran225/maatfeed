@@ -43,12 +43,13 @@ function toProfileDto(
     avatar?: string | null;
     profileImageUrl?: string | null;
   },
-  user?: { isEmailVerified: boolean; trustLevel: string } | null
+  user?: { role: string; isEmailVerified: boolean; trustLevel: string } | null
 ) {
   return {
     id: userId,
     email,
     displayName: profile.displayName,
+    role: user?.role || "user",
     interests:
       profile.interests instanceof Map ? Object.fromEntries(profile.interests.entries()) : profile.interests,
     savedContentIds: profile.savedContentIds.map(String),

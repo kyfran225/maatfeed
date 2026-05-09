@@ -37,6 +37,7 @@ register_user*.ps1
 # Test results and reports
 playwright-report/
 test-results/
+.playwright-mcp/
 *.log
 
 # Package manager files

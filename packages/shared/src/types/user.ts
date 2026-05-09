@@ -7,11 +7,13 @@ export type ContentMixConfig = {
 };
 
 export type TrustLevel = "visitor" | "verified" | "contributor" | "trusted";
+export type UserRole = "user" | "admin";
 
 export type UserProfile = {
   id: string;
   email: string;
   displayName: string;
+  role?: UserRole;
   avatar?: string | null;
   profileImageUrl?: string | null;
   interests: UserInterestVector;

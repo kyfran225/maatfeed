@@ -9,7 +9,7 @@ export interface PaymentPlan {
   name: string;
   amount: number;
   currency: "XOF";
-  interval: "month";
+  interval: "month" | "one_time";
   features: string[];
 }
 
