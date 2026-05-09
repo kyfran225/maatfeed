@@ -80,7 +80,7 @@ function getGenericNotificationEmail(
 
 // Verification email template
 function getVerificationEmail(displayName: string, verificationUrl: string, expiresIn: string): TemplateResult {
-  const logoUrl = `${APP_BASE_URL}/favicon_io/logo-kemet-site.webp`;
+  const logoUrl = `${APP_BASE_URL}/favicon_io_2/android-chrome-192x192.png`;
   return {
     subject: "✅ Vérifiez votre adresse email - MAAT FEED",
     html: `<!DOCTYPE html>
@@ -98,7 +98,7 @@ function getVerificationEmail(displayName: string, verificationUrl: string, expi
           <!-- Logo -->
           <tr>
             <td align="center" style="padding-bottom:20px;">
-              <img src="${logoUrl}" alt="MAAT FEED Logo" width="80" height="80" style="display:block;margin:0 auto 12px;border-radius:12px;border:2px solid #d4af37;">
+              <img src="${logoUrl}" alt="MAAT FEED Logo" width="80" height="80" style="display:block;width:80px;height:80px;margin:0 auto 12px;border-radius:12px;border:2px solid #d4af37;">
               <div style="font-size:28px;font-weight:bold;color:#d4af37;letter-spacing:3px;text-transform:uppercase;">MAAT FEED</div>
               <div style="font-size:12px;color:#888;margin-top:4px;">La sagesse de la civilisation Kemet</div>
             </td>

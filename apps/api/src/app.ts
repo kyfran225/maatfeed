@@ -12,7 +12,7 @@ import { CommunityPostModel } from "./models/CommunityPost.js";
 import { AudioTrackModel } from "./models/AudioTrack.js";
 
 const DEFAULT_ALLOWED_ORIGINS = env.NODE_ENV === "production"
-  ? ["https://www.maatfeed.com", "https://maatfeed.vercel.app", "https://maat-feed.vercel.app"]
+  ? ["https://maatfeed.com", "https://www.maatfeed.com", "https://maatfeed.vercel.app", "https://maat-feed.vercel.app"]
   : ["http://localhost:5173", "http://127.0.0.1:5173"];
 
 const CONFIGURED_ALLOWED_ORIGINS = env.CORS_ORIGIN

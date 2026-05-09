@@ -7,7 +7,7 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://maat-api-staging.onrender.com/api/:path*"
+      "destination": "https://maat-api-production.onrender.com/api/:path*"
     },
     {
       "source": "/:path*",
@@ -56,6 +56,6 @@
     }
   ],
   "env": {
-    "VITE_API_URL": "https://maat-api-staging.onrender.com"
+    "VITE_API_URL": "https://maat-api-production.onrender.com"
   }
 }

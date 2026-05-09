@@ -37,7 +37,7 @@ services:
       - key: JWT_REFRESH_SECRET
         generateValue: true
       - key: CORS_ORIGIN
-        value: https://www.maatfeed.com,https://maatfeed.vercel.app
+        value: https://maatfeed.com,https://www.maatfeed.com,https://maatfeed.vercel.app
       - key: CORS_CREDENTIALS
         value: true
       - key: YOUTUBE_API_KEY
