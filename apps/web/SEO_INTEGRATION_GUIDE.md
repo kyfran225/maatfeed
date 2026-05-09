@@ -167,7 +167,7 @@ export function AdminOpsPage() {
 export function AdminIngestionPage() {
   return (
     <>
-      <SEO pageKey="admin" title="Ingestion — MAATFEED Admin" />
+      <SEO pageKey="admin" title="Ingestion - MAATFEED Admin" />
       {/* reste du contenu */}
     </>
   );
@@ -215,7 +215,7 @@ export function NotificationsPage() {
   return (
     <>
       <SEO 
-        title={`Notifications ${unreadCount > 0 ? `(${unreadCount})` : ''} — MAATFEED`}
+        title={`Notifications ${unreadCount > 0 ? `(${unreadCount})` : ''} - MAATFEED`}
         description="Gère tes notifications et reste informé des nouveaux débats et contenus."
         robots="noindex, nofollow"
       />
@@ -231,7 +231,7 @@ export function ForgotPasswordPage() {
   return (
     <>
       <SEO 
-        title="Mot de passe oublié — MAATFEED"
+        title="Mot de passe oublié - MAATFEED"
         description="Réinitialise ton mot de passe MAATFEED pour retrouver l'accès à ton compte."
         robots="noindex, nofollow"
       />
@@ -247,7 +247,7 @@ export function VerifyEmailPage() {
   return (
     <>
       <SEO 
-        title="Vérification email — MAATFEED"
+        title="Vérification email - MAATFEED"
         description="Vérifie ton adresse email pour activer ton compte MAATFEED."
         robots="noindex, nofollow"
       />
