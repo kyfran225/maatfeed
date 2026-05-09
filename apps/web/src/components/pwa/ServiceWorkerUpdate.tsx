@@ -12,86 +12,138 @@ export function ServiceWorkerUpdate() {
   }
 
   return (
-    <div 
+    <div
       role="alert"
       aria-live="polite"
       style={{
         position: 'fixed',
-        bottom: '20px',
+        top: '20px',
         left: '50%',
         transform: 'translateX(-50%)',
         zIndex: 9999,
         background: 'linear-gradient(135deg, #D4AF37 0%, #B8941F 100%)',
-        color: '#0B0704',
-        padding: '16px 24px',
-        borderRadius: '12px',
-        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)',
+        border: '1px solid rgba(212, 175, 55, 0.5)',
+        padding: '20px',
+        borderRadius: '16px',
+        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.5)',
         display: 'flex',
+        flexDirection: 'column',
         alignItems: 'center',
         gap: '16px',
         fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-        fontSize: '14px',
-        maxWidth: '90vw',
-        width: 'auto',
-        minWidth: '300px'
+        maxWidth: '420px',
+        width: '90vw',
+        animation: 'slideDown 0.3s ease-out'
       }}
     >
-      <span style={{ fontSize: '20px' }}>🔄</span>
-      
-      <div style={{ flex: 1 }}>
-        <div style={{ fontWeight: 600, marginBottom: '4px' }}>
-          Nouvelle version disponible
-        </div>
-        <div style={{ fontSize: '13px', opacity: 0.9 }}>
-          Mettez à jour pour bénéficier des dernières améliorations
-        </div>
-      </div>
-      
-      <div style={{ display: 'flex', gap: '8px' }}>
-        <button
-          onClick={dismissUpdate}
+      <style>{`
+        @keyframes slideDown {
+          from {
+            opacity: 0;
+            transform: translateX(-50%) translateY(-20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+          }
+        }
+      `}</style>
+
+      {/* Header with Icon and Title */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', width: '100%' }}>
+        {/* Update Icon */}
+        <div
           style={{
-            background: 'transparent',
-            border: '1px solid rgba(11, 7, 4, 0.3)',
-            color: '#0B0704',
-            padding: '8px 16px',
-            borderRadius: '8px',
-            cursor: 'pointer',
-            fontSize: '13px',
-            fontWeight: 500,
-            transition: 'all 0.2s ease'
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.background = 'rgba(11, 7, 4, 0.1)';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.background = 'transparent';
+            width: '56px',
+            height: '56px',
+            background: '#0B0704',
+            borderRadius: '14px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0,
+            overflow: 'hidden',
+            boxShadow: 'inset 0 0 0 1px rgba(212, 175, 55, 0.3), 0 2px 4px rgba(0,0,0,0.2)'
           }}
         >
-          Plus tard
-        </button>
-        
+          <span style={{ fontSize: '28px' }}>🔄</span>
+        </div>
+
+        {/* Title */}
+        <div
+          style={{
+            fontWeight: 600,
+            fontSize: '18px',
+            color: '#0B0704'
+          }}
+        >
+          Nouvelle version disponible
+        </div>
+      </div>
+
+      {/* Description */}
+      <div
+        style={{
+          fontSize: '14px',
+          color: '#0B0704',
+          opacity: 0.9,
+          lineHeight: 1.4,
+          textAlign: 'center',
+          width: '100%'
+        }}
+      >
+        Mettez à jour pour bénéficier des dernières améliorations
+      </div>
+
+      {/* Actions */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%' }}>
         <button
           onClick={update}
           style={{
             background: '#0B0704',
             border: 'none',
             color: '#D4AF37',
-            padding: '8px 16px',
-            borderRadius: '8px',
+            padding: '12px 24px',
+            borderRadius: '10px',
             cursor: 'pointer',
-            fontSize: '13px',
+            fontSize: '14px',
             fontWeight: 600,
+            width: '100%',
             transition: 'all 0.2s ease'
           }}
           onMouseEnter={(e) => {
             e.currentTarget.style.transform = 'translateY(-1px)';
+            e.currentTarget.style.boxShadow = '0 4px 12px rgba(11, 7, 4, 0.3)';
           }}
           onMouseLeave={(e) => {
             e.currentTarget.style.transform = 'translateY(0)';
+            e.currentTarget.style.boxShadow = 'none';
           }}
         >
           Mettre à jour
+        </button>
+
+        <button
+          onClick={dismissUpdate}
+          style={{
+            background: 'transparent',
+            border: 'none',
+            color: '#0B0704',
+            opacity: 0.7,
+            padding: '8px',
+            cursor: 'pointer',
+            fontSize: '13px',
+            width: '100%',
+            transition: 'opacity 0.2s ease'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.opacity = '1';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.opacity = '0.7';
+          }}
+        >
+          Plus tard
         </button>
       </div>
     </div>
