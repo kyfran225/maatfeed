@@ -3,7 +3,7 @@ import { CommunityPostModel, type CommunityPostDocument } from "../models/Commun
 import { ContentEnrichmentModel } from "../models/ContentEnrichment.js";
 import type { Types } from "mongoose";
 
-const BASE_URL = process.env.APP_BASE_URL || "https://www.maatfeed.com";
+const BASE_URL = process.env.APP_BASE_URL || "https://maatfeed.com";
 const ASSET_VERSION = "20260508-circle";
 const DEFAULT_META = {
   title: "MAAT FEED - Culture & Apprentissage Africain",

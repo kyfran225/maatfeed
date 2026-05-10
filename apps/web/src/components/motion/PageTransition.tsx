@@ -16,7 +16,7 @@ export const PageTransition: React.FC<PageTransitionProps> = ({ children }) => {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.15, ease: "easeOut" }}
-      className="w-full h-full min-h-screen"
+      className="h-full min-h-0 w-full"
     >
       {children}
     </motion.div>

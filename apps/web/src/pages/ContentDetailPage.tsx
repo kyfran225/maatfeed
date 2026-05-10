@@ -9,7 +9,7 @@ import { interactionService, EngagementData } from "../services/interactionServi
 import { TouchFeedback } from "../components/ui/TouchFeedback";
 import { LoadingState } from "../components/ui/LoadingState";
 import { RedditVideoPlayer } from "../components/media/RedditVideoPlayer";
-import { extractYouTubeVideoId, isYouTubeShortUrl } from "../components/media/YouTubeEmbed";
+import { extractYouTubeVideoId, useIsYouTubeShortFormVideo } from "../components/media/YouTubeEmbed";
 import { preloadMediaCandidate } from "../utils/mediaPreload";
 
 const BUCKET_CONFIG: Record<string, { color: string; gradient: string; label: string }> = {
@@ -69,6 +69,12 @@ export default function ContentDetailPage() {
       thumbnailUrl: content.thumbnailUrl
     }, "immediate");
   }, [content]);
+
+  const isYouTubeVideo = Boolean(content?.videoUrl && extractYouTubeVideoId(content.videoUrl));
+  const isYouTubeShortFormVideo = useIsYouTubeShortFormVideo(
+    isYouTubeVideo ? content?.videoUrl : null,
+    content?.thumbnailUrl
+  );
 
   const loadContent = async (id: string, background = false) => {
     try {
@@ -212,10 +218,10 @@ export default function ContentDetailPage() {
   }
 
   const bucketConfig = BUCKET_CONFIG[content!.bucket] || BUCKET_CONFIG.deep;
-  const isShortFormVideo = content.videoUrl?.includes('tiktok.com') || isYouTubeShortUrl(content.videoUrl) || directVideoOrientation === 'portrait';
+  const isShortFormVideo = content.videoUrl?.includes('tiktok.com') || isYouTubeShortFormVideo || directVideoOrientation === 'portrait';
   const shouldAutoplayVideo = Boolean(
     content.videoUrl?.includes('tiktok.com') ||
-    (content.videoUrl && extractYouTubeVideoId(content.videoUrl))
+    isYouTubeVideo
   );
 
   return (

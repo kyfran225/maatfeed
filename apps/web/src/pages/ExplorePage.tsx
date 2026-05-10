@@ -1,7 +1,7 @@
-import { useCallback, useState, useEffect, useRef } from "react";
+import { useCallback, useState, useEffect, useMemo, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, TrendingUp, Filter, Play, Headphones, BookOpen, Flame, Sparkles } from "lucide-react";
+import { Search, Filter, Play, Headphones, BookOpen, Flame, Sparkles, Info, Volume2 } from "lucide-react";
 import { SEO } from "../components/SEO";
 import { contentService, ContentItem, TrendingContent } from "../services/contentService";
 import { LoadingState } from "../components/ui/LoadingState";
@@ -10,10 +10,12 @@ import { EmptyState } from "../components/ui/EmptyState";
 import { TouchFeedback } from "../components/ui/TouchFeedback";
 import { LoadingSpinner } from "../components/ui/LoadingSpinner";
 import { CONTENT_BUCKET_LABELS } from "@maat/shared";
+import { useVideoPlayer } from "../contexts/VideoPlayerContext";
 import { RedditVideoPlayer } from "../components/media/RedditVideoPlayer";
-import { isYouTubeShortUrl } from "../components/media/YouTubeEmbed";
+import { extractYouTubeVideoId, useIsYouTubeShortFormVideo, YouTubeEmbed } from "../components/media/YouTubeEmbed";
 import { preloadMediaBatch, preloadMediaCandidate } from "../utils/mediaPreload";
 import { useNearViewport } from "../hooks/useNearViewport";
+import { useSingleActiveMedia } from "../hooks/useActiveMedia";
 
 export const BUCKETS = [
   { id: 'viral', name: CONTENT_BUCKET_LABELS.viral, color: 'bg-red-500', gradient: 'from-red-500/30 via-orange-500/20 to-red-600/30', icon: Flame },
@@ -67,44 +69,113 @@ const ThumbnailPlaceholder = ({ bucket, mediaType, title }: { bucket: string; me
 
 // Storage key for persisting search state
 const EXPLORER_STATE_KEY = 'maat-explorer-state';
+const DESKTOP_EXPLORE_QUERY = "(min-width: 768px)";
+
+function useIsDesktopExplore() {
+  const [isDesktop, setIsDesktop] = useState(false);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia(DESKTOP_EXPLORE_QUERY);
+    const update = () => setIsDesktop(mediaQuery.matches);
+
+    update();
+    mediaQuery.addEventListener("change", update);
+
+    return () => {
+      mediaQuery.removeEventListener("change", update);
+    };
+  }, []);
+
+  return isDesktop;
+}
 
 function ExploreContentCard({
   item,
   index,
   onOpen,
+  allowAutoPlay,
+  registerAutoPlayCandidate,
 }: {
   item: ContentItem;
   index: number;
   onOpen: (contentId: string) => void;
+  allowAutoPlay: boolean;
+  registerAutoPlayCandidate?: (key: string, element: HTMLElement | null) => void;
 }) {
   const [directVideoOrientation, setDirectVideoOrientation] = useState<'portrait' | 'landscape' | 'square' | null>(null);
-  const isShortFormVideo = item.videoUrl?.includes('tiktok.com') || isYouTubeShortUrl(item.videoUrl) || directVideoOrientation === 'portrait';
+  const { mediaSoundEnabled, activateMediaSound } = useVideoPlayer();
+  const isYouTubeVideo = Boolean(item.videoUrl && extractYouTubeVideoId(item.videoUrl));
+  const isYouTubeShortFormVideo = useIsYouTubeShortFormVideo(
+    isYouTubeVideo ? item.videoUrl : null,
+    item.thumbnailUrl
+  );
+  const isShortFormVideo = item.videoUrl?.includes('tiktok.com') || isYouTubeShortFormVideo || directVideoOrientation === 'portrait';
   const { elementRef: mediaRef, isNearViewport } = useNearViewport<HTMLDivElement>("800px");
   const shouldMountMedia = index < 3 || isNearViewport;
+  const handleDetailClick = () => onOpen(item.id);
+  const registerCardRef = useCallback((element: HTMLDivElement | null) => {
+    if (!item.videoUrl) return;
+    registerAutoPlayCandidate?.(item.id, element);
+  }, [item.id, item.videoUrl, registerAutoPlayCandidate]);
 
   return (
     <motion.div
+      ref={registerCardRef}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.05 }}
-      className="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 overflow-hidden hover:bg-white/10 transition-colors cursor-pointer"
+      className="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 overflow-hidden hover:bg-white/10 transition-colors"
       data-explore-content-id={item.id}
       onPointerEnter={() => preloadMediaCandidate({ videoUrl: item.videoUrl, audioUrl: item.audioUrl, thumbnailUrl: item.thumbnailUrl })}
       onFocus={() => preloadMediaCandidate({ videoUrl: item.videoUrl, audioUrl: item.audioUrl, thumbnailUrl: item.thumbnailUrl })}
-      onClick={() => onOpen(item.id)}
     >
-      <TouchFeedback>
-        <div ref={mediaRef} className={`${isShortFormVideo ? 'h-[400px]' : 'aspect-video'} relative overflow-hidden`} onClick={(e) => e.stopPropagation()}>
+      <div ref={mediaRef} className={`${isShortFormVideo ? 'h-[400px]' : 'aspect-video'} relative overflow-hidden`}>
         {item.videoUrl && shouldMountMedia ? (
-          <RedditVideoPlayer
-            src={item.videoUrl}
-            thumbnail={item.thumbnailUrl}
-            title={item.title}
-            className="w-full h-full"
-            muted={true}
-            autoPlay={true}
-            onVideoOrientation={setDirectVideoOrientation}
-          />
+          <div className="h-full w-full">
+            {isYouTubeVideo ? (
+              <div className="relative h-full w-full">
+                <YouTubeEmbed
+                  videoUrl={item.videoUrl}
+                  title={item.title}
+                  layout="fill"
+                  loading={index < 3 || allowAutoPlay ? "eager" : "lazy"}
+                  autoplayWhenVisible={allowAutoPlay}
+                  options={{
+                    controls: true,
+                    autoplay: false,
+                    muted: allowAutoPlay || !mediaSoundEnabled,
+                    enableJsApi: true,
+                    fullscreen: true
+                  }}
+                />
+                {allowAutoPlay && !mediaSoundEnabled && (
+                  <button
+                    type="button"
+                    aria-label="Activer le son pour toutes les vidéos"
+                    title="Activer le son"
+                    className="absolute right-3 top-3 z-10 inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/20 bg-black/55 text-white backdrop-blur transition hover:bg-black/70"
+                    onClick={(event) => {
+                      event.preventDefault();
+                      event.stopPropagation();
+                      activateMediaSound();
+                    }}
+                  >
+                    <Volume2 className="h-5 w-5" aria-hidden="true" />
+                  </button>
+                )}
+              </div>
+            ) : (
+              <RedditVideoPlayer
+                src={item.videoUrl}
+                thumbnail={item.thumbnailUrl}
+                title={item.title}
+                className="w-full h-full"
+                muted={allowAutoPlay && !mediaSoundEnabled}
+                autoPlay={allowAutoPlay}
+                onVideoOrientation={setDirectVideoOrientation}
+              />
+            )}
+          </div>
         ) : item.thumbnailUrl ? (
           <img
             src={item.thumbnailUrl}
@@ -123,21 +194,31 @@ function ExploreContentCard({
             {item.bucket}
           </span>
         </div>
-        </div>
+      </div>
       
-        <div className="p-4">
+      <div className="p-4">
         <h3 className="font-semibold text-white line-clamp-2 mb-2">{item.title}</h3>
         <p className="text-sand/60 text-sm line-clamp-2 mb-3">{item.description}</p>
         
-        <div className="flex items-center justify-between text-xs text-sand/40">
-          <span>{item.author}</span>
-          <div className="flex items-center gap-3">
-            <span>{item.likes} j'aime</span>
-            <span>{item.comments} commentaires</span>
+        <div className="flex items-start justify-between gap-3 text-xs text-sand/40">
+          <div className="min-w-0">
+            <span className="block truncate">{item.author}</span>
+            <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
+              <span>{item.likes} j'aime</span>
+              <span>{item.comments} commentaires</span>
+            </div>
           </div>
+          <button
+            type="button"
+            onClick={handleDetailClick}
+            className="shrink-0 inline-flex items-center gap-1.5 rounded-lg bg-orange px-3 py-2 font-medium text-white transition-colors hover:bg-orange/90 focus:outline-none focus:ring-2 focus:ring-orange/50 focus:ring-offset-2 focus:ring-offset-black"
+            aria-label={`Voir le détail de ${item.title}`}
+          >
+            <Info className="h-4 w-4" />
+            Détail
+          </button>
         </div>
-        </div>
-      </TouchFeedback>
+      </div>
     </motion.div>
   );
 }
@@ -145,7 +226,10 @@ function ExploreContentCard({
 export default function ExplorePage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const [searchQuery, setSearchQuery] = useState('');
+  const initialUrlQuery = typeof window !== "undefined"
+    ? new URLSearchParams(window.location.search).get("q") ?? ""
+    : "";
+  const [searchQuery, setSearchQuery] = useState(initialUrlQuery);
   const [selectedBucket, setSelectedBucket] = useState<string | null>(null);
   const [trendingContent, setTrendingContent] = useState<TrendingContent | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -155,14 +239,26 @@ export default function ExplorePage() {
   const [showFilters, setShowFilters] = useState(false);
   const [pendingRestore, setPendingRestore] = useState<{ contentId?: string; scrollY?: number } | null>(null);
   const routeRestoreHandledRef = useRef(false);
+  const isDesktopExplore = useIsDesktopExplore();
+  const allowAutoPlay = !isDesktopExplore;
+  const { activeKey: activeAutoPlayId, registerElement: registerAutoPlayElement } = useSingleActiveMedia<string>({
+    enabled: allowAutoPlay,
+    minimumVisibleRatio: 0.6
+  });
+  const urlQuery = useMemo(() => new URLSearchParams(location.search).get("q") ?? "", [location.search]);
 
   // Restore saved state on mount
   useEffect(() => {
+    const currentUrlQuery = new URLSearchParams(window.location.search).get("q") ?? "";
     const savedState = sessionStorage.getItem(EXPLORER_STATE_KEY);
     if (savedState) {
       try {
         const { query, bucket, contentId, scrollY } = JSON.parse(savedState);
-        if (query) setSearchQuery(query);
+        if (currentUrlQuery) {
+          setSearchQuery(currentUrlQuery);
+        } else if (query) {
+          setSearchQuery(query);
+        }
         if (bucket) setSelectedBucket(bucket);
         if (contentId || typeof scrollY === 'number') {
           routeRestoreHandledRef.current = true;
@@ -174,6 +270,10 @@ export default function ExplorePage() {
     }
     loadTrendingContent();
   }, []);
+
+  useEffect(() => {
+    setSearchQuery(urlQuery);
+  }, [urlQuery]);
 
   // Save state before navigating to content detail
   const handleCardClick = useCallback((contentId: string) => {
@@ -232,7 +332,21 @@ export default function ExplorePage() {
     try {
       setIsSearching(true);
       const results = await contentService.searchContent(query, selectedBucket || undefined);
-      setSearchResults(results.items);
+      if (results.items.length > 0) {
+        setSearchResults(results.items);
+        return;
+      }
+
+      const normalizedQuery = query
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "");
+      if (normalizedQuery !== query) {
+        const normalizedResults = await contentService.searchContent(normalizedQuery, selectedBucket || undefined);
+        setSearchResults(normalizedResults.items);
+        return;
+      }
+
+      setSearchResults([]);
     } catch (err) {
       console.error('Search failed:', err);
       setSearchResults([]);
@@ -249,6 +363,31 @@ export default function ExplorePage() {
 
     return () => clearTimeout(timer);
   }, [searchQuery, selectedBucket]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const currentQuery = params.get("q") ?? "";
+    const trimmedQuery = searchQuery.trim();
+
+    if (trimmedQuery === currentQuery) {
+      return;
+    }
+
+    if (trimmedQuery) {
+      params.set("q", trimmedQuery);
+    } else {
+      params.delete("q");
+    }
+
+    const nextSearch = params.toString();
+    navigate(
+      {
+        pathname: location.pathname,
+        search: nextSearch ? `?${nextSearch}` : ""
+      },
+      { replace: true }
+    );
+  }, [location.pathname, location.search, navigate, searchQuery]);
 
   useEffect(() => {
     const routeState = location.state as {
@@ -307,6 +446,8 @@ export default function ExplorePage() {
       }))
     );
   }, [searchQuery, searchResults, trendingContent]);
+
+  const suggestedItems = trendingContent?.items ?? [];
 
   return (
     <>
@@ -398,8 +539,36 @@ export default function ExplorePage() {
             ) : searchResults.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {searchResults.map((item, index) => (
-                  <ExploreContentCard key={item.id} item={item} index={index} onOpen={handleCardClick} />
+                  <ExploreContentCard
+                    key={item.id}
+                    item={item}
+                    index={index}
+                    onOpen={handleCardClick}
+                    allowAutoPlay={allowAutoPlay && activeAutoPlayId === item.id}
+                    registerAutoPlayCandidate={registerAutoPlayElement}
+                  />
                 ))}
+              </div>
+            ) : suggestedItems.length > 0 ? (
+              <div>
+                <div className="mb-4 rounded-lg border border-white/10 bg-white/[0.04] p-4">
+                  <p className="text-sm font-semibold text-white">Aucun résultat exact</p>
+                  <p className="mt-1 text-sm text-sand/64">
+                    Voici des contenus proches pour continuer l'exploration.
+                  </p>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {suggestedItems.map((item, index) => (
+                    <ExploreContentCard
+                      key={item.id}
+                      item={item}
+                      index={index}
+                      onOpen={handleCardClick}
+                      allowAutoPlay={allowAutoPlay && activeAutoPlayId === item.id}
+                      registerAutoPlayCandidate={registerAutoPlayElement}
+                    />
+                  ))}
+                </div>
               </div>
             ) : (
               <EmptyState 
@@ -431,7 +600,14 @@ export default function ExplorePage() {
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {trendingContent.items.map((item, index) => (
-                    <ExploreContentCard key={item.id} item={item} index={index} onOpen={handleCardClick} />
+                    <ExploreContentCard
+                      key={item.id}
+                      item={item}
+                      index={index}
+                      onOpen={handleCardClick}
+                      allowAutoPlay={allowAutoPlay && activeAutoPlayId === item.id}
+                      registerAutoPlayCandidate={registerAutoPlayElement}
+                    />
                   ))}
                 </div>
               </div>

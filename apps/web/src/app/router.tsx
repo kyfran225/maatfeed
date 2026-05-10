@@ -27,6 +27,7 @@ const NotificationsPage = lazy(() => import("../pages/NotificationsPage"));
 const PremiumPage = lazy(() => import("../pages/PremiumPage"));
 const ProfilePage = lazy(() => import("../pages/ProfilePage"));
 const ResetPasswordPage = lazy(() => import("../pages/ResetPasswordPage"));
+const SeoTopicPage = lazy(() => import("../pages/SeoTopicPage"));
 const SponsorPage = lazy(() => import("../pages/SponsorPage"));
 const VerifyEmailPage = lazy(() => import("../pages/VerifyEmailPage"));
 const PrivacyPolicyPage = lazy(() => import("../pages/PrivacyPolicy"));
@@ -73,6 +74,7 @@ export const router = createBrowserRouter(isMaintenanceMode ? [
         )
       },
       { path: "explore", element: <ExplorePage /> },
+      { path: ":slug", element: <LazyPage><SeoTopicPage /></LazyPage> },
       {
         path: "notifications",
         element: (

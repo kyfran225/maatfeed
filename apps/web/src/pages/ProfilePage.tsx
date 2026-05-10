@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import { Database, FileText, Scale, ShieldCheck } from "lucide-react";
 import { SEO } from "../components/SEO";
 import { Button } from "../components/ui/Button";
 import { useAuth } from "../hooks/useAuth";
@@ -42,11 +43,19 @@ const INTEREST_DATA: Record<string, InterestInfo> = {
   science: { label: "Science", Icon: ScienceIcon, color: "text-cyan-400" }
 };
 
+const LEGAL_LINKS = [
+  { to: "/privacy-policy", label: "Confidentialité", Icon: ShieldCheck },
+  { to: "/terms-of-service", label: "CGU", Icon: FileText },
+  { to: "/legal-notice", label: "Mentions légales", Icon: Scale },
+  { to: "/data-management", label: "Mes données", Icon: Database },
+];
+
 export default function ProfilePage() {
   const navigate = useNavigate();
   const { profile, logoutUser, refreshProfile } = useAuth();
   const { isLoading } = useProfile();
   const [showDetails, setShowDetails] = useState(false);
+  const [showLegalLinks, setShowLegalLinks] = useState(false);
   const [showAvatarModal, setShowAvatarModal] = useState(false);
   const [showPhotoModal, setShowPhotoModal] = useState(false);
   const [selectedAvatar, setSelectedAvatar] = useState<KemetAvatarType | null>(
@@ -299,6 +308,42 @@ export default function ProfilePage() {
                   {isLoading ? "Chargement..." : "Prêt"}
                 </span></p>
               </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Legal and Data Links */}
+      <button
+        onClick={() => setShowLegalLinks(!showLegalLinks)}
+        className="mt-4 flex w-full items-center justify-between rounded-[1.5rem] border border-white/10 bg-white/5 p-5 text-left transition hover:bg-white/10"
+      >
+        <span className="text-xs uppercase tracking-[0.2em] text-gold">Légal et données</span>
+        <span className="text-sand/50">
+          {showLegalLinks ? "▼" : "▶"}
+        </span>
+      </button>
+
+      <AnimatePresence>
+        {showLegalLinks && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.2 }}
+            className="overflow-hidden"
+          >
+            <div className="mt-2 grid gap-2 rounded-[1.5rem] border border-white/10 bg-white/5 p-3 sm:grid-cols-2">
+              {LEGAL_LINKS.map(({ to, label, Icon }) => (
+                <Link
+                  key={to}
+                  to={to}
+                  className="flex min-h-11 items-center gap-3 rounded-xl px-3 py-2 text-sm text-sand/72 transition hover:bg-white/10 hover:text-white"
+                >
+                  <Icon className="h-4 w-4 text-gold/80" aria-hidden="true" />
+                  <span>{label}</span>
+                </Link>
+              ))}
             </div>
           </motion.div>
         )}

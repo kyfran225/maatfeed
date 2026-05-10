@@ -1,10 +1,11 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Check, Play, RotateCcw, Search, HelpCircle, Volume2 } from "lucide-react";
 import { SEO } from "../components/SEO";
 import { useAuth } from "../hooks/useAuth";
 import { useInfiniteGlobalFeed } from "../hooks/useFeed";
 import { useNearViewport } from "../hooks/useNearViewport";
+import { useSingleActiveMedia } from "../hooks/useActiveMedia";
 import { useVideoPlayer } from "../contexts/VideoPlayerContext";
 import type { FeedResponse } from "../services/feedService";
 import {
@@ -20,9 +21,10 @@ import { SponsorCard } from "../components/feed/SponsorCard";
 import { QuizRecapCard } from "../components/feed/QuizRecapCard";
 import { getActiveSponsors, incrementSponsorStats, type Sponsor } from "../services/sponsorService";
 import { RedditVideoPlayer } from "../components/media/RedditVideoPlayer";
-import { extractYouTubeVideoId, isYouTubeShortUrl, YouTubeEmbed } from "../components/media/YouTubeEmbed";
+import { extractYouTubeVideoId, useIsYouTubeShortFormVideo, YouTubeEmbed } from "../components/media/YouTubeEmbed";
 import { preloadMediaBatch, preloadMediaCandidate } from "../utils/mediaPreload";
 import type { ContentItem } from "../services/contentService";
+import { seoTopics } from "../config/seoTopics";
 
 type FeedItem = FeedResponse["items"][number];
 type LearningStatus = "new" | "learned" | "review";
@@ -108,6 +110,7 @@ function FeedItemCard({
   status,
   allowAutoPlay,
   eagerMedia,
+  registerAutoPlayCandidate,
   onSetStatus,
   onOpenQuiz,
 }: {
@@ -115,6 +118,7 @@ function FeedItemCard({
   status?: LearningStatus;
   allowAutoPlay: boolean;
   eagerMedia: boolean;
+  registerAutoPlayCandidate?: (key: string, element: HTMLElement | null) => void;
   onSetStatus: (status: LearningStatus) => void;
   onOpenQuiz: (contentId: string) => void;
 }) {
@@ -122,8 +126,12 @@ function FeedItemCard({
   const [directVideoOrientation, setDirectVideoOrientation] = useState<'portrait' | 'landscape' | 'square' | null>(null);
   const { mediaSoundEnabled, activateMediaSound } = useVideoPlayer();
   const isTikTokVideo = item.mediaUrl?.includes('tiktok.com');
-  const isShortFormVideo = isTikTokVideo || isYouTubeShortUrl(item.mediaUrl) || directVideoOrientation === 'portrait';
   const isYouTubeVideo = Boolean(item.mediaUrl && extractYouTubeVideoId(item.mediaUrl));
+  const isYouTubeShortFormVideo = useIsYouTubeShortFormVideo(
+    isYouTubeVideo ? item.mediaUrl : null,
+    item.thumbnailUrl
+  );
+  const isShortFormVideo = isTikTokVideo || isYouTubeShortFormVideo || directVideoOrientation === 'portrait';
   const { elementRef: mediaRef, isNearViewport } = useNearViewport<HTMLDivElement>("800px");
   const shouldMountMedia = eagerMedia || isNearViewport;
   const returnTo = `${location.pathname}${location.search}${location.hash}`;
@@ -133,6 +141,11 @@ function FeedItemCard({
     contentId: item.id,
     contentSnapshot: feedItemToContentSnapshot(item)
   };
+  const registerArticleRef = useCallback((element: HTMLElement | null) => {
+    if (item.mediaType !== "video") return;
+    registerAutoPlayCandidate?.(item.id, element);
+  }, [item.id, item.mediaType, registerAutoPlayCandidate]);
+
   const saveReturnState = () => {
     sessionStorage.setItem(FEED_RETURN_STATE_KEY, JSON.stringify({
       contentId: item.id,
@@ -143,6 +156,7 @@ function FeedItemCard({
 
   return (
     <article
+      ref={registerArticleRef}
       className="overflow-hidden rounded-lg border border-white/10 bg-white/[0.035]"
       data-feed-content-id={item.id}
       onPointerEnter={() => preloadMediaCandidate({ mediaUrl: item.mediaUrl, thumbnailUrl: item.thumbnailUrl, sourceProvider: item.sourceProvider })}
@@ -190,7 +204,7 @@ function FeedItemCard({
                 title={item.title}
                 className="w-full h-full"
                 muted={allowAutoPlay && !mediaSoundEnabled}
-                autoPlay={allowAutoPlay && isTikTokVideo}
+                autoPlay={allowAutoPlay}
                 onVideoOrientation={setDirectVideoOrientation}
               />
             )}
@@ -309,6 +323,10 @@ export function FeedPage() {
   const [serverSummary, setServerSummary] = useState<LearningSummary | null>(null);
   const [quizContentId, setQuizContentId] = useState<string | null>(null);
   const [sponsors, setSponsors] = useState<Sponsor[]>([]); // Chargement depuis l'API
+  const { activeKey: activeAutoPlayId, registerElement: registerAutoPlayElement } = useSingleActiveMedia<string>({
+    enabled: !isDesktopFeed,
+    minimumVisibleRatio: 0.6
+  });
 
   useEffect(() => {
     setLearningState(readLearningState());
@@ -542,6 +560,21 @@ export function FeedPage() {
           </div>
         </section>
 
+        <section className="mb-6 rounded-lg border border-white/10 bg-white/[0.03] p-4">
+          <h2 className="text-sm font-semibold uppercase tracking-[0.18em] text-sand/58">Explorer par theme</h2>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {seoTopics.map((topic) => (
+              <Link
+                key={topic.slug}
+                to={`/${topic.slug}`}
+                className="rounded-md border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-sand/74 transition hover:bg-white/[0.08] hover:text-white"
+              >
+                {topic.shortTitle}
+              </Link>
+            ))}
+          </div>
+        </section>
+
         {isLoading && <LoadingState message="Chargement..." />}
 
         {error && (
@@ -582,13 +615,16 @@ export function FeedPage() {
             }
 
             const feedItem = item as FeedItem;
+            const shouldAutoPlay = !isDesktopFeed && activeAutoPlayId === feedItem.id;
+
             return (
               <FeedItemCard
                 key={feedItem.id}
                 item={feedItem}
                 status={learningState[feedItem.id]}
-                allowAutoPlay={!isDesktopFeed}
+                allowAutoPlay={shouldAutoPlay}
                 eagerMedia={index < 3}
+                registerAutoPlayCandidate={registerAutoPlayElement}
                 onSetStatus={(status) => setStatus(feedItem.id, status)}
                 onOpenQuiz={(contentId) => setQuizContentId(contentId)}
               />

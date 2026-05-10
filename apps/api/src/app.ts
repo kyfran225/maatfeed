@@ -8,8 +8,6 @@ import { errorHandler } from "./middleware/errorHandler.js";
 import { notFoundHandler } from "./middleware/notFound.js";
 import { apiRouter } from "./routes/index.js";
 import { ContentModel } from "./models/Content.js";
-import { CommunityPostModel } from "./models/CommunityPost.js";
-import { AudioTrackModel } from "./models/AudioTrack.js";
 
 const DEFAULT_ALLOWED_ORIGINS = env.NODE_ENV === "production"
   ? ["https://maatfeed.com", "https://www.maatfeed.com", "https://maatfeed.vercel.app", "https://maat-feed.vercel.app"]
@@ -100,7 +98,7 @@ export function createApp() {
   // Direct sitemap route
   app.get("/sitemap.xml", async (_req, res) => {
     try {
-      const BASE_URL = env.APP_BASE_URL || "https://www.maatfeed.com";
+      const BASE_URL = env.APP_BASE_URL || "https://maatfeed.com";
       
       interface SitemapUrl {
         loc: string;
@@ -174,7 +172,7 @@ ${urlEntries}
           changefreq: "hourly",
           priority: 1.0,
           image: {
-            loc: `${BASE_URL}/og-image.png`,
+            loc: `${BASE_URL}/og-image.webp`,
             title: "MAATFEED - Le feed africain du savoir",
             caption: "Plateforme de débats et de découverte du savoir africain"
           },
@@ -210,6 +208,31 @@ ${urlEntries}
             { hreflang: "fr", href: `${BASE_URL}/audio` },
             { hreflang: "en", href: `${BASE_URL}/audio` }
           ]
+        },
+        {
+          loc: `${BASE_URL}/savoirs-africains`,
+          changefreq: "weekly",
+          priority: 0.9
+        },
+        {
+          loc: `${BASE_URL}/spiritualite-africaine`,
+          changefreq: "weekly",
+          priority: 0.9
+        },
+        {
+          loc: `${BASE_URL}/philosophie-africaine`,
+          changefreq: "weekly",
+          priority: 0.8
+        },
+        {
+          loc: `${BASE_URL}/histoire-africaine`,
+          changefreq: "weekly",
+          priority: 0.8
+        },
+        {
+          loc: `${BASE_URL}/kemet`,
+          changefreq: "weekly",
+          priority: 0.8
         }
       ];
 
@@ -237,48 +260,6 @@ ${urlEntries}
             loc: (content as any).thumbnailUrl,
             title: (content as any).title || "Contenu MAATFEED",
             caption: (content as any).description || "Découvrez ce contenu sur MAATFEED"
-          } : undefined
-        });
-      }
-
-      // Add community posts (discussions, questions)
-      const communityPosts = await CommunityPostModel.find({
-        isHidden: false,
-        type: { $in: ["discussion", "question"] }
-      })
-        .sort({ createdAt: -1 })
-        .limit(500)
-        .select("_id updatedAt createdAt title content")
-        .lean();
-
-      for (const post of communityPosts) {
-        const lastmod = (post.updatedAt || post.createdAt).toISOString().split('T')[0];
-        urls.push({
-          loc: `${BASE_URL}/community/post/${(post._id as any).toString()}`,
-          lastmod,
-          changefreq: "daily",
-          priority: 0.5
-        });
-      }
-
-      // Add audio tracks
-      const audioTracks = await AudioTrackModel.find({ isPublic: true })
-        .sort({ updatedAt: -1 })
-        .limit(200)
-        .select("_id updatedAt createdAt title thumbnailUrl")
-        .lean();
-
-      for (const track of audioTracks) {
-        const lastmod = (track.updatedAt || track.createdAt).toISOString().split('T')[0];
-        urls.push({
-          loc: `${BASE_URL}/audio/track/${(track._id as any).toString()}`,
-          lastmod,
-          changefreq: "weekly",
-          priority: 0.4,
-          image: (track as any).thumbnailUrl ? {
-            loc: (track as any).thumbnailUrl,
-            title: (track as any).title || "Piste Audio MAATFEED",
-            caption: "Écoutez cette piste audio sur MAATFEED"
           } : undefined
         });
       }

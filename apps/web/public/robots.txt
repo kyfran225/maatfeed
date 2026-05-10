@@ -14,6 +14,11 @@ Allow: /community
 Allow: /audio
 Allow: /content/
 Allow: /debate/
+Allow: /savoirs-africains
+Allow: /spiritualite-africaine
+Allow: /philosophie-africaine
+Allow: /histoire-africaine
+Allow: /kemet
 
 # ============================================
 # PAGES À NE PAS INDEXER (noindex)
@@ -105,6 +110,7 @@ Crawl-delay: 2
 # SITEMAPS
 # ============================================
 Sitemap: https://maatfeed.com/sitemap.xml
+Sitemap: https://maatfeed.com/api/sitemap.xml
 
 # Sitemaps additionnels (quand disponibles)
 # Sitemap: https://maatfeed.com/sitemap-videos.xml

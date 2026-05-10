@@ -2,11 +2,12 @@ import { Link } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import { getAvatarById } from "@maat/shared";
 import { NotificationsBell } from "../notifications/NotificationsBell";
-import { Home, Headphones, MessageCircle, Search } from "lucide-react";
+import { BookOpen, Home, Headphones, MessageCircle, Search } from "lucide-react";
 
 const desktopNavItems = [
   { to: "/", label: "Accueil", Icon: Home },
   { to: "/explore", label: "Découvrir", Icon: Search },
+  { to: "/savoirs-africains", label: "Savoirs", Icon: BookOpen },
   { to: "/community", label: "Échanges", Icon: MessageCircle },
   { to: "/audio", label: "Audio", Icon: Headphones },
 ];

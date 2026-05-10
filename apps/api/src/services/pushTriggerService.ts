@@ -7,7 +7,7 @@ import { sendPushToMany, type PushNotificationPayload } from "./webPushService.j
 import { notifyTrendingContentUsers } from "./notificationService.js";
 import { logger } from "../config/logger.js";
 
-const BASE_URL = process.env.APP_BASE_URL || "https://www.maatfeed.com";
+const BASE_URL = process.env.APP_BASE_URL || "https://maatfeed.com";
 
 interface ParentCommentForNotification {
   userId?: { toString(): string } | null;

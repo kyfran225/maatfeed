@@ -71,7 +71,7 @@ services:
       - key: FROM_EMAIL
         value: "Maatfeed <no-reply@maatfeed.com>"
       - key: APP_BASE_URL
-        value: https://www.maatfeed.com
+        value: https://maatfeed.com
       - key: API_BASE_URL
         value: https://api.maatfeed.com
       - key: CLOUDINARY_CLOUD_NAME
@@ -89,9 +89,9 @@ services:
       - key: PAYMENT_PROVIDER
         value: paystack
       - key: PAYMENT_SUCCESS_URL
-        value: https://www.maatfeed.com/profile
+        value: https://maatfeed.com/profile
       - key: PAYMENT_CANCEL_URL
-        value: https://www.maatfeed.com/profile
+        value: https://maatfeed.com/profile
       - key: VAPID_PUBLIC_KEY
         sync: false
       - key: VAPID_PRIVATE_KEY

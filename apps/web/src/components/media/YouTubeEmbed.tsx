@@ -78,6 +78,50 @@ export function isYouTubeShortUrl(url?: string | null): boolean {
   }
 }
 
+export function getYouTubeFormatThumbnailUrls(videoUrl?: string | null, thumbnailUrl?: string | null): string[] {
+  const urls = [thumbnailUrl].filter((url): url is string => Boolean(url));
+
+  return Array.from(new Set(urls));
+}
+
+export function isPortraitImageSize(width: number, height: number): boolean {
+  return width > 0 && height > 0 && height / width >= 1.15;
+}
+
+export function useIsYouTubeShortFormVideo(videoUrl?: string | null, thumbnailUrl?: string | null): boolean {
+  const isShortUrl = isYouTubeShortUrl(videoUrl);
+  const [isShortForm, setIsShortForm] = useState(isShortUrl);
+
+  useEffect(() => {
+    setIsShortForm(isShortUrl);
+
+    if (isShortUrl || !extractYouTubeVideoId(videoUrl ?? "")) {
+      return;
+    }
+
+    let isCancelled = false;
+    const candidates = getYouTubeFormatThumbnailUrls(videoUrl, thumbnailUrl);
+
+    candidates.forEach((candidateUrl) => {
+      const image = new Image();
+      image.onload = () => {
+        if (isCancelled) return;
+
+        if (isPortraitImageSize(image.naturalWidth, image.naturalHeight)) {
+          setIsShortForm(true);
+        }
+      };
+      image.src = candidateUrl;
+    });
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [isShortUrl, thumbnailUrl, videoUrl]);
+
+  return isShortForm;
+}
+
 export function buildYouTubeEmbedUrl(videoId: string, options: YouTubeEmbedOptions = {}) {
   const mergedOptions = { ...YOUTUBE_DEFAULT_OPTIONS, ...options };
   const params = new URLSearchParams({

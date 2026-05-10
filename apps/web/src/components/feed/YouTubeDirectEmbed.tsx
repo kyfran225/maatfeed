@@ -181,7 +181,7 @@ export const YouTubeDirectEmbed = forwardRef<YouTubePlayerRef, YouTubeDirectEmbe
       const ytPlayer = new window.YT.Player(playerId, {
         videoId: videoId,
         playerVars: {
-          autoplay: 1,
+          autoplay: 0,
           playsinline: 1,
           loop: 1,
           playlist: videoId,
@@ -392,7 +392,7 @@ export const YouTubeDirectEmbed = forwardRef<YouTubePlayerRef, YouTubeDirectEmbe
         <iframe
           ref={iframeRef}
           src={buildYouTubeEmbedUrl(videoId, {
-            autoplay: true,
+            autoplay: false,
             controls: false,
             loop: true,
             fullscreen: false,

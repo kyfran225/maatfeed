@@ -43,8 +43,8 @@ export const siteSEO: SEOConfig = {
   // Identité
   siteName: 'MAATFEED',
   siteTagline: 'Savoirs africains, débats et audio',
-  defaultTitle: 'MAATFEED - Savoirs africains, débats et audio',
-  defaultDescription: 'MAATFEED rassemble contenus, audio et discussions autour des savoirs africains.',
+  defaultTitle: 'MAATFEED - Savoirs africains et spiritualité africaine',
+  defaultDescription: 'MAATFEED rassemble contenus, audio et discussions autour des savoirs africains, de la spiritualité africaine, de Kemet, de l’histoire et de la philosophie africaine.',
   
   // URLs - IMPORTANT: Adapter selon l'environnement
   siteUrl: 'https://maatfeed.com',
@@ -77,9 +77,9 @@ export const siteSEO: SEOConfig = {
 // Configuration par type de page pour un SEO granulaire
 export const pageSEO = {
   home: {
-    title: 'MAATFEED - Savoirs africains, débats et audio',
-    description: 'Contenus, audio et discussions autour des savoirs africains.',
-    keywords: ['savoir africain', 'débat', 'spiritualité', 'histoire', 'kemet'],
+    title: 'MAATFEED - Savoirs africains et spiritualité africaine',
+    description: 'Contenus, audio et discussions autour des savoirs africains, de la spiritualité africaine, de Kemet, de l’histoire et de la philosophie africaine.',
+    keywords: ['savoirs africains', 'savoir africain', 'spiritualité africaine', 'débat', 'histoire africaine', 'kemet', 'philosophie africaine'],
     robots: 'index, follow',
     priority: '1.0',
     changefreq: 'daily',

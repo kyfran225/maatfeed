@@ -2,7 +2,7 @@ import { Router } from "express";
 
 const router = Router();
 
-const BASE_URL = process.env.APP_BASE_URL || "https://www.maatfeed.com";
+const BASE_URL = process.env.APP_BASE_URL || "https://maatfeed.com";
 
 function generateRobotsTxt(): string {
   return `User-agent: *

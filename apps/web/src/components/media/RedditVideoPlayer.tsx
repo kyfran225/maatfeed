@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Play, Pause, Volume2, VolumeX, Settings, Share2, Maximize, Minimize } from 'lucide-react';
 import { TouchFeedback } from '../ui/TouchFeedback';
-import { TikTokEmbed } from '../feed/TikTokEmbed';
+import { TikTokEmbed, TikTokEmbedRef } from '../feed/TikTokEmbed';
 import { extractYouTubeVideoId, YouTubeEmbed } from './YouTubeEmbed';
 import { useVideoPlayer } from '../../contexts/VideoPlayerContext';
 
@@ -51,6 +51,7 @@ export function RedditVideoPlayer({
 }: RedditVideoPlayerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const tiktokPlayerRef = useRef<TikTokEmbedRef>(null);
   const progressRef = useRef<HTMLDivElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -296,6 +297,25 @@ export function RedditVideoPlayer({
     onEnded?.();
   }, [onEnded]);
 
+  const pauseMedia = useCallback(() => {
+    if (isDirectVideo || isAudioFile) {
+      videoRef.current?.pause();
+    }
+
+    if (isTiktok) {
+      tiktokPlayerRef.current?.pause();
+    }
+
+    setShouldAutoPlay(false);
+    setIsPlaying(false);
+    onPause?.();
+  }, [isAudioFile, isDirectVideo, isTiktok, onPause]);
+
+  useEffect(() => {
+    if (autoPlay) return;
+    pauseMedia();
+  }, [autoPlay, pauseMedia]);
+
   useEffect(() => {
     if (!autoPlay || (!isDirectVideo && !isTiktok && !isYoutube) || !containerRef.current) return;
 
@@ -313,23 +333,13 @@ export function RedditVideoPlayer({
           onPlay?.();
         }
       } else {
-        setShouldAutoPlay(false);
-        if (isDirectVideo) {
-          videoRef.current?.pause();
-        }
-        setIsPlaying(false);
-        if (isTiktok) {
-          onPause?.();
-        }
-        if (isYoutube) {
-          onPause?.();
-        }
+        pauseMedia();
       }
     }, { threshold: 0.6 });
 
     observer.observe(containerRef.current);
     return () => observer.disconnect();
-  }, [autoPlay, handlePlay, isDirectVideo, isPlaying, isTiktok, isYoutube, onPause, onPlay]);
+  }, [autoPlay, handlePlay, isDirectVideo, isPlaying, isTiktok, isYoutube, onPlay, pauseMedia]);
 
   useEffect(() => {
     return () => {
@@ -346,6 +356,7 @@ export function RedditVideoPlayer({
         tabIndex={0}
       >
         <TikTokEmbed
+          ref={tiktokPlayerRef}
           videoUrl={src}
           title={title || 'TikTok video'}
           className="w-full"
