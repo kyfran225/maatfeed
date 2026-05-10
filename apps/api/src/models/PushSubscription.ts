@@ -61,7 +61,6 @@ const pushSubscriptionSchema = new Schema<IPushSubscription>(
 
 // Index for efficient querying
 pushSubscriptionSchema.index({ userId: 1, isActive: 1 });
-pushSubscriptionSchema.index({ endpoint: 1 });
 pushSubscriptionSchema.index({ createdAt: -1 });
 
 export const PushSubscriptionModel =
