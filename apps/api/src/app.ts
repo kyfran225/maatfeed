@@ -116,9 +116,19 @@ export function createApp() {
         }[];
       }
 
+      function escapeXml(text: string): string {
+        if (!text) return "";
+        return text
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/\"/g, "&quot;")
+          .replace(/'/g, "&apos;");
+      }
+
       function generateSitemapXml(urls: SitemapUrl[]): string {
         const urlEntries = urls.map((url) => {
-          let xml = `  <url>\n    <loc>${url.loc}</loc>\n`;
+          let xml = `  <url>\n    <loc>${escapeXml(url.loc)}</loc>\n`;
           
           if (url.lastmod) {
             xml += `    <lastmod>${url.lastmod}</lastmod>\n`;
@@ -133,19 +143,19 @@ export function createApp() {
           // Add alternate language links
           if (url.alternate && url.alternate.length > 0) {
             url.alternate.forEach(alt => {
-              xml += `    <xhtml:link rel="alternate" hreflang="${alt.hreflang}" href="${alt.href}" />\n`;
+              xml += `    <xhtml:link rel="alternate" hreflang="${escapeXml(alt.hreflang)}" href="${escapeXml(alt.href)}" />\n`;
             });
           }
           
           // Add image
           if (url.image) {
             xml += `    <image:image>\n`;
-            xml += `      <image:loc>${url.image.loc}</image:loc>\n`;
+            xml += `      <image:loc>${escapeXml(url.image.loc)}</image:loc>\n`;
             if (url.image.title) {
-              xml += `      <image:title>${url.image.title}</image:title>\n`;
+              xml += `      <image:title>${escapeXml(url.image.title)}</image:title>\n`;
             }
             if (url.image.caption) {
-              xml += `      <image:caption>${url.image.caption}</image:caption>\n`;
+              xml += `      <image:caption>${escapeXml(url.image.caption)}</image:caption>\n`;
             }
             xml += `    </image:image>\n`;
           }
