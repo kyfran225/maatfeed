@@ -21,6 +21,15 @@ interface SitemapUrl {
   }[];
 }
 
+function escapeXml(text: string): string {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
+}
+
 function generateSitemapXml(urls: SitemapUrl[]): string {
   const urlEntries = urls.map((url) => {
     let xml = `  <url>\n    <loc>${url.loc}</loc>\n`;
@@ -47,10 +56,10 @@ function generateSitemapXml(urls: SitemapUrl[]): string {
       xml += `    <image:image>\n`;
       xml += `      <image:loc>${url.image.loc}</image:loc>\n`;
       if (url.image.title) {
-        xml += `      <image:title>${url.image.title}</image:title>\n`;
+        xml += `      <image:title>${escapeXml(url.image.title)}</image:title>\n`;
       }
       if (url.image.caption) {
-        xml += `      <image:caption>${url.image.caption}</image:caption>\n`;
+        xml += `      <image:caption>${escapeXml(url.image.caption)}</image:caption>\n`;
       }
       xml += `    </image:image>\n`;
     }
