@@ -169,6 +169,7 @@ ${urlEntries}
       const STATIC_PAGES: SitemapUrl[] = [
         {
           loc: `${BASE_URL}/`,
+          lastmod: new Date().toISOString().split('T')[0],
           changefreq: "hourly",
           priority: 1.0,
           image: {
@@ -184,6 +185,7 @@ ${urlEntries}
         },
         {
           loc: `${BASE_URL}/explore`,
+          lastmod: new Date().toISOString().split('T')[0],
           changefreq: "hourly",
           priority: 0.9,
           alternate: [
@@ -211,26 +213,31 @@ ${urlEntries}
         },
         {
           loc: `${BASE_URL}/savoirs-africains`,
+          lastmod: new Date().toISOString().split('T')[0],
           changefreq: "weekly",
           priority: 0.9
         },
         {
           loc: `${BASE_URL}/spiritualite-africaine`,
+          lastmod: new Date().toISOString().split('T')[0],
           changefreq: "weekly",
           priority: 0.9
         },
         {
           loc: `${BASE_URL}/philosophie-africaine`,
+          lastmod: new Date().toISOString().split('T')[0],
           changefreq: "weekly",
           priority: 0.8
         },
         {
           loc: `${BASE_URL}/histoire-africaine`,
+          lastmod: new Date().toISOString().split('T')[0],
           changefreq: "weekly",
           priority: 0.8
         },
         {
           loc: `${BASE_URL}/kemet`,
+          lastmod: new Date().toISOString().split('T')[0],
           changefreq: "weekly",
           priority: 0.8
         }
