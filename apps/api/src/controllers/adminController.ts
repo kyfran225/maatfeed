@@ -13,6 +13,8 @@ import { getAdminDashboardSummary } from "../services/learningAnalyticsService.j
 import { getQueueOptions } from "../queues/queueFactory.js";
 import { QUEUE_NAMES } from "../queues/queueNames.js";
 import { env } from "../config/env.js";
+import { invalidateFeedCache } from "../services/feedService.js";
+import { AudioTrackModel } from "../models/AudioTrack.js";
 
 function ensureAdmin(response: Response) {
   if (response.locals.auth?.role !== "admin") {
@@ -686,6 +688,155 @@ export async function refreshFeedCacheController(request: Request, response: Res
     response.status(500).json({
       success: false,
       error: error instanceof Error ? error.message : "Failed to trigger feed cache refresh"
+    });
+  }
+}
+
+export async function deleteContentController(request: Request, response: Response) {
+  if (!ensureAdmin(response)) {
+    return;
+  }
+
+  const userId = response.locals.auth?.userId;
+  const contentId = String(request.body?.contentId ?? "").trim();
+  const reason = String(request.body?.reason ?? "admin_deleted").trim() || "admin_deleted";
+
+  if (!userId) {
+    response.status(401).json({
+      success: false,
+      error: "Authentication required"
+    });
+    return;
+  }
+
+  if (!contentId) {
+    response.status(400).json({
+      success: false,
+      error: "contentId is required"
+    });
+    return;
+  }
+
+  if (!mongoose.Types.ObjectId.isValid(contentId)) {
+    response.status(400).json({
+      success: false,
+      error: "contentId is invalid"
+    });
+    return;
+  }
+
+  try {
+    const updated = await ContentModel.findOneAndUpdate(
+      { _id: contentId, isDeleted: { $ne: true } },
+      {
+        $set: {
+          isDeleted: true,
+          deletedAt: new Date(),
+          deletedBy: new mongoose.Types.ObjectId(userId),
+          deleteReason: reason
+        }
+      },
+      { new: true }
+    ).lean();
+
+    if (!updated) {
+      response.status(404).json({
+        success: false,
+        error: "Content not found"
+      });
+      return;
+    }
+
+    await invalidateFeedCache(contentId);
+
+    response.status(200).json({
+      success: true,
+      data: {
+        contentId
+      },
+      meta: {
+        timestamp: new Date().toISOString()
+      }
+    });
+  } catch (error) {
+    logger.error({ error, contentId }, "Failed to delete content");
+    response.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to delete content"
+    });
+  }
+}
+
+export async function deleteAudioTrackController(request: Request, response: Response) {
+  if (!ensureAdmin(response)) {
+    return;
+  }
+
+  const userId = response.locals.auth?.userId;
+  const trackId = String(request.body?.trackId ?? "").trim();
+  const reason = String(request.body?.reason ?? "admin_deleted").trim() || "admin_deleted";
+
+  if (!userId) {
+    response.status(401).json({
+      success: false,
+      error: "Authentication required"
+    });
+    return;
+  }
+
+  if (!trackId) {
+    response.status(400).json({
+      success: false,
+      error: "trackId is required"
+    });
+    return;
+  }
+
+  if (!mongoose.Types.ObjectId.isValid(trackId)) {
+    response.status(400).json({
+      success: false,
+      error: "trackId is invalid"
+    });
+    return;
+  }
+
+  try {
+    const updated = await AudioTrackModel.findOneAndUpdate(
+      { _id: trackId, isDeleted: { $ne: true } },
+      {
+        $set: {
+          isDeleted: true,
+          isPublic: false,
+          deletedAt: new Date(),
+          deletedBy: new mongoose.Types.ObjectId(userId),
+          deleteReason: reason
+        }
+      },
+      { new: true }
+    ).lean();
+
+    if (!updated) {
+      response.status(404).json({
+        success: false,
+        error: "Track not found"
+      });
+      return;
+    }
+
+    response.status(200).json({
+      success: true,
+      data: {
+        trackId
+      },
+      meta: {
+        timestamp: new Date().toISOString()
+      }
+    });
+  } catch (error) {
+    logger.error({ error, trackId }, "Failed to delete audio track");
+    response.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to delete audio track"
     });
   }
 }

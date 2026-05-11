@@ -306,7 +306,8 @@ export const TikTokEmbed = forwardRef<TikTokEmbedRef, TikTokEmbedProps>(function
           style={{
             maxWidth: '605px',
             minWidth: '325px',
-            margin: '0 auto'
+            margin: '0 auto',
+            pointerEvents: loading ? 'none' : 'auto'
           }}
         >
           {loading && (
@@ -346,27 +347,7 @@ export const TikTokEmbed = forwardRef<TikTokEmbedRef, TikTokEmbedProps>(function
             callbacksRef.current.onError?.(message);
           }}
         />
-        {(!mediaSoundEnabled || !tiktokSoundConfirmed) && (
-          <button
-            type="button"
-            aria-label="Activer le son TikTok"
-            title="Activer le son"
-            className="absolute right-3 top-20 z-20 inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/20 bg-black/60 text-white shadow-lg backdrop-blur transition hover:bg-black/75"
-            onClick={(event) => {
-              event.preventDefault();
-              event.stopPropagation();
-              activateSoundPreference();
-            }}
-            onPointerDown={(event) => {
-              event.preventDefault();
-              event.stopPropagation();
-              activateSoundPreference();
-            }}
-          >
-            <Volume2 className="h-5 w-5" aria-hidden="true" />
-          </button>
-        )}
-        </div>
+                </div>
       </div>
     </>
   );

@@ -13,7 +13,7 @@ export default function SeoTopicPage() {
   }
 
   const canonical = `https://maatfeed.com/${topic.slug}`;
-  const exploreUrl = `/explore?q=${encodeURIComponent(topic.relatedQueries[0] ?? topic.title)}`;
+  const exploreUrl = `/?q=${encodeURIComponent(topic.relatedQueries[0] ?? topic.title)}`;
 
   return (
     <>
@@ -99,7 +99,7 @@ export default function SeoTopicPage() {
               {topic.relatedQueries.map((query) => (
                 <Link
                   key={query}
-                  to={`/explore?q=${encodeURIComponent(query)}`}
+                  to={`/?q=${encodeURIComponent(query)}`}
                   className="inline-flex items-center gap-2 rounded-md border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-sand/72 transition hover:bg-white/[0.08] hover:text-white"
                 >
                   {query}

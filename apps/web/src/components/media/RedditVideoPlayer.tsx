@@ -317,29 +317,18 @@ export function RedditVideoPlayer({
   }, [autoPlay, pauseMedia]);
 
   useEffect(() => {
-    if (!autoPlay || (!isDirectVideo && !isTiktok && !isYoutube) || !containerRef.current) return;
+    if (!containerRef.current) return;
 
     const observer = new IntersectionObserver((entries) => {
       if (!entries[0]) return;
-      if (entries[0].isIntersecting) {
-        setShouldAutoPlay(true);
-        if (isDirectVideo && !isPlaying) {
-          void handlePlay();
-        } else if (isTiktok) {
-          setIsPlaying(true);
-          onPlay?.();
-        } else if (isYoutube) {
-          setIsPlaying(true);
-          onPlay?.();
-        }
-      } else {
+      if (!entries[0].isIntersecting) {
         pauseMedia();
       }
     }, { threshold: 0.6 });
 
     observer.observe(containerRef.current);
     return () => observer.disconnect();
-  }, [autoPlay, handlePlay, isDirectVideo, isPlaying, isTiktok, isYoutube, onPlay, pauseMedia]);
+  }, [pauseMedia]);
 
   useEffect(() => {
     return () => {
@@ -360,7 +349,7 @@ export function RedditVideoPlayer({
           videoUrl={src}
           title={title || 'TikTok video'}
           className="w-full"
-          options={{ autoplay: autoPlay && shouldAutoPlay }}
+          options={{ autoplay: false }}
           onReady={() => setIsLoading(false)}
           onPlay={() => {
             setIsPlaying(true);

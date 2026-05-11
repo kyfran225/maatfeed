@@ -11,6 +11,7 @@ import { TouchFeedback } from "../components/ui/TouchFeedback";
 import { LoadingSpinner } from "../components/ui/LoadingSpinner";
 import { CONTENT_BUCKET_LABELS } from "@maat/shared";
 import { useVideoPlayer } from "../contexts/VideoPlayerContext";
+import { AdminDeleteButton } from "../components/admin/AdminDeleteButton";
 import { RedditVideoPlayer } from "../components/media/RedditVideoPlayer";
 import { extractYouTubeVideoId, useIsYouTubeShortFormVideo, YouTubeEmbed } from "../components/media/YouTubeEmbed";
 import { preloadMediaBatch, preloadMediaCandidate } from "../utils/mediaPreload";
@@ -95,12 +96,14 @@ function ExploreContentCard({
   onOpen,
   allowAutoPlay,
   registerAutoPlayCandidate,
+  onDeleteSuccess,
 }: {
   item: ContentItem;
   index: number;
   onOpen: (contentId: string) => void;
   allowAutoPlay: boolean;
   registerAutoPlayCandidate?: (key: string, element: HTMLElement | null) => void;
+  onDeleteSuccess?: (contentId: string) => void;
 }) {
   const [directVideoOrientation, setDirectVideoOrientation] = useState<'portrait' | 'landscape' | 'square' | null>(null);
   const { mediaSoundEnabled, activateMediaSound } = useVideoPlayer();
@@ -217,6 +220,7 @@ function ExploreContentCard({
             <Info className="h-4 w-4" />
             Détail
           </button>
+          <AdminDeleteButton contentId={item.id} title={item.title} onDeleteSuccess={onDeleteSuccess} />
         </div>
       </div>
     </motion.div>
@@ -238,6 +242,7 @@ export default function ExplorePage() {
   const [searchResults, setSearchResults] = useState<ContentItem[]>([]);
   const [showFilters, setShowFilters] = useState(false);
   const [pendingRestore, setPendingRestore] = useState<{ contentId?: string; scrollY?: number } | null>(null);
+  const [deletedContentIds, setDeletedContentIds] = useState<Set<string>>(new Set());
   const routeRestoreHandledRef = useRef(false);
   const isDesktopExplore = useIsDesktopExplore();
   const allowAutoPlay = !isDesktopExplore;
@@ -321,6 +326,10 @@ export default function ExplorePage() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleContentDeleted = (contentId: string) => {
+    setDeletedContentIds((current) => new Set([...current, contentId]));
   };
 
   const handleSearch = async (query: string) => {
@@ -538,7 +547,7 @@ export default function ExplorePage() {
               <LoadingState message="Recherche en cours..." />
             ) : searchResults.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {searchResults.map((item, index) => (
+                {searchResults.filter(item => !deletedContentIds.has(item.id)).map((item, index) => (
                   <ExploreContentCard
                     key={item.id}
                     item={item}
@@ -546,6 +555,7 @@ export default function ExplorePage() {
                     onOpen={handleCardClick}
                     allowAutoPlay={allowAutoPlay && activeAutoPlayId === item.id}
                     registerAutoPlayCandidate={registerAutoPlayElement}
+                    onDeleteSuccess={handleContentDeleted}
                   />
                 ))}
               </div>
@@ -558,7 +568,7 @@ export default function ExplorePage() {
                   </p>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {suggestedItems.map((item, index) => (
+                  {suggestedItems.filter(item => !deletedContentIds.has(item.id)).map((item, index) => (
                     <ExploreContentCard
                       key={item.id}
                       item={item}
@@ -566,6 +576,7 @@ export default function ExplorePage() {
                       onOpen={handleCardClick}
                       allowAutoPlay={allowAutoPlay && activeAutoPlayId === item.id}
                       registerAutoPlayCandidate={registerAutoPlayElement}
+                      onDeleteSuccess={handleContentDeleted}
                     />
                   ))}
                 </div>
@@ -599,7 +610,7 @@ export default function ExplorePage() {
                   {selectedBucket ? BUCKETS.find(b => b.id === selectedBucket)?.name : 'Tendances'}
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {trendingContent.items.map((item, index) => (
+                  {trendingContent.items.filter(item => !deletedContentIds.has(item.id)).map((item, index) => (
                     <ExploreContentCard
                       key={item.id}
                       item={item}
@@ -607,6 +618,7 @@ export default function ExplorePage() {
                       onOpen={handleCardClick}
                       allowAutoPlay={allowAutoPlay && activeAutoPlayId === item.id}
                       registerAutoPlayCandidate={registerAutoPlayElement}
+                      onDeleteSuccess={handleContentDeleted}
                     />
                   ))}
                 </div>

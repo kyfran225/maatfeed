@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Link, useLocation } from "react-router-dom";
-import { Check, Play, RotateCcw, Search, HelpCircle, Volume2 } from "lucide-react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Check, Play, RotateCcw, Search, HelpCircle, Volume2, X } from "lucide-react";
 import { SEO } from "../components/SEO";
 import { useAuth } from "../hooks/useAuth";
 import { useInfiniteGlobalFeed } from "../hooks/useFeed";
@@ -8,6 +8,7 @@ import { useNearViewport } from "../hooks/useNearViewport";
 import { useSingleActiveMedia } from "../hooks/useActiveMedia";
 import { useVideoPlayer } from "../contexts/VideoPlayerContext";
 import type { FeedResponse } from "../services/feedService";
+import { contentService } from "../services/contentService";
 import {
   getLearningProgress,
   updateLearningProgress,
@@ -19,12 +20,78 @@ import { LoadingState } from "../components/ui/LoadingState";
 import { QuizModal } from "../components/modals/QuizModal";
 import { SponsorCard } from "../components/feed/SponsorCard";
 import { QuizRecapCard } from "../components/feed/QuizRecapCard";
+import { AdminDeleteButton } from "../components/admin/AdminDeleteButton";
 import { getActiveSponsors, incrementSponsorStats, type Sponsor } from "../services/sponsorService";
 import { RedditVideoPlayer } from "../components/media/RedditVideoPlayer";
 import { extractYouTubeVideoId, useIsYouTubeShortFormVideo, YouTubeEmbed } from "../components/media/YouTubeEmbed";
 import { preloadMediaBatch, preloadMediaCandidate } from "../utils/mediaPreload";
 import type { ContentItem } from "../services/contentService";
 import { seoTopics } from "../config/seoTopics";
+
+// YouTubeVideoWrapper component with intersection observer for pause when not visible
+function YouTubeVideoWrapper({ 
+  videoUrl, 
+  title, 
+  allowAutoPlay, 
+  mediaSoundEnabled, 
+  loading 
+}: { 
+  videoUrl: string; 
+  title: string; 
+  allowAutoPlay: boolean; 
+  mediaSoundEnabled: boolean; 
+  loading: "eager" | "lazy";
+}) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [isVisible, setIsVisible] = useState(true);
+
+  useEffect(() => {
+    if (!containerRef.current) return;
+
+    const observer = new IntersectionObserver(([entry]) => {
+      const nextIsVisible = Boolean(entry?.isIntersecting);
+      setIsVisible(nextIsVisible);
+    }, { threshold: 0.6 });
+
+    observer.observe(containerRef.current);
+    return () => observer.disconnect();
+  }, []);
+
+  // Only render YouTubeEmbed when visible to stop playback when not visible
+  if (!isVisible) {
+    return (
+      <div ref={containerRef} className="relative h-full w-full">
+        <div className="w-full h-full bg-black/80 flex items-center justify-center">
+          <div className="text-white/60 text-center">
+            <div className="w-16 h-16 rounded-full bg-white/10 flex items-center justify-center mx-auto mb-2">
+              <Play className="w-8 h-8 text-white/60 ml-1" />
+            </div>
+            <p className="text-sm">Vidéo en pause</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div ref={containerRef} className="relative h-full w-full">
+      <YouTubeEmbed
+        videoUrl={videoUrl}
+        title={title}
+        layout="fill"
+        loading={loading}
+        autoplayWhenVisible={allowAutoPlay}
+        options={{
+          controls: true,
+          autoplay: false,
+          muted: allowAutoPlay || !mediaSoundEnabled,
+          enableJsApi: true,
+          fullscreen: true
+        }}
+      />
+    </div>
+  );
+}
 
 type FeedItem = FeedResponse["items"][number];
 type LearningStatus = "new" | "learned" | "review";
@@ -105,6 +172,33 @@ function feedItemToContentSnapshot(item: FeedItem): ContentItem {
   };
 }
 
+function contentItemToFeedItem(item: ContentItem): FeedItem {
+  return {
+    id: item.id,
+    title: item.title,
+    description: item.description,
+    summary: item.description,
+    mediaUrl: item.videoUrl || item.audioUrl || "",
+    thumbnailUrl: item.thumbnailUrl,
+    mediaType: item.videoUrl ? "video" : "audio",
+    creator: {
+      name: item.author,
+      handle: item.author
+    },
+    sourceProvider: "youtube", // Default value, could be enhanced
+    bucket: item.bucket,
+    tags: item.tags || [],
+    transcript: "", // Empty transcript for search results
+    scores: {
+      finalScore: item.score || 0,
+      likes: item.likes || 0,
+      comments: item.comments || 0,
+      views: item.views || 0
+    },
+    createdAt: item.createdAt || new Date().toISOString()
+  };
+}
+
 function FeedItemCard({
   item,
   status,
@@ -113,6 +207,7 @@ function FeedItemCard({
   registerAutoPlayCandidate,
   onSetStatus,
   onOpenQuiz,
+  onDeleteSuccess,
 }: {
   item: FeedItem;
   status?: LearningStatus;
@@ -121,6 +216,7 @@ function FeedItemCard({
   registerAutoPlayCandidate?: (key: string, element: HTMLElement | null) => void;
   onSetStatus: (status: LearningStatus) => void;
   onOpenQuiz: (contentId: string) => void;
+  onDeleteSuccess?: (contentId: string) => void;
 }) {
   const location = useLocation();
   const [directVideoOrientation, setDirectVideoOrientation] = useState<'portrait' | 'landscape' | 'square' | null>(null);
@@ -166,37 +262,13 @@ function FeedItemCard({
         {item.mediaType === 'video' && item.mediaUrl && shouldMountMedia ? (
           <div className="h-full w-full">
             {isYouTubeVideo ? (
-              <div className="relative h-full w-full">
-                <YouTubeEmbed
-                  videoUrl={item.mediaUrl}
-                  title={item.title}
-                  layout="fill"
-                  loading={eagerMedia || allowAutoPlay ? "eager" : "lazy"}
-                  autoplayWhenVisible={allowAutoPlay}
-                  options={{
-                    controls: true,
-                    autoplay: false,
-                    muted: allowAutoPlay || !mediaSoundEnabled,
-                    enableJsApi: true,
-                    fullscreen: true
-                  }}
-                />
-                {allowAutoPlay && !mediaSoundEnabled && (
-                  <button
-                    type="button"
-                    aria-label="Activer le son pour toutes les vidéos"
-                    title="Activer le son"
-                    className="absolute right-3 top-3 z-10 inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/20 bg-black/55 text-white backdrop-blur transition hover:bg-black/70"
-                    onClick={(event) => {
-                      event.preventDefault();
-                      event.stopPropagation();
-                      activateMediaSound();
-                    }}
-                  >
-                    <Volume2 className="h-5 w-5" aria-hidden="true" />
-                  </button>
-                )}
-              </div>
+              <YouTubeVideoWrapper
+                videoUrl={item.mediaUrl}
+                title={item.title}
+                allowAutoPlay={allowAutoPlay}
+                mediaSoundEnabled={mediaSoundEnabled}
+                loading={eagerMedia || allowAutoPlay ? "eager" : "lazy"}
+              />
             ) : (
               <RedditVideoPlayer
                 src={item.mediaUrl}
@@ -293,6 +365,7 @@ function FeedItemCard({
             <HelpCircle className="h-4 w-4" aria-hidden="true" />
             Vérifier
           </button>
+          <AdminDeleteButton contentId={item.id} title={item.title} onDeleteSuccess={onDeleteSuccess} />
         </div>
       </div>
     </article>
@@ -301,10 +374,17 @@ function FeedItemCard({
 
 export function FeedPage() {
   const location = useLocation();
+  const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
   const feedRestoreHandledRef = useRef(false);
   const isDesktopFeed = useIsDesktopFeed();
+  const initialUrlQuery = typeof window !== "undefined"
+    ? new URLSearchParams(window.location.search).get("q") ?? ""
+    : "";
+  const [searchQuery, setSearchQuery] = useState(initialUrlQuery);
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchResults, setSearchResults] = useState<ContentItem[]>([]);
   const {
     data,
     isLoading,
@@ -314,19 +394,101 @@ export function FeedPage() {
     hasNextPage,
     isFetchingNextPage
   } = useInfiniteGlobalFeed();
-  const items = useMemo(
-    () => data?.pages.flatMap((page) => page.items).filter((item) => item?.id) ?? [],
-    [data]
-  );
-  const contentIds = useMemo(() => items.map((item) => item.id), [items]);
   const [learningState, setLearningState] = useState<LearningState>({});
   const [serverSummary, setServerSummary] = useState<LearningSummary | null>(null);
   const [quizContentId, setQuizContentId] = useState<string | null>(null);
   const [sponsors, setSponsors] = useState<Sponsor[]>([]); // Chargement depuis l'API
+  const [deletedContentIds, setDeletedContentIds] = useState<Set<string>>(new Set());
+  const [showScrollIndicator, setShowScrollIndicator] = useState(false);
+  
+  const items = useMemo(
+    () => data?.pages.flatMap((page) => page.items).filter((item) => item?.id && !deletedContentIds.has(item.id)) ?? [],
+    [data, deletedContentIds]
+  );
+  const contentIds = useMemo(() => items.map((item) => item.id), [items]);
   const { activeKey: activeAutoPlayId, registerElement: registerAutoPlayElement } = useSingleActiveMedia<string>({
     enabled: !isDesktopFeed,
     minimumVisibleRatio: 0.6
   });
+
+  const handleContentDeleted = (contentId: string) => {
+    setDeletedContentIds((current) => new Set([...current, contentId]));
+  };
+
+  const handleSearch = async (query: string) => {
+    if (!query.trim()) {
+      setSearchResults([]);
+      return;
+    }
+
+    try {
+      setIsSearching(true);
+      const results = await contentService.searchContent(query);
+      if (results.items.length > 0) {
+        setSearchResults(results.items);
+        return;
+      }
+
+      const normalizedQuery = query
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "");
+      if (normalizedQuery !== query) {
+        const normalizedResults = await contentService.searchContent(normalizedQuery);
+        setSearchResults(normalizedResults.items);
+        return;
+      }
+
+      setSearchResults([]);
+    } catch (err) {
+      console.error('Search failed:', err);
+      setSearchResults([]);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  // Sync search query with URL params
+  useEffect(() => {
+    const urlQuery = new URLSearchParams(location.search).get("q") ?? "";
+    if (urlQuery !== searchQuery) {
+      setSearchQuery(urlQuery);
+    }
+  }, [location.search]);
+
+  // Update URL when search query changes
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const currentQuery = params.get("q") ?? "";
+    const trimmedQuery = searchQuery.trim();
+
+    if (trimmedQuery === currentQuery) {
+      return;
+    }
+
+    if (trimmedQuery) {
+      params.set("q", trimmedQuery);
+    } else {
+      params.delete("q");
+    }
+
+    const nextSearch = params.toString();
+    navigate(
+      {
+        pathname: location.pathname,
+        search: nextSearch ? `?${nextSearch}` : ""
+      },
+      { replace: true }
+    );
+  }, [location.pathname, location.search, navigate, searchQuery]);
+
+  // Debounced search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      handleSearch(searchQuery);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   useEffect(() => {
     setLearningState(readLearningState());
@@ -457,6 +619,22 @@ export function FeedPage() {
     });
   }, [items.length, location.state]);
 
+  // Scroll detection for search results context indicator
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollY = window.scrollY || document.documentElement.scrollTop;
+      const isScrolled = scrollY > 200; // Show indicator after scrolling 200px
+      const shouldShow = Boolean(searchQuery) && isScrolled;
+      
+      setShowScrollIndicator(shouldShow);
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll(); // Check initial state
+
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [searchQuery]);
+
   const localMarkedCount = useMemo(
     () => items.filter((item) => learningState[item.id] === "learned" || learningState[item.id] === "review").length,
     [items, learningState]
@@ -545,17 +723,35 @@ export function FeedPage() {
           </div>
 
           <div className="flex items-center gap-2">
-            <Link
-              to="/explore"
-              className="inline-flex items-center gap-2 rounded-md border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-sand/78 transition hover:bg-white/[0.08] hover:text-white"
-            >
-              <Search className="h-4 w-4" aria-hidden="true" />
-              Chercher
-            </Link>
-            {markedCount > 0 && (
-              <span className="rounded-md border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-sand/62">
-                {markedCount}
-              </span>
+            {/* markedCount supprimé pour nettoyer l'interface */}
+          </div>
+        </section>
+
+        {/* Search Bar */}
+        <section className="mb-6">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-sand/40" />
+            <input
+              type="text"
+              placeholder="Rechercher dans le feed..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-12 py-3 bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl text-white placeholder-sand/40 focus:outline-none focus:ring-2 focus:ring-orange/50 focus:border-transparent"
+            />
+            {searchQuery && !isSearching && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery("")}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-sand/40 hover:text-white transition-colors"
+                aria-label="Effacer la recherche"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            )}
+            {isSearching && (
+              <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                <div className="w-5 h-5 border-2 border-orange border-t-transparent rounded-full animate-spin"></div>
+              </div>
             )}
           </div>
         </section>
@@ -575,62 +771,104 @@ export function FeedPage() {
           </div>
         </section>
 
-        {isLoading && <LoadingState message="Chargement..." />}
-
-        {error && (
-          <ErrorState
-            message={`Le fil n'a pas pu se charger : ${error.message}`}
-            onRetry={() => void refetch()}
-          />
-        )}
-
-        {!isLoading && !error && items.length === 0 && (
-          <EmptyState
-            title="Aucun contenu disponible"
-            description="Reviens après la prochaine mise à jour."
-          />
-        )}
-
-        <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {feedWithInjections.map((item, index) => {
-            if ('type' in item && item.type === 'sponsor') {
-              return (
-                <SponsorCard
-                  key={`sponsor-${item.data.id}-${index}`}
-                  sponsor={item.data}
-                />
-              );
-            }
-
-            if ('type' in item && item.type === 'quiz_recap') {
-              return (
-                <QuizRecapCard
-                  key={`quiz-recap-${index}`}
-                  contentIds={item.contentIds}
-                  onComplete={() => {
-                    // Optional: track completion or refresh state
-                  }}
-                />
-              );
-            }
-
-            const feedItem = item as FeedItem;
-            const shouldAutoPlay = !isDesktopFeed && activeAutoPlayId === feedItem.id;
-
-            return (
-              <FeedItemCard
-                key={feedItem.id}
-                item={feedItem}
-                status={learningState[feedItem.id]}
-                allowAutoPlay={shouldAutoPlay}
-                eagerMedia={index < 3}
-                registerAutoPlayCandidate={registerAutoPlayElement}
-                onSetStatus={(status) => setStatus(feedItem.id, status)}
-                onOpenQuiz={(contentId) => setQuizContentId(contentId)}
+        {searchQuery ? (
+          // Search results view
+          <>
+            {isSearching ? (
+              <LoadingState message="Recherche en cours..." />
+            ) : searchResults.length > 0 ? (
+              <>
+                <h2 className="text-lg font-semibold text-white mb-4">
+                  Résultats pour "{searchQuery}"
+                </h2>
+                <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                  {searchResults.map((item, index) => {
+                    const feedItem = contentItemToFeedItem(item);
+                    return (
+                      <FeedItemCard
+                        key={`search-${item.id}`}
+                        item={feedItem}
+                        status={learningState[item.id]}
+                        allowAutoPlay={false}
+                        eagerMedia={index < 3}
+                        registerAutoPlayCandidate={registerAutoPlayElement}
+                        onSetStatus={(status) => setStatus(item.id, status)}
+                        onOpenQuiz={(contentId) => setQuizContentId(contentId)}
+                        onDeleteSuccess={handleContentDeleted}
+                      />
+                    );
+                  })}
+                </section>
+              </>
+            ) : (
+              <EmptyState
+                title="Aucun résultat"
+                description="Essaie un sujet plus précis."
               />
-            );
-          })}
-        </section>
+            )}
+          </>
+        ) : (
+          // Normal feed view
+          <>
+            {isLoading && <LoadingState message="Chargement..." />}
+
+            {error && (
+              <ErrorState
+                message={`Le fil n'a pas pu se charger : ${error.message}`}
+                onRetry={() => void refetch()}
+              />
+            )}
+
+            {!isLoading && !error && items.length === 0 && (
+              <EmptyState
+                title="Aucun contenu disponible"
+                description="Reviens après la prochaine mise à jour."
+              />
+            )}
+
+            <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+              {feedWithInjections.map((item, index) => {
+                if ('type' in item && item.type === 'sponsor') {
+                  return (
+                    <SponsorCard
+                      key={`sponsor-${item.data.id}-${index}`}
+                      sponsor={item.data}
+                    />
+                  );
+                }
+
+                if ('type' in item && item.type === 'quiz_recap') {
+                  return (
+                    <QuizRecapCard
+                      key={`quiz-recap-${index}`}
+                      contentIds={item.contentIds}
+                      onComplete={() => {
+                        // Optional: track completion or refresh state
+                      }}
+                    />
+                  );
+                }
+
+                const feedItem = item as FeedItem;
+                const shouldAutoPlay = false;
+
+                return (
+                  <FeedItemCard
+                    key={`feed-${feedItem.id}`}
+                    item={feedItem}
+                    status={learningState[feedItem.id]}
+                    allowAutoPlay={shouldAutoPlay}
+                    eagerMedia={index < 3}
+                    registerAutoPlayCandidate={registerAutoPlayElement}
+                    onSetStatus={(status) => setStatus(feedItem.id, status)}
+                    onOpenQuiz={(contentId) => setQuizContentId(contentId)}
+                    onDeleteSuccess={handleContentDeleted}
+                  />
+                );
+              })}
+            </section>
+          </>
+        )}
 
         {!isLoading && !error && items.length > 0 && (
           <div ref={loadMoreRef} className="flex min-h-24 items-center justify-center py-6">
@@ -657,6 +895,24 @@ export function FeedPage() {
             }
           }}
         />
+
+        
+        {/* Floating Search Results Indicator */}
+        {showScrollIndicator && (
+          <div className="fixed top-20 left-1/2 transform -translate-x-1/2 z-[9999] flex items-center gap-2 bg-ember/90 backdrop-blur-sm text-white px-6 py-2 rounded-full shadow-lg border border-white/20 transition-all duration-300 whitespace-nowrap min-w-fit">
+            <Search className="w-4 h-4" />
+            <span className="text-sm font-medium">
+              Résultats pour "{searchQuery}"
+            </span>
+            <button
+              onClick={() => setSearchQuery("")}
+              className="ml-2 w-5 h-5 flex items-center justify-center rounded-full hover:bg-white/20 transition-colors"
+              aria-label="Effacer la recherche"
+            >
+              <X className="w-3 h-3" />
+            </button>
+          </div>
+        )}
       </main>
     </>
   );

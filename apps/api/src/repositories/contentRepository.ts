@@ -74,6 +74,7 @@ export async function createRawContent(input: {
 
 export async function searchContent(query: string) {
   return ContentModel.find({
+    isDeleted: { $ne: true },
     $text: {
       $search: query
     }
@@ -108,7 +109,7 @@ export async function buildContentCards(contentIds: string[]): Promise<ContentCa
 
   const objectIds = contentIds.map((id) => new Types.ObjectId(id));
   const [contents, classifications, enrichments, scores] = await Promise.all([
-    ContentModel.find({ _id: { $in: objectIds } }).lean(),
+    ContentModel.find({ _id: { $in: objectIds }, isDeleted: { $ne: true } }).lean(),
     ContentClassificationModel.find({ contentId: { $in: objectIds } }).lean(),
     ContentEnrichmentModel.find({ contentId: { $in: objectIds } }).lean(),
     ContentScoreModel.find({ contentId: { $in: objectIds } }).lean()

@@ -259,6 +259,7 @@ ${urlEntries}
       // Add published content (last 1000 items)
       const contents = await ContentModel.find({
         processingStatus: "published",
+        isDeleted: { $ne: true },
         sourceProvider: { $in: ["youtube", "tiktok"] }
       })
         .sort({ publishedAt: -1 })

@@ -64,7 +64,7 @@ async function ensureAudioCatalogSeeded() {
 export async function getAudioTracks(limit = 50): Promise<AudioTrackData[]> {
   await ensureAudioCatalogSeeded();
 
-  const tracks = await AudioTrackModel.find({ isPublic: true })
+  const tracks = await AudioTrackModel.find({ isPublic: true, isDeleted: { $ne: true } })
     .sort({ playCount: -1, createdAt: -1 })
     .limit(limit)
     .populate("contentId")
@@ -164,7 +164,7 @@ export async function generateAutoPlaylist(config: {
   const limit = config.limit || 20;
   const minPlayCount = config.minPlayCount || 0;
 
-  const trackQuery: any = { isPublic: true, playCount: { $gte: minPlayCount } };
+  const trackQuery: any = { isPublic: true, isDeleted: { $ne: true }, playCount: { $gte: minPlayCount } };
   if (config.genre) {
     trackQuery.genre = config.genre;
   }

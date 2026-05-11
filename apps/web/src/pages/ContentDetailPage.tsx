@@ -8,8 +8,8 @@ import { contentService, ContentItem } from "../services/contentService";
 import { interactionService, EngagementData } from "../services/interactionService";
 import { TouchFeedback } from "../components/ui/TouchFeedback";
 import { LoadingState } from "../components/ui/LoadingState";
-import { RedditVideoPlayer } from "../components/media/RedditVideoPlayer";
-import { extractYouTubeVideoId, useIsYouTubeShortFormVideo } from "../components/media/YouTubeEmbed";
+import { extractYouTubeVideoId, useIsYouTubeShortFormVideo, YouTubeEmbed } from "../components/media/YouTubeEmbed";
+import { TikTokEmbed } from "../components/feed/TikTokEmbed";
 import { preloadMediaCandidate } from "../utils/mediaPreload";
 
 const BUCKET_CONFIG: Record<string, { color: string; gradient: string; label: string }> = {
@@ -219,10 +219,7 @@ export default function ContentDetailPage() {
 
   const bucketConfig = BUCKET_CONFIG[content!.bucket] || BUCKET_CONFIG.deep;
   const isShortFormVideo = content.videoUrl?.includes('tiktok.com') || isYouTubeShortFormVideo || directVideoOrientation === 'portrait';
-  const shouldAutoplayVideo = Boolean(
-    content.videoUrl?.includes('tiktok.com') ||
-    isYouTubeVideo
-  );
+  const shouldAutoplayVideo = false;
 
   return (
     <>
@@ -254,14 +251,63 @@ export default function ContentDetailPage() {
 
       {/* Media Player / Thumbnail */}
       <div className={`relative ${isShortFormVideo ? 'h-[400px]' : 'aspect-video'} overflow-hidden bg-gradient-to-br ${bucketConfig.gradient}`}>
-        <RedditVideoPlayer
-          src={content.videoUrl || content.audioUrl || ''}
-          thumbnail={content.thumbnailUrl}
-          title={content.title}
-          className="w-full h-full"
-          autoPlay={shouldAutoplayVideo}
-          onVideoOrientation={setDirectVideoOrientation}
-        />
+        {isYouTubeVideo ? (
+          <div className="relative h-full w-full">
+            <YouTubeEmbed
+              videoUrl={content.videoUrl!}
+              title={content.title}
+              layout="fill"
+              options={{
+                controls: true,
+                autoplay: true,
+                muted: false,
+                enableJsApi: true,
+                fullscreen: true
+              }}
+            />
+          </div>
+        ) : content.videoUrl?.includes('tiktok.com') ? (
+          <div className="relative h-full w-full">
+            <TikTokEmbed
+              videoUrl={content.videoUrl!}
+              title={content.title}
+              className="w-full"
+              options={{ autoplay: true }}
+            />
+          </div>
+        ) : content.videoUrl ? (
+          <video
+            src={content.videoUrl}
+            poster={content.thumbnailUrl}
+            className="w-full h-full object-contain"
+            controls
+            autoPlay
+            playsInline
+            preload="metadata"
+          />
+        ) : content.audioUrl ? (
+          <div className="w-full h-full flex flex-col items-center justify-center">
+            <audio
+              src={content.audioUrl}
+              controls
+              autoPlay
+              className="w-full max-w-md"
+              preload="metadata"
+            />
+          </div>
+        ) : content.thumbnailUrl ? (
+          <img 
+            src={content.thumbnailUrl} 
+            alt={content.title} 
+            className="w-full h-full object-cover" 
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center">
+            <div className="w-24 h-24 rounded-full bg-white/10 flex items-center justify-center">
+              <Compass className="w-12 h-12 text-white/60" />
+            </div>
+          </div>
+        )}
 
         {/* Bucket Badge */}
         <div className="absolute top-4 right-4">

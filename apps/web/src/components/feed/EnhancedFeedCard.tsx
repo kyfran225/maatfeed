@@ -16,6 +16,10 @@ import { EmailVerificationSheet } from "../auth/EmailVerificationSheet";
 import { ShareSheet } from "./ShareSheet";
 import { VideoProgressBar } from "./VideoProgressBar";
 import { EmailVerificationRequiredError } from "../../services/httpClient";
+import { DeleteConfirmDialog } from "../admin/DeleteConfirmDialog";
+import { deleteContent } from "../../services/adminService";
+import { Trash2 } from "lucide-react";
+import { useToast } from "../../hooks/useToast";
 
 interface EnhancedFeedCardProps {
   item: FeedResponse["items"][0];
@@ -66,10 +70,11 @@ function getCommunityCtaPresentation(community: FeedResponse["items"][0]["commun
 export const EnhancedFeedCard = memo(function EnhancedFeedCard({ item, index, isActive = false, nextItems = [] }: EnhancedFeedCardProps) {
   const location = useLocation();
   const navigate = useNavigate();
-  const { isAuthenticated, isEmailVerified } = useAuth();
+  const { isAuthenticated, isEmailVerified, profile } = useAuth();
   const { likeMutation, saveMutation, shareMutation } = useInteractions(item.id);
   const { trackWatch, startTracking, resetTracking } = useTrackWatch(item.id);
   const { data: engagement, isLoading: isEngagementLoading } = useEngagement(item.id);
+  const { showToast } = useToast();
   const [showComments, setShowComments] = useState(false);
   const [showAuthRequired, setShowAuthRequired] = useState(false);
   const [showEmailVerification, setShowEmailVerification] = useState(false);
@@ -79,6 +84,9 @@ export const EnhancedFeedCard = memo(function EnhancedFeedCard({ item, index, is
   const [isSummaryExpanded, setIsSummaryExpanded] = useState(false);
   const [watchProgress, setWatchProgress] = useState(0);
   const [videoProgress, setVideoProgress] = useState({ currentTime: 0, duration: 0 });
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const isAdmin = profile?.role === "admin";
   // Local state for optimistic UI updates, synced with server data
   const [hasLiked, setHasLiked] = useState(false);
   const [optimisticLikeCount, setOptimisticLikeCount] = useState(item.scores.likes);
@@ -194,6 +202,34 @@ export const EnhancedFeedCard = memo(function EnhancedFeedCard({ item, index, is
 
   const handleJoinDebate = () => {
     navigate(`/debate/${item.id}`);
+  };
+
+  const handleDelete = () => {
+    setShowDeleteDialog(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!isAdmin) return;
+    
+    setIsDeleting(true);
+    try {
+      await deleteContent({
+        contentId: item.id,
+        reason: "admin_deleted"
+      });
+      
+      setShowDeleteDialog(false);
+      showToast("Contenu supprimé avec succès", "success");
+      
+      // Optionally trigger a refresh of the feed
+      // This would need to be implemented based on your feed refresh strategy
+      
+    } catch (error) {
+      console.error("Failed to delete content:", error);
+      showToast("Échec de la suppression du contenu", "error");
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   const { setIsAnyVideoPlaying } = useVideoPlayer();
@@ -665,6 +701,26 @@ export const EnhancedFeedCard = memo(function EnhancedFeedCard({ item, index, is
                   )}
                 </button>
               </TouchFeedback>
+
+              {isAdmin && (
+                <TouchFeedback onTap={() => {}}>
+                  <button
+                    data-action="delete"
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleDelete();
+                    }}
+                    className="flex flex-col items-center gap-1 p-2 rounded-xl transition-all hover:bg-red-500/20 active:scale-95"
+                    aria-label={`Delete ${item.title}`}
+                    title="Supprimer le contenu (admin)"
+                  >
+                    <Trash2 className="w-6 h-6 text-red-400" />
+                    <span className="text-xs text-red-400 font-medium">Suppr</span>
+                  </button>
+                </TouchFeedback>
+              )}
             </motion.div>
           )}
         </div>
@@ -727,6 +783,15 @@ export const EnhancedFeedCard = memo(function EnhancedFeedCard({ item, index, is
         onClose={() => setShowShareSheet(false)}
         url={item.mediaUrl}
         title={item.title}
+      />
+
+      <DeleteConfirmDialog
+        isOpen={showDeleteDialog}
+        onClose={() => setShowDeleteDialog(false)}
+        onConfirm={confirmDelete}
+        title={item.title}
+        description={`Êtes-vous sûr de vouloir supprimer "${item.title}" ? Cette action masquera le contenu aux utilisateurs mais le conservera dans la base de données.`}
+        isLoading={isDeleting}
       />
     </>
   );

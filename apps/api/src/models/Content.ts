@@ -16,6 +16,10 @@ export interface ContentDocument {
   tags: string[];
   processingStatus: "raw" | "classified" | "enriched" | "published" | "failed";
   publishedAt: Date;
+  isDeleted?: boolean;
+  deletedAt?: Date | null;
+  deletedBy?: Types.ObjectId | null;
+  deleteReason?: string | null;
   metadata?: {
     communityPostId?: Types.ObjectId | null;
     originalAuthor?: Types.ObjectId | null;
@@ -94,6 +98,23 @@ const contentSchema = new Schema(
       type: Date,
       default: Date.now
     },
+    isDeleted: {
+      type: Boolean,
+      default: false
+    },
+    deletedAt: {
+      type: Date,
+      default: null
+    },
+    deletedBy: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      default: null
+    },
+    deleteReason: {
+      type: String,
+      default: null
+    },
     metadata: {
       communityPostId: {
         type: Schema.Types.ObjectId,
@@ -148,5 +169,6 @@ const contentSchema = new Schema(
 contentSchema.index({ sourceProvider: 1, externalId: 1 }, { unique: true });
 contentSchema.index({ processingStatus: 1, publishedAt: -1 });
 contentSchema.index({ title: "text", description: "text", tags: "text" });
+contentSchema.index({ isDeleted: 1, createdAt: -1 });
 
 export const ContentModel = mongoose.models.Content || model("Content", contentSchema);

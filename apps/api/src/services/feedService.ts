@@ -88,6 +88,7 @@ export interface FeedCacheData {
 
 const feedContentSelector = {
   processingStatus: "published",
+  isDeleted: { $ne: true },
   $or: [
     {
       mediaType: "video",

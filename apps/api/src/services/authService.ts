@@ -60,7 +60,8 @@ function toProfileDto(
     avatar: profile.avatar || null,
     profileImageUrl: profile.profileImageUrl || null,
     isEmailVerified: user?.isEmailVerified || false,
-    trustLevel: user?.trustLevel || "visitor"
+    trustLevel: user?.trustLevel || "visitor",
+    role: user?.role
   };
 }
 

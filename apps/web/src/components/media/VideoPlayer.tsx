@@ -121,7 +121,7 @@ export function VideoPlayer({ videoUrl, audioUrl, thumbnailUrl, title, bucket }:
           videoUrl={videoUrl}
           title={title}
           className="w-full"
-          options={{ autoplay: isVisible }}
+          options={{ autoplay: false }}
           onPlay={() => setIsPlaying(true)}
           onPause={() => setIsPlaying(false)}
           onError={(message) => setError(message)}

@@ -72,6 +72,23 @@ const audioTrackSchema = new Schema(
     isPublic: {
       type: Boolean,
       default: true
+    },
+    isDeleted: {
+      type: Boolean,
+      default: false
+    },
+    deletedAt: {
+      type: Date,
+      default: null
+    },
+    deletedBy: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      default: null
+    },
+    deleteReason: {
+      type: String,
+      default: null
     }
   },
   {
@@ -83,5 +100,6 @@ audioTrackSchema.index({ genre: 1, playCount: -1 });
 audioTrackSchema.index({ contentId: 1 });
 audioTrackSchema.index({ isPublic: 1, createdAt: -1 });
 audioTrackSchema.index({ externalSourceId: 1 }, { sparse: true });
+audioTrackSchema.index({ isDeleted: 1, createdAt: -1 });
 
 export const AudioTrackModel = mongoose.models.AudioTrack || model("AudioTrack", audioTrackSchema);

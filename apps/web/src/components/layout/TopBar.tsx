@@ -36,7 +36,7 @@ export function TopBar() {
   };
 
   return (
-    <header className="sticky top-0 z-10 flex items-center justify-between gap-4 px-4 pb-4 pt-safe-top backdrop-blur">
+    <header className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between gap-4 px-4 pb-4 pt-safe-top backdrop-blur">
       <Link to="/" className="flex shrink-0 items-center">
         <img
           src="/favicon_io/maafeed-home.png"

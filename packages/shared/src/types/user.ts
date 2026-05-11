@@ -19,6 +19,7 @@ export type UserProfile = {
   onboardingCompleted: boolean;
   isEmailVerified?: boolean;
   trustLevel?: TrustLevel;
+  role?: string;
   preferences?: {
     contentMix?: ContentMixConfig;
   };

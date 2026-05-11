@@ -46,10 +46,12 @@ export function AppLayout() {
         />
       )}
 
-      <div className="mx-auto flex min-h-screen max-w-7xl flex-col lg:flex-row lg:gap-6">
+      {/* Header fixe en dehors de la structure flex */}
+      <TopBar />
+      
+      <div className="mx-auto flex min-h-screen max-w-7xl flex-col lg:flex-row lg:gap-6 pt-16">
         {/* Single Layout - responsive via CSS */}
         <div className="flex-1 flex flex-col">
-          <TopBar />
           <main className="flex-1 lg:pb-0 lg:pr-6 relative">
             <PageTransition>
               <Outlet />

@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { requeueProcessingController, triggerIngestionController, deploymentReadinessController, autoIngestController, autoIngestStatusController, autoIngestTriggerController, massIngestController, contentStatsController, queueStatusController, llmRateLimitStatusController, autoAIDiagnosticsController, autoAICheckController, listRecentDebateCommentsController, triggerAutoAIReplyController, syncAudioSourcesController, refreshFeedCacheController, getAdminDashboardController } from "../controllers/adminController.js";
+import { requeueProcessingController, triggerIngestionController, deploymentReadinessController, autoIngestController, autoIngestStatusController, autoIngestTriggerController, massIngestController, contentStatsController, queueStatusController, llmRateLimitStatusController, autoAIDiagnosticsController, autoAICheckController, listRecentDebateCommentsController, triggerAutoAIReplyController, syncAudioSourcesController, refreshFeedCacheController, getAdminDashboardController, deleteContentController, deleteAudioTrackController } from "../controllers/adminController.js";
 import { requireAuth } from "../middleware/auth.js";
 import { requireAdmin } from "../middleware/adminAuth.js";
 
@@ -38,3 +38,7 @@ adminRouter.post("/auto-ai-diagnostics/trigger", triggerAutoAIReplyController);
 adminRouter.post("/audio/sync", requireAuth, syncAudioSourcesController);
 
 adminRouter.post("/feed/refresh-cache", requireAuth, refreshFeedCacheController);
+
+adminRouter.delete("/content", requireAuth, requireAdmin, deleteContentController);
+
+adminRouter.delete("/audio-track", requireAuth, requireAdmin, deleteAudioTrackController);

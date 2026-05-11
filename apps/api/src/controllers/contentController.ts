@@ -20,7 +20,7 @@ export class ContentController {
       }
 
       // Check if content exists first
-      const contentExists = await ContentModel.findById(id).lean() as { publishedAt?: Date } | null;
+      const contentExists = await ContentModel.findOne({ _id: id, isDeleted: { $ne: true } }).lean() as { publishedAt?: Date } | null;
       if (!contentExists) {
         return res.status(404).json({
           success: false,
