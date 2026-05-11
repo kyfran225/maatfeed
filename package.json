@@ -36,6 +36,14 @@
     "typescript": "^5.9.3"
   },
   "dependencies": {
-    "openai": "^6.34.0"
+    "@hookform/error-message": "^2.0.1",
+    "@hookform/resolvers": "^5.2.2",
+    "@socket.io/redis-adapter": "^8.3.0",
+    "express-rate-limit": "^8.5.1",
+    "openai": "^6.34.0",
+    "rate-limit-redis": "^5.0.0",
+    "react-hook-form": "^7.75.0",
+    "socket.io": "^4.8.3",
+    "zustand": "^5.0.13"
   }
 }

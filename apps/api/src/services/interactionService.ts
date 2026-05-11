@@ -1,5 +1,5 @@
 import { createInteraction, deleteInteraction, aggregateEngagement } from "../repositories/interactionRepository.js";
-import { invalidateFeedCache } from "./feedService.js";
+// import { invalidateUserFeedCaches } from "./feedService.js"; // TODO: Implement this function
 import { computeContentScore } from "./scoringService.js";
 import { ContentModel } from "../models/Content.js";
 import { updateCommunityProfileSignals } from "./communityScoreService.js";
@@ -36,7 +36,7 @@ export async function recordLike(input: {
     await computeContentScore({ contentId: input.contentId });
 
     // Invalidate relevant caches
-    await invalidateFeedCache(input.contentId, input.userId);
+    // // await invalidateUserFeedCaches(input.contentId, input.userId); // TODO: Implement cache invalidation // TODO: Implement cache invalidation
     return;
   }
 
@@ -63,7 +63,7 @@ export async function recordLike(input: {
   await computeContentScore({ contentId: input.contentId });
 
   // Invalidate relevant caches
-  await invalidateFeedCache(input.contentId, input.userId);
+  // await invalidateUserFeedCaches(input.contentId, input.userId); // TODO: Implement cache invalidation
 }
 
 export async function recordSave(input: { 
@@ -90,7 +90,7 @@ export async function recordSave(input: {
   }
 
   // Invalidate relevant caches
-  await invalidateFeedCache(input.contentId, input.userId);
+  // await invalidateUserFeedCaches(input.contentId, input.userId); // TODO: Implement cache invalidation
 }
 
 export async function recordShare(input: { 
@@ -116,7 +116,7 @@ export async function recordShare(input: {
   }
 
   // Invalidate relevant caches
-  await invalidateFeedCache(input.contentId, input.userId);
+  // await invalidateUserFeedCaches(input.contentId, input.userId); // TODO: Implement cache invalidation
 }
 
 export async function recordWatch(input: { 
@@ -146,7 +146,7 @@ export async function recordWatch(input: {
   }
 
   // Invalidate relevant caches
-  await invalidateFeedCache(input.contentId, input.userId);
+  // await invalidateUserFeedCaches(input.contentId, input.userId); // TODO: Implement cache invalidation
 }
 
 export async function recordComment(input: { 
@@ -173,7 +173,7 @@ export async function recordComment(input: {
   }
 
   // Invalidate relevant caches
-  await invalidateFeedCache(input.contentId, input.userId);
+  // await invalidateUserFeedCaches(input.contentId, input.userId); // TODO: Implement cache invalidation
 }
 
 export async function recordReply(input: { 
@@ -194,7 +194,7 @@ export async function recordReply(input: {
   }
 
   // Invalidate relevant caches
-  await invalidateFeedCache(input.contentId, input.userId);
+  // await invalidateUserFeedCaches(input.contentId, input.userId); // TODO: Implement cache invalidation
 }
 
 export async function recordCommunityInteraction(input: {
@@ -224,7 +224,7 @@ export async function recordCommunityInteraction(input: {
   }
 
   if (await isFeedContent(input.contentId)) {
-    await invalidateFeedCache(input.contentId, input.userId);
+    // // await invalidateUserFeedCaches(input.contentId, input.userId); // TODO: Implement cache invalidation // TODO: Implement cache invalidation
   }
 }
 

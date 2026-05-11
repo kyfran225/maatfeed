@@ -9,7 +9,7 @@ import { interactionService, EngagementData } from "../services/interactionServi
 import { TouchFeedback } from "../components/ui/TouchFeedback";
 import { LoadingState } from "../components/ui/LoadingState";
 import { extractYouTubeVideoId, useIsYouTubeShortFormVideo, YouTubeEmbed } from "../components/media/YouTubeEmbed";
-import { TikTokEmbed } from "../components/feed/TikTokEmbed";
+import { TikTokEmbed } from "../components/TikTokEmbed";
 import { preloadMediaCandidate } from "../utils/mediaPreload";
 
 const BUCKET_CONFIG: Record<string, { color: string; gradient: string; label: string }> = {

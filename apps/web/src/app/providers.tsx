@@ -4,6 +4,7 @@ import { AuthProvider } from "../hooks/useAuth";
 import { LayoutProvider } from "../contexts/LayoutContext";
 import { AudioPlayerProvider } from "../contexts/AudioPlayerContext";
 import { VideoPlayerProvider } from "../contexts/VideoPlayerContext";
+import { SocketProvider } from "../providers/SocketProvider";
 import { ToastProvider, useToast } from "../hooks/useToast";
 import { ToastContainer } from "../components/ui/Toast";
 import { queryClient } from "../lib/queryClient";
@@ -12,15 +13,17 @@ export function AppProviders({ children }: PropsWithChildren) {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <AudioPlayerProvider>
-          <VideoPlayerProvider>
-            <LayoutProvider>
-              <ToastProvider>
-                <AppProvidersInner>{children}</AppProvidersInner>
-              </ToastProvider>
-            </LayoutProvider>
-          </VideoPlayerProvider>
-        </AudioPlayerProvider>
+        <SocketProvider>
+          <AudioPlayerProvider>
+            <VideoPlayerProvider>
+              <LayoutProvider>
+                <ToastProvider>
+                  <AppProvidersInner>{children}</AppProvidersInner>
+                </ToastProvider>
+              </LayoutProvider>
+            </VideoPlayerProvider>
+          </AudioPlayerProvider>
+        </SocketProvider>
       </AuthProvider>
     </QueryClientProvider>
   );

@@ -1,7 +1,8 @@
 import { Link } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import { getAvatarById } from "@maat/shared";
-import { NotificationsBell } from "../notifications/NotificationsBell";
+import { NotificationCenter } from "../../features/notifications/NotificationCenter";
+import { DataSaverToggle } from "../../features/performance/DataSaverToggle";
 import { BookOpen, Home, Headphones, MessageCircle, Search } from "lucide-react";
 
 const desktopNavItems = [
@@ -59,7 +60,8 @@ export function TopBar() {
       </nav>
 
       <div className="flex shrink-0 items-center gap-3 text-sm">
-        <NotificationsBell />
+        <DataSaverToggle />
+        <NotificationCenter />
         {isAuthenticated && profile ? (
           <Link 
             to="/profile" 

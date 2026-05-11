@@ -1,4 +1,4 @@
-import { ContentModel, type ContentDocument } from "../models/Content.js";
+import { ContentModel, type IContent } from "../models/Content.js";
 import { CommunityPostModel, type CommunityPostDocument } from "../models/CommunityPost.js";
 import { ContentEnrichmentModel } from "../models/ContentEnrichment.js";
 import type { Types } from "mongoose";
@@ -49,7 +49,7 @@ export async function getContentMetaTags(contentId: string): Promise<MetaTagsDTO
   if (!contentDoc || contentDoc.processingStatus !== "published") {
     return null;
   }
-  const content = contentDoc.toObject() as ContentDocument & { _id: Types.ObjectId };
+  const content = contentDoc.toObject() as IContent & { _id: Types.ObjectId };
 
   const enrichmentDoc = await ContentEnrichmentModel.findOne({ contentId });
   const enrichment = enrichmentDoc?.toObject() as { summary?: string } | undefined;

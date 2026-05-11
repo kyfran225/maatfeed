@@ -1,5 +1,6 @@
 import dotenv from "dotenv";
 import { UserModel } from "../models/User.js";
+import mongoose from "mongoose";
 
 dotenv.config();
 
@@ -12,13 +13,13 @@ async function checkUserRole() {
       return;
     }
 
-    console.log("📧 Email:", user.email);
-    console.log("👤 Nom:", user.displayName);
-    console.log("🔑 Rôle:", user.role || "⚠️ NON DÉFINI");
-    console.log("🆔 ID:", user._id);
+    console.log("📧 Email:", (user as any).email || "Non défini");
+    console.log("👤 Nom:", (user as any).displayName || "Non défini");
+    console.log("🔑 Rôle:", (user as any).role || "⚠️ NON DÉFINI");
+    console.log("🆔 ID:", (user as any)._id?.toString() || "Non défini");
     
     // Si le rôle n'est pas défini, on peut le définir
-    if (!user.role) {
+    if (!(user as any).role) {
       console.log("\n⚠️  L'utilisateur n'a pas de rôle défini.");
       console.log("Pour définir le rôle admin, exécutez:");
       console.log(`node -e "
@@ -32,7 +33,7 @@ console.log('✅ Rôle admin défini pour kyfran6@gmail.com');
     }
     
   } catch (error) {
-    console.error("❌ Erreur:", error);
+    console.error("❌ Erreur:", error instanceof Error ? error.message : String(error));
   }
 }
 

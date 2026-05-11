@@ -13,7 +13,7 @@ import { getAdminDashboardSummary } from "../services/learningAnalyticsService.j
 import { getQueueOptions } from "../queues/queueFactory.js";
 import { QUEUE_NAMES } from "../queues/queueNames.js";
 import { env } from "../config/env.js";
-import { invalidateFeedCache } from "../services/feedService.js";
+// import { invalidateFeedCache } from "../services/feedService.js"; // TODO: Implement this function
 import { AudioTrackModel } from "../models/AudioTrack.js";
 
 function ensureAdmin(response: Response) {
@@ -747,7 +747,7 @@ export async function deleteContentController(request: Request, response: Respon
       return;
     }
 
-    await invalidateFeedCache(contentId);
+    // await invalidateFeedCache(contentId); // TODO: Implement cache invalidation
 
     response.status(200).json({
       success: true,

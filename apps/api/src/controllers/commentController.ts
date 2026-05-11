@@ -168,14 +168,7 @@ export async function deleteCommentController(req: Request, res: Response) {
     const { commentId } = req.params;
     const { reason } = req.body || {};
 
-    const success = await deleteComment(commentId as string, userId, reason);
-
-    if (!success) {
-      return res.status(404).json({
-        success: false,
-        error: "Comment not found or not authorized"
-      });
-    }
+    await deleteComment(commentId as string, userId, reason);
 
     res.json({
       success: true,
@@ -309,14 +302,7 @@ export async function deleteReplyController(req: Request, res: Response) {
     const { replyId } = req.params;
     const { reason } = req.body || {};
 
-    const success = await deleteReply(replyId as string, userId, reason);
-
-    if (!success) {
-      return res.status(404).json({
-        success: false,
-        error: "Reply not found or not authorized"
-      });
-    }
+    await deleteReply(replyId as string, userId, reason);
 
     res.json({
       success: true,

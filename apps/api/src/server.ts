@@ -8,7 +8,7 @@ import { connectServices } from "./bootstrap/connectServices.js";
 import { env } from "./config/env.js";
 import { logger } from "./config/logger.js";
 import { createApp } from "./app.js";
-import { createDiscussionTypingServer } from "./realtime/discussionTypingServer.js";
+import { socketIOManager } from "./realtime/socketIOServer.js";
 import { disconnectRedis } from "./db/redis.js";
 
 async function startServer() {
@@ -16,16 +16,9 @@ async function startServer() {
 
   const app = createApp();
   const server = createServer(app);
-  const discussionTypingServer = createDiscussionTypingServer();
 
-  server.on("upgrade", (request, socket, head) => {
-    const handled = discussionTypingServer.handleUpgrade(request, socket, head);
-
-    if (!handled) {
-      socket.write("HTTP/1.1 404 Not Found\r\n\r\n");
-      socket.destroy();
-    }
-  });
+  // Initialize Socket.IO server (unified real-time solution)
+  await socketIOManager.initialize(server);
 
   // Graceful shutdown handlers
   let isShuttingDown = false;
@@ -41,9 +34,9 @@ async function startServer() {
       logger.info("HTTP server closed");
     });
 
-    // Close WebSocket server
-    discussionTypingServer.server.close(() => {
-      logger.info("WebSocket server closed");
+    // Close Socket.IO server
+    socketIOManager.close(() => {
+      logger.info("Socket.IO server closed");
     });
 
     // Close database connections

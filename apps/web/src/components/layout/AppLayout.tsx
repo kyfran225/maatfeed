@@ -7,8 +7,8 @@ import { BottomNav } from "./BottomNav";
 import { TopBar } from "./TopBar";
 import { PageTransition } from "../motion/PageTransition";
 import { ScrollToTop } from "./ScrollToTop";
-import { EmailVerificationBanner } from "../auth/EmailVerificationBanner";
-import { MiniAudioPlayer } from "../audio/MiniAudioPlayer";
+import { EmailVerificationBanner } from "../../features/auth/EmailVerificationBanner";
+import { MiniAudioPlayer } from "../../features/audio/MiniAudioPlayer";
 
 export function AppLayout() {
   const location = useLocation();

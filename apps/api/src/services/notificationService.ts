@@ -9,6 +9,7 @@ import { ProfileModel } from "../models/Profile.js";
 import { ContentModel } from "../models/Content.js";
 import * as emailService from "./emailService.js";
 import * as webPushService from "./webPushService.js";
+import { socketIOManager } from "../realtime/socketIOServer.js";
 import { logger } from "../config/logger.js";
 
 // Trust level configuration with benefits
@@ -112,6 +113,8 @@ export async function createNotification(input: CreateNotificationInput) {
   // Queue for delivery (in-app is immediate)
   if (channels.includes("in_app")) {
     await markAsSent(notification._id.toString());
+    // Send real-time notification via Socket.IO
+    await sendRealTimeNotification(notification);
   }
 
   // Email and push are queued for async processing
@@ -139,6 +142,35 @@ async function markAsDelivered(notificationId: string) {
   });
 }
 
+// Send real-time notification via Socket.IO
+async function sendRealTimeNotification(notification: any) {
+  try {
+    const unreadCount = await getUnreadCount(notification.userId.toString());
+    
+    const notificationData = {
+      id: notification._id,
+      type: notification.type,
+      title: notification.title,
+      message: notification.message,
+      data: notification.data,
+      priority: notification.priority,
+      createdAt: notification.createdAt,
+      unreadCount
+    };
+
+    // Send to user's personal room
+    socketIOManager.broadcastToUser(
+      notification.userId.toString(),
+      'notification:new',
+      notificationData
+    );
+
+    logger.debug({ notificationId: notification._id }, 'Real-time notification sent via Socket.IO');
+  } catch (error) {
+    logger.error({ error, notificationId: notification._id }, 'Failed to send real-time notification');
+  }
+}
+
 // Mark notification as read
 export async function markNotificationAsRead(userId: string, notificationId: string) {
   const notification = await NotificationModel.findOneAndUpdate(
@@ -151,6 +183,10 @@ export async function markNotificationAsRead(userId: string, notificationId: str
     throw new Error("Notification not found");
   }
 
+  // Send updated unread count via Socket.IO
+  const unreadCount = await getUnreadCount(userId);
+  socketIOManager.broadcastToUser(userId, 'notification:unread-count', { unreadCount });
+
   return notification;
 }
 
@@ -161,7 +197,11 @@ export async function markAllNotificationsAsRead(userId: string) {
     { status: "read", readAt: new Date() }
   );
 
-  return { success: true };
+  // Send updated unread count via Socket.IO
+  const unreadCount = await getUnreadCount(userId);
+  socketIOManager.broadcastToUser(userId, 'notification:unread-count', { unreadCount });
+
+  return { success: true, unreadCount };
 }
 
 // Process notification delivery

@@ -1,5 +1,5 @@
 import { Job } from "bullmq";
-import { refreshFeedCache, invalidateFeedCache } from "../services/feedService.js";
+import { feedService } from "../services/feedService.js";
 import { invalidateCachePattern } from "../services/cacheService.js";
 import { redisKeys } from "@maat/shared";
 
@@ -24,12 +24,12 @@ export async function processRefreshFeedCacheJob(job: Job<RefreshFeedCacheJobDat
   try {
     switch (type) {
       case "global":
-        await refreshFeedCache();
+        await feedService.getGlobalFeed();
         break;
         
       case "user":
         if (userId) {
-          await invalidateFeedCache(undefined, userId);
+          await feedService.getPersonalizedFeed(userId);
           console.log(`Invalidated user feed cache for user: ${userId}`);
         }
         break;
@@ -48,7 +48,7 @@ export async function processRefreshFeedCacheJob(job: Job<RefreshFeedCacheJobDat
         await invalidateCachePattern("trends:*");
         
         // Rebuild global cache
-        await refreshFeedCache();
+        await feedService.getGlobalFeed();
         
         console.log("Completed full feed cache refresh");
         break;

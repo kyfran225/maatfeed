@@ -2,7 +2,7 @@ import { CommunityPostModel, type CommunityPostDocument } from "../models/Commun
 import { CommentModel } from "../models/Comment.js";
 import { ContentClassificationModel } from "../models/ContentClassification.js";
 import { ContentEnrichmentModel } from "../models/ContentEnrichment.js";
-import { ContentModel, type ContentDocument } from "../models/Content.js";
+import { ContentModel, type IContent } from "../models/Content.js";
 import { ContentScoreModel } from "../models/ContentScore.js";
 import { ProfileModel } from "../models/Profile.js";
 import { cacheService } from "./cacheService.js";

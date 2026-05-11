@@ -7,7 +7,11 @@ import { logger } from "./config/logger.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 import { notFoundHandler } from "./middleware/notFound.js";
 import { apiRouter } from "./routes/index.js";
-import { ContentModel } from "./models/Content.js";
+import { ContentModel } from "./models/Content";
+import modules from "./modules/index.js";
+import notificationRoutes from "./routes/notifications.js";
+import seriesRoutes from "./routes/seriesRoutes.js";
+import recommendationsRoutes from "./routes/recommendationsRoutes.js";
 
 const DEFAULT_ALLOWED_ORIGINS = env.NODE_ENV === "production"
   ? ["https://maatfeed.com", "https://www.maatfeed.com", "https://maatfeed.vercel.app", "https://maat-feed.vercel.app"]
@@ -294,6 +298,15 @@ ${urlEntries}
     }
   });
 
+  // Integrate modular routes
+  app.use("/api/auth", modules.auth);
+  app.use("/api/feed", modules.feed);
+  app.use("/api/content", modules.content);
+  app.use("/api/notifications", notificationRoutes);
+  app.use("/api/series", seriesRoutes);
+  app.use("/api/recommendations", recommendationsRoutes);
+  
+  // Legacy routes for backward compatibility
   app.use("/api", apiRouter);
   app.use(notFoundHandler);
   app.use(errorHandler);

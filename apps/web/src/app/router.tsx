@@ -3,8 +3,8 @@ import { Suspense, lazy } from "react";
 import { AppLayout } from "../components/layout/AppLayout";
 import { AdminLayout } from "../components/layout/AdminLayout";
 import { RequireAuth } from "../components/layout/RequireAuth";
-import { AuthPage } from "../pages/AuthPage";
-import { FeedPage } from "../pages/FeedPage";
+import { AuthPage } from "../features/auth/AuthPage";
+import { FeedPage } from "../features/feed/FeedPage";
 import { MaintenancePage } from "../pages/MaintenancePage";
 import { NotFoundPage } from "../pages/NotFoundPage";
 import { isMaintenanceMode } from "../config/runtime";
@@ -13,11 +13,11 @@ import { isMaintenanceMode } from "../config/runtime";
 const AdminOpsPage = lazy(() => import("../pages/AdminOpsPage"));
 const AdminIngestionPage = lazy(() => import("../pages/AdminIngestionPage"));
 const AdminSponsorsPage = lazy(() => import("../pages/AdminSponsorsPage"));
-const AudioPage = lazy(() => import("../pages/AudioPage"));
+const AudioPage = lazy(() => import("../features/audio/AudioPage"));
 const CommunityPage = lazy(() => import("../pages/CommunityPage"));
 const ContentDetailPage = lazy(() => import("../pages/ContentDetailPage"));
-const DebateDetailPage = lazy(() => import("../pages/DebateDetailPage"));
 const DemoSectionTitlePage = lazy(() => import("../pages/DemoSectionTitlePage"));
+const ListenPage = lazy(() => import("../features/listen/ListenPage"));
 const TikTokDemoPage = lazy(() => import("../pages/TikTokDemoPage"));
 const YouTubeDemoPage = lazy(() => import("../pages/YouTubeDemoPage"));
 const ExplorePage = lazy(() => import("../pages/ExplorePage"));
@@ -25,8 +25,9 @@ const ForgotPasswordPage = lazy(() => import("../pages/ForgotPasswordPage"));
 const OnboardingPage = lazy(() => import("../pages/OnboardingPage"));
 const NotificationsPage = lazy(() => import("../pages/NotificationsPage"));
 const PremiumPage = lazy(() => import("../pages/PremiumPage"));
-const ProfilePage = lazy(() => import("../pages/ProfilePage"));
+const ProfilePage = lazy(() => import("../features/profile/ProfilePage"));
 const ResetPasswordPage = lazy(() => import("../pages/ResetPasswordPage"));
+const UploadPage = lazy(() => import("../features/upload/UploadPage"));
 const SeoTopicPage = lazy(() => import("../pages/SeoTopicPage"));
 const SponsorPage = lazy(() => import("../pages/SponsorPage"));
 const VerifyEmailPage = lazy(() => import("../pages/VerifyEmailPage"));
@@ -34,6 +35,11 @@ const PrivacyPolicyPage = lazy(() => import("../pages/PrivacyPolicy"));
 const LegalNoticePage = lazy(() => import("../pages/LegalNotice"));
 const TermsOfServicePage = lazy(() => import("../pages/TermsOfService"));
 const DataManagementPage = lazy(() => import("../pages/DataManagement"));
+const AnalyticsDashboard = lazy(() => import("../pages/AnalyticsDashboard"));
+const CreatorAnalytics = lazy(() => import("../pages/CreatorAnalytics"));
+const SeriesListPage = lazy(() => import("../features/series/SeriesListPage"));
+const SeriesDetailPage = lazy(() => import("../features/series/SeriesDetailPage"));
+const DesktopPage = lazy(() => import("../pages/DesktopPage"));
 
 // Simple fallback for lazy-loaded pages
 const PageLoader = () => (
@@ -85,8 +91,11 @@ export const router = createBrowserRouter(isMaintenanceMode ? [
       },
       { path: "content/:contentId", element: <ContentDetailPage /> },
       { path: "community", element: <LazyPage><CommunityPage /></LazyPage> },
-      { path: "debate/:contentId", element: <LazyPage><DebateDetailPage /></LazyPage> },
+      { path: "debate/:contentId", element: <ContentDetailPage /> },
       { path: "audio", element: <AudioPage /> },
+      { path: "listen", element: <LazyPage><ListenPage /></LazyPage> },
+      { path: "series", element: <LazyPage><SeriesListPage /></LazyPage> },
+      { path: "series/:id", element: <LazyPage><SeriesDetailPage /></LazyPage> },
       { path: "premium", element: <LazyPage><PremiumPage /></LazyPage> },
       { path: "sponsor", element: <LazyPage><SponsorPage /></LazyPage> },
       { path: "demo-section-title", element: <DemoSectionTitlePage /> },
@@ -101,6 +110,14 @@ export const router = createBrowserRouter(isMaintenanceMode ? [
         )
       },
       {
+        path: "upload",
+        element: (
+          <RequireAuth>
+            <LazyPage><UploadPage /></LazyPage>
+          </RequireAuth>
+        )
+      },
+      {
         path: "data-management",
         element: (
           <RequireAuth>
@@ -111,6 +128,23 @@ export const router = createBrowserRouter(isMaintenanceMode ? [
       { path: "privacy-policy", element: <LazyPage><PrivacyPolicyPage /></LazyPage> },
       { path: "legal-notice", element: <LazyPage><LegalNoticePage /></LazyPage> },
       { path: "terms-of-service", element: <LazyPage><TermsOfServicePage /></LazyPage> },
+      {
+        path: "analytics",
+        element: (
+          <RequireAuth>
+            <LazyPage><AnalyticsDashboard /></LazyPage>
+          </RequireAuth>
+        )
+      },
+      {
+        path: "creator-analytics",
+        element: (
+          <RequireAuth>
+            <LazyPage><CreatorAnalytics /></LazyPage>
+          </RequireAuth>
+        )
+      },
+      { path: "desktop", element: <LazyPage><DesktopPage /></LazyPage> },
       {
         path: "admin",
         element: <AdminLayout />,

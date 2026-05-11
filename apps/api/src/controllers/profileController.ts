@@ -145,9 +145,37 @@ export async function getSavedContentController(req: Request, res: Response) {
     .lean();
 
     // Build feed items for saved content
-    const { buildFeedItemFromContent } = await import("../services/feedService.js");
+    const { feedService } = await import("../services/feedService.js");
     const items = await Promise.all(
-      savedContent.map(content => buildFeedItemFromContent(content))
+      savedContent.map(async (content) => {
+        // Create a simple feed item from content
+        return {
+          _id: (content as any)._id.toString(),
+          title: content.title,
+          description: content.description,
+          mediaType: content.mediaType,
+          mediaUrl: content.mediaUrl,
+          thumbnailUrl: content.thumbnailUrl,
+          duration: content.duration,
+          creatorId: content.creatorId.toString(),
+          creatorName: content.creatorName,
+          creatorAvatar: content.creatorAvatar,
+          tags: content.tags,
+          category: content.category,
+          language: content.language,
+          publishedAt: content.publishedAt || content.createdAt,
+          createdAt: content.createdAt,
+          score: content.score,
+          views: content.views,
+          likes: content.likes,
+          shares: content.shares,
+          comments: content.comments,
+          hasDebate: content.hasDebate,
+          debateId: content.debateId?.toString(),
+          userReaction: undefined,
+          isSaved: true
+        };
+      })
     );
 
     res.json({

@@ -61,7 +61,7 @@ function toProfileDto(
     profileImageUrl: profile.profileImageUrl || null,
     isEmailVerified: user?.isEmailVerified || false,
     trustLevel: user?.trustLevel || "visitor",
-    role: user?.role
+    role: (user as any)?.role || "user"
   };
 }
 

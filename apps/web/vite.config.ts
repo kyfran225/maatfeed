@@ -8,7 +8,6 @@ const rootDir = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 function getNodeModulePackageName(id: string) {
   const normalizedId = id.replaceAll("\\", "/");
   const match = normalizedId.match(/\/node_modules\/((?:@[^/]+\/)?[^/]+)/);
-
   return match?.[1];
 }
 
@@ -38,7 +37,7 @@ export default defineConfig(({ command }) => ({
     }
   },
   build: {
-    chunkSizeWarningLimit: 500,
+    chunkSizeWarningLimit: 400, // Réduit de 500 à 400
     rollupOptions: {
       output: {
         manualChunks(id: string | undefined) {
@@ -46,8 +45,7 @@ export default defineConfig(({ command }) => ({
 
           const packageName = getNodeModulePackageName(id);
 
-          // Core framework chunks. Keep react-router before react because its
-          // package path also starts with node_modules/react.
+          // Core framework chunks - Optimisés
           if (packageName === "react-router" || packageName === "react-router-dom") {
             return "router";
           }
@@ -68,18 +66,98 @@ export default defineConfig(({ command }) => ({
           if (packageName === "axios") {
             return "http";
           }
+          if (packageName === "socket.io" || packageName === "socket.io-client") {
+            return "socket";
+          }
+          if (packageName === "react-player") {
+            return "player";
+          }
+          if (packageName === "react-hook-form" || packageName === "@hookform/resolvers") {
+            return "forms";
+          }
+          if (packageName === "zod") {
+            return "validation";
+          }
+          if (packageName === "zustand") {
+            return "state";
+          }
 
-          // Feature pages - only split page components themselves
-          // This avoids circular deps from shared hooks/services
-          if (id.includes("/pages/AudioPage.tsx")) {
-            return "audio-page";
+          // Heavy pages - Split optimisé (éviter circular dependencies)
+          if (id.includes("/pages/DesktopPage.tsx")) {
+            return "desktop-page";
+          }
+          if (id.includes("/pages/AnalyticsDashboard.tsx") ||
+              id.includes("/pages/CreatorAnalytics.tsx")) {
+            return "analytics-pages";
+          }
+          if (id.includes("/pages/CommunityPage.tsx") ||
+              id.includes("/pages/ListenPage.tsx")) {
+            return "community-pages";
+          }
+          if (id.includes("/pages/UploadPage.tsx")) {
+            return "upload-page";
           }
           if (id.includes("/pages/AdminOpsPage.tsx") ||
-              id.includes("/pages/AdminIngestionPage.tsx")) {
+              id.includes("/pages/AdminIngestionPage.tsx") ||
+              id.includes("/pages/AdminSponsorsPage.tsx")) {
             return "admin-pages";
+          }
+          if (id.includes("/features/series/SeriesDetailPage.tsx")) {
+            return "series-detail-page";
+          }
+          if (id.includes("/features/audio/AudioPage.tsx")) {
+            return "audio-page";
+          }
+          if (id.includes("/features/listen/ListenPage.tsx")) {
+            return "listen-page";
+          }
+          if (id.includes("/features/profile/ProfilePage.tsx")) {
+            return "profile-page";
+          }
+          if (id.includes("/features/upload/UploadPage.tsx")) {
+            return "upload-feature-page";
+          }
+
+          // Feature components (séparés pour éviter circular dependencies)
+          if (id.includes("/components/desktop/")) {
+            return "desktop-components";
+          }
+          if (id.includes("/components/analytics/")) {
+            return "analytics-components";
+          }
+          if (id.includes("/components/community/")) {
+            return "community-components";
+          }
+          // ContentDetailPage utilise media-components, donc on les regroupe
+          if (id.includes("/pages/ContentDetailPage.tsx") ||
+              id.includes("/components/media/")) {
+            return "content-media-page";
           }
         }
       }
-    }
+    },
+    // Optimisations supplémentaires
+    minify: "terser",
+    terserOptions: {
+      compress: {
+        drop_console: command === "build",
+        drop_debugger: command === "build"
+      }
+    },
+    sourcemap: command === "serve"
+  },
+  // Optimisation des dépendances
+  optimizeDeps: {
+    include: [
+      "react",
+      "react-dom",
+      "react-router-dom",
+      "framer-motion",
+      "lucide-react",
+      "zustand",
+      "@tanstack/react-query",
+      "react-hook-form",
+      "zod"
+    ]
   }
 }));

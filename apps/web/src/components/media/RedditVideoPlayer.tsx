@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Play, Pause, Volume2, VolumeX, Settings, Share2, Maximize, Minimize } from 'lucide-react';
 import { TouchFeedback } from '../ui/TouchFeedback';
-import { TikTokEmbed, TikTokEmbedRef } from '../feed/TikTokEmbed';
+import { TikTokEmbed, TikTokEmbedRef } from '../TikTokEmbed';
 import { extractYouTubeVideoId, YouTubeEmbed } from './YouTubeEmbed';
 import { useVideoPlayer } from '../../contexts/VideoPlayerContext';
 

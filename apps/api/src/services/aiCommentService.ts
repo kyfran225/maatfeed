@@ -3,7 +3,7 @@ import { logger } from "../config/logger.js";
 import type { CommentAnalysis } from "./commentAnalysisService.js";
 import { analyzeComment } from "./commentAnalysisService.js";
 import { generateWithAIRouter } from "./aiRouterService.js";
-import { invalidateFeedCache } from "./feedService.js";
+// import { invalidateFeedCache } from "./feedService.js"; // TODO: Implement this function
 import { refreshCommunityDiscussionScore } from "./communityScoreService.js";
 import { routeToPersonality, buildPersonalityPrompt, type AIPersonalityId, type AIPersonality } from "./personalityRouterService.js";
 import { shouldAIIntervene } from "./contentClassificationService.js";
@@ -354,7 +354,7 @@ export async function createAICommentForComment(
     $inc: { replyCount: 1 }
   });
 
-  await invalidateFeedCache(sourceComment.contentId.toString());
+  // await invalidateFeedCache(sourceComment.contentId.toString()); // TODO: Implement cache invalidation
   await refreshCommunityDiscussionScore(sourceComment.contentId.toString());
 
   return aiComment._id.toString();

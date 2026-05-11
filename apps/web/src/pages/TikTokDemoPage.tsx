@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { SEO } from "../components/SEO";
-import { TikTokEmbed } from "../components/feed/TikTokEmbed";
+import { TikTokEmbed } from "../components/TikTokEmbed";
 
 interface TikTokOptions {
   controls: boolean;
